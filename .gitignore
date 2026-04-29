@@ -1,4 +1,20 @@
 __pycache__/
 *.pyc
 .env
+.venv/
 data/
+
+# Generated research artifacts
+research/results/
+*.sqlite
+*.sqlite-*
+*.db
+*.npy
+*.npz
+*.parquet
+*.pkl
+*.joblib
+
+# Large document/content outputs
+*.pdf
+*.grobid-xml

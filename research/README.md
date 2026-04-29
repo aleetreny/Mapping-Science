@@ -23,11 +23,15 @@ It is meant to centralize:
 2. `ideas_database.md`
    Structured bank of ideas, experiments, and hypotheses.
 
+3. `literature_master.md`
+   Curated, DOI-verified literature list aligned with thesis method blocks.
+
 ## Intended workflow
 
 1. keep high level decisions in `KB_master.md`
 2. keep exploratory ideas and literature inspired directions in `ideas_database.md`
-3. later add more files for:
+3. use `literature_master.md` as the stable bibliography backbone for writing and method choices
+4. later add more files for:
    1. formal literature review
    2. corpus decisions
    3. experiment logs

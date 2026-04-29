@@ -1,0 +1,10 @@
+# Install PyTorch first on CPU-only Windows:
+# python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+adapters>=1.0.0
+transformers>=4.40.0
+numpy>=1.26.0
+pandas>=2.2.0
+umap-learn>=0.5.6
+scikit-learn>=1.4.0
+matplotlib>=3.8.0
+tqdm>=4.66.0
