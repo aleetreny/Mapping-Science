@@ -3,6 +3,7 @@ pandas
 pyarrow
 duckdb
 pyyaml
+python-dotenv
 tqdm
 tenacity
 pytest

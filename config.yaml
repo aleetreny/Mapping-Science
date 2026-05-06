@@ -34,6 +34,7 @@ sampling:
   stratify_by_year: true
   target_per_year_per_subfield: 300
   random_seed: 42
+  use_openalex_sample_api: true
 
 storage:
   duckdb_path: "warehouse/tfm_openalex.duckdb"

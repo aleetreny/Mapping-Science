@@ -88,6 +88,28 @@ The pipeline writes one DuckDB database at `warehouse/tfm_openalex.duckdb` and m
 - `eligible_for_text_corpus`
 - `planned_sample_size`
 
+## `sample_plan`
+
+One row per eligible subfield-year cell in the 2010-2019 morphology window.
+
+- `subfield_id`
+- `subfield_display_name`
+- `field_id`
+- `field_display_name`
+- `domain_id`
+- `domain_display_name`
+- `publication_year`
+- `available_valid_works`
+- `planned_sample_size`
+- `sampling_method`
+- `seed`
+
+`sampling_method` is one of:
+
+- `sample_api`
+- `download_all_available`
+- `skip_no_available_works`
+
 ## `works_text`
 
 - `work_id`

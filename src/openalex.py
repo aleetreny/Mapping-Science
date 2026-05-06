@@ -7,7 +7,20 @@ from typing import Any, Iterable
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import requests
+from dotenv import load_dotenv
 from tenacity import Retrying, retry_if_exception_type, stop_after_attempt, wait_exponential
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def load_repo_env(env_path: str | Path | None = None) -> bool:
+    """Load environment variables from the repo .env file without overriding shell vars."""
+    path = Path(env_path) if env_path is not None else REPO_ROOT / ".env"
+    return load_dotenv(path, override=False)
+
+
+load_repo_env()
 
 
 DEFAULT_SELECT_FIELDS = [
@@ -58,10 +71,11 @@ def short_openalex_id(value: Any) -> str | None:
 def safe_url_for_logging(url: str) -> str:
     """Redact secrets and direct contact details from a URL before logging."""
     parts = urlsplit(url)
-    sensitive_names = {"api_key", "apikey", "key", "mailto", "email"}
+    sensitive_names = {"api_key", "apikey", "key", "api-key", "mailto", "email"}
     query = []
     for key, value in parse_qsl(parts.query, keep_blank_values=True):
-        if key.lower() in sensitive_names:
+        normalized_key = key.lower()
+        if normalized_key in sensitive_names or "email" in normalized_key:
             query.append((key, "REDACTED"))
         else:
             query.append((key, value))
@@ -96,6 +110,56 @@ def build_text_query_params(
         "per-page": per_page,
         "sort": "publication_date:asc",
     }
+
+
+def build_year_text_query_params(
+    subfield_id: str,
+    year: int,
+    work_types: Iterable[str],
+    language: str = "en",
+    per_page: int = 200,
+    select_fields: Iterable[str] | None = None,
+) -> dict[str, Any]:
+    """Build a year-specific works query for the morphology text corpus."""
+    filters = [
+        f"primary_topic.subfield.id:{short_openalex_id(subfield_id)}",
+        f"publication_year:{year}",
+        "has_abstract:true",
+        f"language:{language}",
+        f"type:{'|'.join(work_types)}",
+        "is_retracted:false",
+        "is_paratext:false",
+    ]
+    return {
+        "filter": build_filter(filters),
+        "select": ",".join(select_fields or DEFAULT_SELECT_FIELDS),
+        "per-page": per_page,
+        "sort": "publication_date:asc",
+    }
+
+
+def build_sampled_text_query_params(
+    subfield_id: str,
+    year: int,
+    sample_size: int,
+    seed: int,
+    work_types: Iterable[str],
+    language: str = "en",
+    select_fields: Iterable[str] | None = None,
+) -> dict[str, Any]:
+    """Build an OpenAlex sampled works query for one subfield-year cell."""
+    params = build_year_text_query_params(
+        subfield_id=subfield_id,
+        year=year,
+        work_types=work_types,
+        language=language,
+        per_page=min(int(sample_size), 200),
+        select_fields=select_fields or DEFAULT_SELECT_FIELDS,
+    )
+    params["sample"] = sample_size
+    params["seed"] = seed
+    params.pop("sort", None)
+    return params
 
 
 def build_count_query_params(
@@ -245,4 +309,4 @@ class OpenAlexClient:
 
 
 def project_root() -> Path:
-    return Path(__file__).resolve().parents[1]
+    return REPO_ROOT

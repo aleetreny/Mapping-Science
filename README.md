@@ -27,6 +27,8 @@ The pipeline therefore uses `primary_topic.subfield.id` as the main classificati
 
 Downloading all OpenAlex works for all subfields would be too large and unnecessary. A capped, stratified sample gives comparable morphology inputs across subfields while keeping storage and later embedding work manageable.
 
+The corpus download uses OpenAlex's `sample` and `seed` parameters for large subfield-year cells. Small cells are downloaded in full. This avoids downloading all candidates first and then sampling locally.
+
 Growth targets are based primarily on article and preprint counts, not only abstract-available works, because growth should measure scientific production rather than abstract availability.
 
 ## Repository Layout
@@ -54,17 +56,13 @@ Set `OPENALEX_EMAIL` in `.env` if possible. `OPENALEX_API_KEY` may be left empty
 
 ```bash
 python scripts/00_fetch_taxonomy.py
+python scripts/01_build_counts.py --dry-run
 python scripts/01_build_counts.py
 python scripts/02_build_corpus_plan.py
-python scripts/03_download_corpus.py --limit-subfields 5
-python scripts/04_validate_database.py
-```
-
-Use dry runs before long API work:
-
-```bash
-python scripts/01_build_counts.py --dry-run
-python scripts/03_download_corpus.py --dry-run
+python scripts/03_build_sample_plan.py
+python scripts/04_download_sampled_corpus.py --dry-run
+python scripts/04_download_sampled_corpus.py --limit-subfields 5
+python scripts/05_validate_database.py
 ```
 
 The full corpus download may take time. Test first with `--limit-subfields 5`.
@@ -82,6 +80,7 @@ data/interim/subfield_year_counts.parquet
 data/interim/field_year_counts.parquet
 data/interim/domain_year_counts.parquet
 data/interim/corpus_plan.parquet
+data/interim/sample_plan.parquet
 data/processed/works_text.parquet
 data/interim/validation_report.md
 data/interim/validation_summary.json

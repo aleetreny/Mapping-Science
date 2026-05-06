@@ -26,8 +26,16 @@ GET https://api.openalex.org/works?filter=publication_year:2019,is_retracted:fal
 
 ## Text Corpus Query
 
+Large subfield-year cells use OpenAlex API sampling:
+
 ```text
-GET https://api.openalex.org/works?filter=primary_topic.subfield.id:2613,from_publication_date:2010-01-01,to_publication_date:2019-12-31,has_abstract:true,language:en,type:article|preprint,is_retracted:false,is_paratext:false&select=id,doi,title,display_name,abstract_inverted_index,publication_year,publication_date,type,language,primary_topic,cited_by_count,referenced_works_count,is_retracted,is_paratext
+GET https://api.openalex.org/works?filter=primary_topic.subfield.id:2613,publication_year:2019,has_abstract:true,language:en,type:article|preprint,is_retracted:false,is_paratext:false&sample=300&seed=4674&select=id,doi,title,display_name,abstract_inverted_index,publication_year,publication_date,type,language,primary_topic,cited_by_count,referenced_works_count,is_retracted,is_paratext
+```
+
+Small cells are downloaded in full with cursor pagination:
+
+```text
+GET https://api.openalex.org/works?filter=primary_topic.subfield.id:2613,publication_year:2019,has_abstract:true,language:en,type:article|preprint,is_retracted:false,is_paratext:false&cursor=*&select=id,doi,title,display_name,abstract_inverted_index,publication_year,publication_date,type,language,primary_topic,cited_by_count,referenced_works_count,is_retracted,is_paratext
 ```
 
 The abstract is reconstructed locally from `abstract_inverted_index`.

@@ -1,67 +1,79 @@
 from __future__ import annotations
 
-import math
+import re
+from typing import Any
 
-import pandas as pd
+
+def numeric_part_of_subfield_id(subfield_id: Any) -> int:
+    """Extract a deterministic numeric value from an OpenAlex subfield id."""
+    digits = re.findall(r"\d+", str(subfield_id))
+    if not digits:
+        return 0
+    return int("".join(digits))
 
 
-def stratified_sample_by_year(
-    df: pd.DataFrame,
-    year_col: str,
+def stable_sample_seed(subfield_id: Any, publication_year: int, random_seed: int) -> int:
+    """Build a stable seed for one subfield-year cell."""
+    return int(random_seed) + int(publication_year) + numeric_part_of_subfield_id(subfield_id)
+
+
+def allocate_yearly_sample_sizes(
+    available_by_year: dict[int, int],
     target_total: int,
     target_per_year: int,
-    random_seed: int,
-) -> pd.DataFrame:
-    """Sample deterministically by year, redistributing unused yearly capacity."""
-    if df.empty or target_total <= 0:
-        return df.iloc[0:0].copy()
-
-    if len(df) <= target_total:
-        return df.copy()
-
-    years = sorted(df[year_col].dropna().unique().tolist())
-    counts = df.groupby(year_col).size().to_dict()
-    quotas: dict[int, int] = {}
+) -> dict[int, int]:
+    """Allocate yearly sample sizes with simple redistribution of unused capacity."""
+    years = sorted(available_by_year)
+    allocations: dict[int, int] = {}
 
     for year in years:
-        quotas[year] = min(int(counts.get(year, 0)), target_per_year)
+        available = max(0, int(available_by_year.get(year, 0)))
+        allocations[year] = min(available, target_per_year)
 
-    allocated = sum(quotas.values())
-    remaining = min(target_total, len(df)) - allocated
+    remaining = min(target_total, sum(max(0, int(v)) for v in available_by_year.values()))
+    remaining -= sum(allocations.values())
 
     while remaining > 0:
         years_with_capacity = [
-            year for year in years if quotas[year] < int(counts.get(year, 0))
+            year
+            for year in years
+            if allocations[year] < max(0, int(available_by_year.get(year, 0)))
         ]
         if not years_with_capacity:
             break
 
-        step = max(1, math.floor(remaining / len(years_with_capacity)))
         for year in years_with_capacity:
             if remaining <= 0:
                 break
-            capacity = int(counts.get(year, 0)) - quotas[year]
-            add = min(capacity, step, remaining)
-            quotas[year] += add
-            remaining -= add
+            available = max(0, int(available_by_year.get(year, 0)))
+            capacity = available - allocations[year]
+            if capacity <= 0:
+                continue
+            allocations[year] += 1
+            remaining -= 1
 
-    sampled_parts = []
-    for position, year in enumerate(years):
-        quota = quotas.get(year, 0)
-        if quota <= 0:
-            continue
-        group = df[df[year_col] == year]
-        if len(group) <= quota:
-            sampled_parts.append(group)
-        else:
-            sampled_parts.append(
-                group.sample(n=quota, random_state=random_seed + position)
-            )
+    total_allocated = sum(allocations.values())
+    if total_allocated > target_total:
+        overflow = total_allocated - target_total
+        for year in sorted(years, reverse=True):
+            if overflow <= 0:
+                break
+            remove = min(allocations[year], overflow)
+            allocations[year] -= remove
+            overflow -= remove
 
-    if not sampled_parts:
-        return df.iloc[0:0].copy()
+    return allocations
 
-    sampled = pd.concat(sampled_parts, ignore_index=True)
-    if len(sampled) > target_total:
-        sampled = sampled.sample(n=target_total, random_state=random_seed)
-    return sampled.reset_index(drop=True)
+
+def sampling_method_for_cell(
+    available_valid_works: int,
+    planned_sample_size: int,
+    target_per_year: int,
+    use_openalex_sample_api: bool = True,
+) -> str:
+    """Classify how one subfield-year cell should be downloaded."""
+    if available_valid_works <= 0 or planned_sample_size <= 0:
+        return "skip_no_available_works"
+    if use_openalex_sample_api and available_valid_works >= target_per_year:
+        return "sample_api"
+    return "download_all_available"

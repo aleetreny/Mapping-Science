@@ -61,6 +61,7 @@ Phase 1, active now: data infrastructure.
 - fetch OpenAlex taxonomy
 - build yearly count tables
 - compute growth-ready corpus plan
+- build a subfield-year sample plan
 - download sampled 2010-2019 title and abstract corpus
 - validate the local DuckDB database and Parquet files
 
@@ -100,13 +101,14 @@ When future phases are added, keep them separated from the data pipeline and avo
 python scripts/00_fetch_taxonomy.py
 python scripts/01_build_counts.py
 python scripts/02_build_corpus_plan.py
-python scripts/03_download_corpus.py --limit-subfields 5
-python scripts/04_validate_database.py
+python scripts/03_build_sample_plan.py
+python scripts/04_download_sampled_corpus.py --limit-subfields 5
+python scripts/05_validate_database.py
 ```
 
 Use dry runs before long API work:
 
 ```bash
 python scripts/01_build_counts.py --dry-run
-python scripts/03_download_corpus.py --dry-run
+python scripts/04_download_sampled_corpus.py --dry-run
 ```
