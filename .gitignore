@@ -1,20 +1,39 @@
-__pycache__/
-*.pyc
 .env
 .venv/
-data/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
 
-# Generated research artifacts
-research/results/
+# Data and generated artifacts
+data/raw/**
+data/interim/**
+data/processed/**
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+warehouse/*.duckdb
+warehouse/*.duckdb.wal
+warehouse/*.duckdb.tmp
+*.parquet
+*.csv
+*.jsonl
+*.npy
+*.npz
+*.pkl
+*.joblib
 *.sqlite
 *.sqlite-*
 *.db
-*.npy
-*.npz
-*.parquet
-*.pkl
-*.joblib
+
+# Generated research artifacts
+research/results/
+research/__pycache__/
 
 # Large document/content outputs
 *.pdf
 *.grobid-xml
+logs/
+outputs/
+models/
+embeddings/

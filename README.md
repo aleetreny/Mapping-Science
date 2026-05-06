@@ -1,89 +1,90 @@
-# OpenAlex Statistics and Probability Corpus
+# OpenAlex Subfield Morphology and Scientific Growth Prediction
 
-This repo now includes a Python workflow to:
+The full thesis context is summarized in [research/README.md](research/README.md). This codebase is currently implementing the data collection and database organization phase only.
 
-1. query OpenAlex for a Statistics and Probability corpus
-2. store the metadata in a local SQLite database
-3. optionally download PDFs through OpenAlex's content API
+The project builds a clean OpenAlex database for later testing whether the title and abstract structure of a subfield before 2020 helps predict whether that subfield grows during 2020-2025.
 
-The default corpus profile is tuned for downloadable papers:
+No embeddings, dimensionality reduction, clustering, morphology metrics, regression models, prediction models, maps, dashboards, or ML infrastructure are implemented in this phase.
 
-- `primary_topic.subfield.id:2613`
-- `has_abstract:true`
-- `type:article`
-- `language:en`
-- `has_references:true`
-- `is_retracted:false`
-- `is_paratext:false`
-- `is_oa:true`
-- `has_pdf_url:true`
-- `has_fulltext:true`
-- `has_content.pdf:true`
+## Current Data Design
 
-If you want the broader metadata-only corpus later, switch to `--profile core`.
+- Unit of analysis: OpenAlex subfield
+- Morphology window: 2010-2019
+- Growth window: 2020-2025
+- Excluded year: 2026, because it is the current incomplete year
+- Text source: title plus abstract
+- OpenAlex classification: `primary_topic.subfield.id`
+- Sample target: 3,000 papers per eligible subfield
+- Storage: one DuckDB database at `warehouse/tfm_openalex.duckdb`
 
-## Files
+## Why Subfields, Not Topics
 
-- `openalex_corpus.py`: downloader and SQLite ingester
-- `example_queries.sql`: starter SQL queries for exploring the database
+OpenAlex topics are too numerous for the first stable thesis pipeline. Subfields are broad enough to form meaningful semantic spaces and give roughly a few hundred units, which is more realistic for a master thesis.
 
-## PowerShell usage
+The pipeline therefore uses `primary_topic.subfield.id` as the main classification. It does not use `topics.subfield.id` as the active unit of analysis.
 
-Set your key for the current shell:
+## Why Not Download Everything
 
-```powershell
-$env:OPENALEX_API_KEY="YOUR_KEY_HERE"
+Downloading all OpenAlex works for all subfields would be too large and unnecessary. A capped, stratified sample gives comparable morphology inputs across subfields while keeping storage and later embedding work manageable.
+
+Growth targets are based primarily on article and preprint counts, not only abstract-available works, because growth should measure scientific production rather than abstract availability.
+
+## Repository Layout
+
+```text
+src/        small reusable helpers
+scripts/    numbered pipeline steps
+docs/       data model and query documentation
+research/   whole-project thesis context for future agents
+data/       ignored local data folders
+warehouse/  ignored DuckDB database location
+tests/      basic unit tests
 ```
 
-Build the default downloadable corpus metadata and download 10 PDFs:
+## Setup
 
-```powershell
-python .\openalex_corpus.py --download-pdfs
+```bash
+pip install -r requirements.txt
+cp .env.example .env
 ```
 
-Build the full downloadable corpus metadata without downloading PDFs:
+Set `OPENALEX_EMAIL` in `.env` if possible. `OPENALEX_API_KEY` may be left empty.
 
-```powershell
-python .\openalex_corpus.py --no-download-pdfs
+## Run
+
+```bash
+python scripts/00_fetch_taxonomy.py
+python scripts/01_build_counts.py
+python scripts/02_build_corpus_plan.py
+python scripts/03_download_corpus.py --limit-subfields 5
+python scripts/04_validate_database.py
 ```
 
-Build the broader core corpus using any topic in the subfield:
+Use dry runs before long API work:
 
-```powershell
-python .\openalex_corpus.py --profile core --subfield-scope any --no-download-pdfs
+```bash
+python scripts/01_build_counts.py --dry-run
+python scripts/03_download_corpus.py --dry-run
 ```
 
-Download more PDFs later without changing the metadata profile:
+The full corpus download may take time. Test first with `--limit-subfields 5`.
 
-```powershell
-python .\openalex_corpus.py --download-pdfs --max-pdfs 50
+## Outputs
+
+The organized local outputs are:
+
+```text
+warehouse/tfm_openalex.duckdb
+data/interim/domains.parquet
+data/interim/fields.parquet
+data/interim/subfields.parquet
+data/interim/subfield_year_counts.parquet
+data/interim/field_year_counts.parquet
+data/interim/domain_year_counts.parquet
+data/interim/corpus_plan.parquet
+data/processed/works_text.parquet
+data/interim/validation_report.md
+data/interim/validation_summary.json
 ```
 
-## Output
-
-By default the script writes to:
-
-- database: `data/openalex_stats_probability/corpus.sqlite`
-- PDFs: `data/openalex_stats_probability/pdfs/`
-
-The SQLite database contains:
-
-- `works`
-- `authors`
-- `work_authorships`
-- `topics`
-- `work_topics`
-- `pdf_downloads`
-- `sync_jobs`
-- view: `download_queue`
-
-## Notes
-
-- OpenAlex API docs: <https://developers.openalex.org/>
-- Works reference: <https://developers.openalex.org/api-reference/works/list-works>
-- Works filters: <https://developers.openalex.org/api-reference/works>
-- Content downloads: <https://developers.openalex.org/how-to-use-the-api/get-content>
-- Subfield taxonomy: <https://developers.openalex.org/how-to-use-the-api/api-overview>
-
-- OpenAlex's free API budget is limited. Metadata requests are cheap; PDF content downloads are much more expensive.
-- OpenAlex can serve PDFs, but the original copyright and licensing of each PDF still apply. The script stores the reported OA/license metadata so you can audit later.
+Data files, secrets, and large artifacts are ignored by Git.

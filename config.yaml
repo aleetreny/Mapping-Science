@@ -1,0 +1,42 @@
+openalex:
+  base_url: "https://api.openalex.org"
+  email_env: "OPENALEX_EMAIL"
+  api_key_env: "OPENALEX_API_KEY"
+  timeout_seconds: 30
+  max_retries: 5
+  backoff_seconds: 2
+  max_requests_per_second: 5
+  per_page: 200
+
+windows:
+  morphology_start_year: 2010
+  morphology_end_year: 2019
+  growth_start_year: 2020
+  growth_end_year: 2025
+  exclude_years: [2026]
+
+filters:
+  unit: "subfield"
+  use_primary_topic_subfield_only: true
+  language: "en"
+  work_types: ["article", "preprint"]
+  require_abstract_for_text_corpus: true
+  require_title_for_text_corpus: true
+  min_title_tokens: 5
+  min_abstract_tokens: 80
+  exclude_retracted: true
+  exclude_paratext: true
+
+sampling:
+  target_sample_per_subfield: 3000
+  max_sample_per_subfield: 3000
+  min_valid_texts_per_subfield: 500
+  stratify_by_year: true
+  target_per_year_per_subfield: 300
+  random_seed: 42
+
+storage:
+  duckdb_path: "warehouse/tfm_openalex.duckdb"
+  raw_dir: "data/raw/openalex"
+  interim_dir: "data/interim"
+  processed_dir: "data/processed"
