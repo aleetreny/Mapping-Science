@@ -27,7 +27,7 @@ The pipeline therefore uses `primary_topic.subfield.id` as the main classificati
 
 Downloading all OpenAlex works for all subfields would be too large and unnecessary. A capped, stratified sample gives comparable morphology inputs across subfields while keeping storage and later embedding work manageable.
 
-The corpus download uses OpenAlex's `sample` and `seed` parameters for large subfield-year cells. Small cells are downloaded in full. This avoids downloading all candidates first and then sampling locally.
+The corpus download uses OpenAlex's `sample` and `seed` parameters for large subfield-year cells. Small cells are downloaded in full. The production downloader oversamples raw API results, backfills shortfalls with new seeds, writes a manifest, and can resume after interruption. This avoids downloading all candidates first and then sampling locally.
 
 Growth targets are based primarily on article and preprint counts, not only abstract-available works, because growth should measure scientific production rather than abstract availability.
 
@@ -65,7 +65,7 @@ python scripts/04_download_sampled_corpus.py --limit-subfields 5
 python scripts/05_validate_database.py
 ```
 
-The full corpus download may take time. Test first with `--limit-subfields 5`.
+The full corpus download may take time. Test first with `--limit-subfields 5`, then use the production runbook in [docs/full_download_runbook.md](docs/full_download_runbook.md).
 
 ## Outputs
 
@@ -81,6 +81,7 @@ data/interim/field_year_counts.parquet
 data/interim/domain_year_counts.parquet
 data/interim/corpus_plan.parquet
 data/interim/sample_plan.parquet
+data/interim/download_manifest.parquet
 data/processed/works_text.parquet
 data/interim/validation_report.md
 data/interim/validation_summary.json

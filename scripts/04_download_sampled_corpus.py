@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -16,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.abstracts import reconstruct_abstract
+from src.download_state import cell_key, completed_cell_keys_from_manifest
 from src.openalex import (
     DEFAULT_SELECT_FIELDS,
     OpenAlexClient,
@@ -24,29 +23,33 @@ from src.openalex import (
     build_year_text_query_params,
     short_openalex_id,
 )
+from src.sampling import api_initial_sample_size, stable_backfill_seed
 from src.storage import connect_duckdb, ensure_dirs, load_parquet, save_parquet, write_table
+from src.works import WORKS_TEXT_COLUMNS, validate_and_normalize_work
 
 
-TOKEN_RE = re.compile(r"\b\w+\b")
-
-WORKS_TEXT_COLUMNS = [
-    "work_id",
-    "doi",
-    "title",
-    "abstract",
-    "text_for_embedding",
-    "publication_year",
-    "publication_date",
-    "type",
-    "language",
+MANIFEST_COLUMNS = [
     "subfield_id",
     "subfield_display_name",
     "field_id",
     "field_display_name",
     "domain_id",
     "domain_display_name",
-    "cited_by_count",
-    "referenced_works_count",
+    "publication_year",
+    "sampling_method",
+    "available_valid_works",
+    "planned_sample_size",
+    "api_initial_sample_size",
+    "raw_returned_works",
+    "valid_after_local_filter",
+    "kept_works",
+    "duplicate_or_already_seen",
+    "discarded_local_validation",
+    "shortfall",
+    "backfill_rounds_used",
+    "seeds_used",
+    "status",
+    "error_message",
 ]
 
 
@@ -58,103 +61,94 @@ def load_config() -> dict[str, Any]:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Download OpenAlex sampled text corpus.")
     parser.add_argument("--dry-run", action="store_true", help="Print planned downloads.")
+    parser.add_argument("--resume", action="store_true", help="Resume existing outputs.")
+    parser.add_argument("--force", action="store_true", help="Ignore existing outputs.")
     parser.add_argument(
         "--limit-subfields",
         type=int,
         default=None,
         help="Limit unique subfields for testing.",
     )
+    parser.add_argument(
+        "--only-subfield",
+        default=None,
+        help="Download one subfield id for debugging.",
+    )
+    parser.add_argument(
+        "--max-backfill-rounds",
+        type=int,
+        default=None,
+        help="Override configured max backfill rounds.",
+    )
     return parser.parse_args()
 
 
-def token_count(text: str | None) -> int:
-    if not text:
-        return 0
-    return len(TOKEN_RE.findall(text))
-
-
-def topic_ref(topic: dict[str, Any], name: str) -> tuple[str | None, str | None]:
-    entity = topic.get(name)
-    if not isinstance(entity, dict):
-        return None, None
-    return short_openalex_id(entity.get("id")), entity.get("display_name")
-
-
 def selected_sample_plan(
-    sample_plan: pd.DataFrame, limit_subfields: int | None
+    sample_plan: pd.DataFrame,
+    limit_subfields: int | None,
+    only_subfield: str | None,
 ) -> pd.DataFrame:
     selected = sample_plan.copy()
     selected["subfield_id"] = selected["subfield_id"].astype(str)
     selected = selected.sort_values(["subfield_id", "publication_year"]).reset_index(
         drop=True
     )
+    if only_subfield is not None:
+        return selected[selected["subfield_id"] == str(only_subfield)].reset_index(
+            drop=True
+        )
     if limit_subfields is None:
         return selected
     keep_ids = selected["subfield_id"].drop_duplicates().head(limit_subfields)
     return selected[selected["subfield_id"].isin(set(keep_ids))].reset_index(drop=True)
 
 
-def validate_and_normalize_work(
-    work: dict[str, Any],
+def ensure_sample_plan_columns(sample_plan: pd.DataFrame, config: dict[str, Any]) -> pd.DataFrame:
+    """Support older sample_plan files by deriving new production columns."""
+    result = sample_plan.copy()
+    sampling = config["sampling"]
+    oversample_factor = float(sampling.get("oversample_factor", 1.0))
+    if "api_initial_sample_size" not in result.columns:
+        result["api_initial_sample_size"] = result.apply(
+            lambda row: api_initial_sample_size(
+                available_valid_works=int(row["available_valid_works"]),
+                planned_sample_size=int(row["planned_sample_size"]),
+                sampling_method=str(row["sampling_method"]),
+                oversample_factor=oversample_factor,
+            ),
+            axis=1,
+        )
+    if "expected_shortfall_risk" not in result.columns:
+        result["expected_shortfall_risk"] = (
+            (result["planned_sample_size"] > 0)
+            & (result["api_initial_sample_size"] == result["planned_sample_size"])
+        )
+    return result
+
+
+def sample_request_pages(sample_size: int, per_page: int) -> int:
+    if sample_size <= 0:
+        return 0
+    return math.ceil(sample_size / min(sample_size, per_page, 200))
+
+
+def estimate_initial_requests(sample_plan: pd.DataFrame, per_page: int) -> int:
+    planned = sample_plan[sample_plan["planned_sample_size"] > 0]
+    sample_rows = planned[planned["sampling_method"] == "sample_api"]
+    all_rows = planned[planned["sampling_method"] == "download_all_available"]
+    return int(
+        sum(sample_request_pages(int(size), per_page) for size in sample_rows["api_initial_sample_size"])
+    ) + int(
+        sum(math.ceil(int(size) / per_page) for size in all_rows["planned_sample_size"])
+    )
+
+
+def query_params_for_row(
+    row: pd.Series,
     config: dict[str, Any],
-    expected_subfield_id: str,
-    expected_year: int,
-) -> dict[str, Any] | None:
-    filters = config["filters"]
-    title = work.get("title") or work.get("display_name")
-    abstract = reconstruct_abstract(work.get("abstract_inverted_index"))
-    publication_year = work.get("publication_year")
-    work_type = work.get("type")
-    language = work.get("language")
-    primary_topic = work.get("primary_topic") or {}
-
-    if publication_year != int(expected_year):
-        return None
-    if language != filters["language"]:
-        return None
-    if work_type not in set(filters["work_types"]):
-        return None
-    if bool(work.get("is_retracted")):
-        return None
-    if bool(work.get("is_paratext")):
-        return None
-    if token_count(title) < int(filters["min_title_tokens"]):
-        return None
-    if token_count(abstract) < int(filters["min_abstract_tokens"]):
-        return None
-
-    subfield_id, subfield_name = topic_ref(primary_topic, "subfield")
-    field_id, field_name = topic_ref(primary_topic, "field")
-    domain_id, domain_name = topic_ref(primary_topic, "domain")
-    if not subfield_id or subfield_id != str(expected_subfield_id):
-        return None
-
-    work_id = short_openalex_id(work.get("id"))
-    if not work_id:
-        return None
-
-    return {
-        "work_id": work_id,
-        "doi": work.get("doi"),
-        "title": title,
-        "abstract": abstract,
-        "text_for_embedding": f"{title}\n\n{abstract}",
-        "publication_year": publication_year,
-        "publication_date": work.get("publication_date"),
-        "type": work_type,
-        "language": language,
-        "subfield_id": subfield_id,
-        "subfield_display_name": subfield_name,
-        "field_id": field_id,
-        "field_display_name": field_name,
-        "domain_id": domain_id,
-        "domain_display_name": domain_name,
-        "cited_by_count": work.get("cited_by_count"),
-        "referenced_works_count": work.get("referenced_works_count"),
-    }
-
-
-def query_params_for_row(row: pd.Series, config: dict[str, Any]) -> dict[str, Any]:
+    sample_size: int | None = None,
+    seed: int | None = None,
+) -> dict[str, Any]:
     work_types = config["filters"]["work_types"]
     language = config["filters"]["language"]
     per_page = int(config["openalex"].get("per_page", 200))
@@ -163,8 +157,8 @@ def query_params_for_row(row: pd.Series, config: dict[str, Any]) -> dict[str, An
         return build_sampled_text_query_params(
             subfield_id=str(row["subfield_id"]),
             year=int(row["publication_year"]),
-            sample_size=int(row["planned_sample_size"]),
-            seed=int(row["seed"]),
+            sample_size=int(sample_size or row["api_initial_sample_size"]),
+            seed=int(seed if seed is not None else row["seed"]),
             work_types=work_types,
             language=language,
             select_fields=DEFAULT_SELECT_FIELDS,
@@ -180,30 +174,36 @@ def query_params_for_row(row: pd.Series, config: dict[str, Any]) -> dict[str, An
     )
 
 
-def print_dry_run(sample_plan: pd.DataFrame, config: dict[str, Any]) -> None:
-    planned = sample_plan[sample_plan["planned_sample_size"] > 0].copy()
+def print_dry_run(sample_plan: pd.DataFrame, config: dict[str, Any], args: argparse.Namespace) -> None:
     per_page = int(config["openalex"].get("per_page", 200))
-    sample_rows = planned[planned["sampling_method"] == "sample_api"]
-    all_rows = planned[planned["sampling_method"] == "download_all_available"]
-    estimated_requests = int(
-        sum(
-            math.ceil(size / min(size, per_page))
-            for size in sample_rows["planned_sample_size"]
-            if size > 0
-        )
-    ) + int(
-        sum(math.ceil(size / per_page) for size in all_rows["planned_sample_size"])
-    )
+    planned = sample_plan[sample_plan["planned_sample_size"] > 0]
+    sampling = config["sampling"]
 
     print(f"subfields selected: {sample_plan['subfield_id'].nunique()}")
-    print(f"planned works: {int(sample_plan['planned_sample_size'].sum())}")
-    print(f"estimated API requests: {estimated_requests}")
-    print("planned works by sampling method:")
+    print(f"planned valid works: {int(sample_plan['planned_sample_size'].sum())}")
+    print(f"initial raw API sample works: {int(sample_plan['api_initial_sample_size'].sum())}")
+    print(f"estimated initial API requests: {estimate_initial_requests(sample_plan, per_page)}")
+    print(f"oversample factor: {sampling.get('oversample_factor', 1.0)}")
+    print(
+        "max backfill rounds: "
+        f"{args.max_backfill_rounds if args.max_backfill_rounds is not None else sampling.get('max_backfill_rounds', 0)}"
+    )
+    print("planned valid works by sampling method:")
     if planned.empty:
         print("(none)")
     else:
         print(
             planned.groupby("sampling_method")["planned_sample_size"]
+            .sum()
+            .astype(int)
+            .to_string()
+        )
+    print("initial raw works by sampling method:")
+    if planned.empty:
+        print("(none)")
+    else:
+        print(
+            planned.groupby("sampling_method")["api_initial_sample_size"]
             .sum()
             .astype(int)
             .to_string()
@@ -216,57 +216,433 @@ def print_dry_run(sample_plan: pd.DataFrame, config: dict[str, Any]) -> None:
             print(json.dumps(query_params_for_row(row, config), indent=2))
 
 
-def fetch_works_for_row(
+def empty_works_df() -> pd.DataFrame:
+    return pd.DataFrame(columns=WORKS_TEXT_COLUMNS)
+
+
+def empty_manifest_df() -> pd.DataFrame:
+    return pd.DataFrame(columns=MANIFEST_COLUMNS)
+
+
+def load_existing_outputs(
+    processed_dir: Path,
+    interim_dir: Path,
+    resume_enabled: bool,
+    force: bool,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    if force or not resume_enabled:
+        return empty_works_df(), empty_manifest_df()
+
+    works_path = processed_dir / "works_text.parquet"
+    manifest_path = interim_dir / "download_manifest.parquet"
+    works = load_parquet(works_path) if works_path.exists() else empty_works_df()
+    manifest = load_parquet(manifest_path) if manifest_path.exists() else empty_manifest_df()
+    return works, manifest
+
+
+def count_maps(works: pd.DataFrame) -> tuple[dict[tuple[str, int], int], dict[str, int]]:
+    if works.empty:
+        return {}, {}
+    cell_counts = {
+        cell_key(row.subfield_id, row.publication_year): int(row.count)
+        for row in works.groupby(["subfield_id", "publication_year"])
+        .size()
+        .reset_index(name="count")
+        .itertuples(index=False)
+    }
+    subfield_counts = {
+        str(row.subfield_id): int(row.count)
+        for row in works.groupby("subfield_id")
+        .size()
+        .reset_index(name="count")
+        .itertuples(index=False)
+    }
+    return cell_counts, subfield_counts
+
+
+def cap_works_per_subfield(works: pd.DataFrame, max_per_subfield: int) -> pd.DataFrame:
+    if works.empty or "subfield_id" not in works.columns:
+        return works
+    ordered = works.sort_values(
+        ["subfield_id", "publication_year", "work_id"], kind="mergesort"
+    ).reset_index(drop=True)
+    keep = ordered.groupby("subfield_id").cumcount() < int(max_per_subfield)
+    return ordered.loc[keep, WORKS_TEXT_COLUMNS].reset_index(drop=True)
+
+
+def current_works_dataframe(base_works: pd.DataFrame, new_records: list[dict[str, Any]]) -> pd.DataFrame:
+    if not new_records:
+        return base_works.copy()
+    new_df = pd.DataFrame(new_records, columns=WORKS_TEXT_COLUMNS)
+    if base_works.empty:
+        return new_df
+    return pd.concat([base_works, new_df], ignore_index=True)
+
+
+def manifest_dict_from_df(manifest: pd.DataFrame) -> dict[tuple[str, int], dict[str, Any]]:
+    records = {}
+    if manifest.empty:
+        return records
+    for row in manifest.to_dict(orient="records"):
+        records[cell_key(row["subfield_id"], row["publication_year"])] = row
+    return records
+
+
+def make_manifest_record(
+    row: pd.Series,
+    raw_returned: int,
+    valid_after_local_filter: int,
+    kept_works: int,
+    duplicate_or_already_seen: int,
+    discarded_local_validation: int,
+    backfill_rounds_used: int,
+    seeds_used: list[int],
+    status: str,
+    error_message: str = "",
+) -> dict[str, Any]:
+    planned = int(row["planned_sample_size"])
+    return {
+        "subfield_id": str(row["subfield_id"]),
+        "subfield_display_name": row.get("subfield_display_name"),
+        "field_id": row.get("field_id"),
+        "field_display_name": row.get("field_display_name"),
+        "domain_id": row.get("domain_id"),
+        "domain_display_name": row.get("domain_display_name"),
+        "publication_year": int(row["publication_year"]),
+        "sampling_method": row.get("sampling_method"),
+        "available_valid_works": int(row["available_valid_works"]),
+        "planned_sample_size": planned,
+        "api_initial_sample_size": int(row.get("api_initial_sample_size", planned)),
+        "raw_returned_works": int(raw_returned),
+        "valid_after_local_filter": int(valid_after_local_filter),
+        "kept_works": int(kept_works),
+        "duplicate_or_already_seen": int(duplicate_or_already_seen),
+        "discarded_local_validation": int(discarded_local_validation),
+        "shortfall": max(0, planned - int(kept_works)),
+        "backfill_rounds_used": int(backfill_rounds_used),
+        "seeds_used": ",".join(str(seed) for seed in seeds_used),
+        "status": status,
+        "error_message": error_message,
+    }
+
+
+def update_manifest_kept_counts(
+    manifest_records: dict[tuple[str, int], dict[str, Any]],
+    works: pd.DataFrame,
+) -> None:
+    cell_counts, _ = count_maps(works)
+    for key, record in manifest_records.items():
+        kept = int(cell_counts.get(key, 0))
+        planned = int(record.get("planned_sample_size", 0))
+        record["kept_works"] = kept
+        record["shortfall"] = max(0, planned - kept)
+        if record.get("status") == "completed_target_met" and kept < planned:
+            record["status"] = "completed_shortfall"
+
+
+def write_outputs(
+    base_works: pd.DataFrame,
+    new_records: list[dict[str, Any]],
+    manifest_records: dict[tuple[str, int], dict[str, Any]],
+    config: dict[str, Any],
+) -> pd.DataFrame:
+    processed_dir = ROOT / config["storage"]["processed_dir"]
+    interim_dir = ROOT / config["storage"]["interim_dir"]
+    duckdb_path = ROOT / config["storage"]["duckdb_path"]
+    max_per_subfield = int(config["sampling"]["max_sample_per_subfield"])
+
+    works = current_works_dataframe(base_works, new_records)
+    works = works.drop_duplicates("work_id", keep="first").reset_index(drop=True)
+    works = cap_works_per_subfield(works, max_per_subfield)
+    update_manifest_kept_counts(manifest_records, works)
+
+    manifest = pd.DataFrame(
+        list(manifest_records.values()), columns=MANIFEST_COLUMNS
+    ).sort_values(["subfield_id", "publication_year"])
+
+    save_parquet(works, processed_dir / "works_text.parquet")
+    save_parquet(manifest, interim_dir / "download_manifest.parquet")
+
+    con = connect_duckdb(duckdb_path)
+    try:
+        write_table(con, "works_text", works)
+        write_table(con, "download_manifest", manifest)
+    finally:
+        con.close()
+
+    return works
+
+
+def process_raw_works(
+    raw_works: list[dict[str, Any]],
+    row: pd.Series,
+    config: dict[str, Any],
+    seen_work_ids: set[str],
+    cell_counts: dict[tuple[str, int], int],
+    subfield_counts: dict[str, int],
+    max_per_subfield: int,
+) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    subfield_id = str(row["subfield_id"])
+    year = int(row["publication_year"])
+    key = cell_key(subfield_id, year)
+    target_keep = int(row["planned_sample_size"])
+
+    accepted: list[dict[str, Any]] = []
+    metrics = {
+        "raw_returned": len(raw_works),
+        "valid_after_local_filter": 0,
+        "duplicate_or_already_seen": 0,
+        "discarded_local_validation": 0,
+    }
+
+    for work in raw_works:
+        normalized = validate_and_normalize_work(
+            work,
+            config=config,
+            expected_subfield_id=subfield_id,
+            expected_year=year,
+        )
+        if normalized is None:
+            metrics["discarded_local_validation"] += 1
+            continue
+
+        metrics["valid_after_local_filter"] += 1
+        work_id = normalized["work_id"]
+        if work_id in seen_work_ids:
+            metrics["duplicate_or_already_seen"] += 1
+            continue
+        if cell_counts.get(key, 0) >= target_keep:
+            continue
+        if subfield_counts.get(subfield_id, 0) >= max_per_subfield:
+            continue
+
+        seen_work_ids.add(work_id)
+        cell_counts[key] = cell_counts.get(key, 0) + 1
+        subfield_counts[subfield_id] = subfield_counts.get(subfield_id, 0) + 1
+        accepted.append(normalized)
+
+    return accepted, metrics
+
+
+def fetch_sampled_raw_works(
+    client: OpenAlexClient,
+    row: pd.Series,
+    config: dict[str, Any],
+    sample_size: int,
+    seed: int,
+) -> list[dict[str, Any]]:
+    if sample_size <= 0:
+        return []
+
+    params = query_params_for_row(row, config, sample_size=sample_size, seed=seed)
+    raw_works: list[dict[str, Any]] = []
+    page = 1
+    while len(raw_works) < sample_size:
+        page_params = dict(params)
+        page_params["page"] = page
+        data = client.get_json("works", page_params)
+        works = data.get("results") or []
+        if not works:
+            break
+        raw_works.extend(works)
+        if len(works) < int(params.get("per-page", 200)):
+            break
+        page += 1
+    return raw_works[:sample_size]
+
+
+def fetch_all_available_raw_works(
     client: OpenAlexClient,
     row: pd.Series,
     config: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    planned_sample_size = int(row["planned_sample_size"])
-    if planned_sample_size <= 0:
+    planned = int(row["planned_sample_size"])
+    if planned <= 0:
         return []
-
     params = query_params_for_row(row, config)
-    records = []
+    raw_works = []
+    for work in client.paginate("works", params):
+        raw_works.append(work)
+        if len(raw_works) >= planned:
+            break
+    return raw_works
 
-    if row["sampling_method"] == "sample_api":
-        page = 1
-        while len(records) < planned_sample_size:
-            page_params = dict(params)
-            page_params["page"] = page
-            data = client.get_json("works", page_params)
-            works = data.get("results") or []
-            if not works:
-                break
-            for work in works:
-                normalized = validate_and_normalize_work(
-                    work,
-                    config=config,
-                    expected_subfield_id=str(row["subfield_id"]),
-                    expected_year=int(row["publication_year"]),
-                )
-                if normalized is not None:
-                    records.append(normalized)
-                if len(records) >= planned_sample_size:
-                    break
-            page += 1
-        return records
 
-    if row["sampling_method"] == "download_all_available":
-        fetched = 0
-        for work in client.paginate("works", params):
-            fetched += 1
-            normalized = validate_and_normalize_work(
-                work,
-                config=config,
-                expected_subfield_id=str(row["subfield_id"]),
-                expected_year=int(row["publication_year"]),
+def process_sample_plan_row(
+    client: OpenAlexClient,
+    row: pd.Series,
+    config: dict[str, Any],
+    seen_work_ids: set[str],
+    cell_counts: dict[tuple[str, int], int],
+    subfield_counts: dict[str, int],
+    new_records: list[dict[str, Any]],
+    max_backfill_rounds: int,
+) -> dict[str, Any]:
+    sampling = config["sampling"]
+    oversample_factor = float(sampling.get("oversample_factor", 1.0))
+    backfill_seed_step = int(sampling.get("backfill_seed_step", 100000))
+    max_per_subfield = int(sampling["max_sample_per_subfield"])
+
+    subfield_id = str(row["subfield_id"])
+    year = int(row["publication_year"])
+    key = cell_key(subfield_id, year)
+    target_keep = int(row["planned_sample_size"])
+    available = int(row["available_valid_works"])
+
+    raw_returned = 0
+    valid_after_local_filter = 0
+    duplicate_or_already_seen = 0
+    discarded_local_validation = 0
+    backfill_rounds_used = 0
+    seeds_used: list[int] = []
+    raw_ids_seen: set[str] = set()
+
+    if target_keep <= 0 or available <= 0:
+        return make_manifest_record(
+            row,
+            raw_returned=0,
+            valid_after_local_filter=0,
+            kept_works=cell_counts.get(key, 0),
+            duplicate_or_already_seen=0,
+            discarded_local_validation=0,
+            backfill_rounds_used=0,
+            seeds_used=[],
+            status="skipped_no_available_works",
+        )
+
+    if cell_counts.get(key, 0) >= target_keep:
+        return make_manifest_record(
+            row,
+            raw_returned=0,
+            valid_after_local_filter=0,
+            kept_works=cell_counts.get(key, 0),
+            duplicate_or_already_seen=0,
+            discarded_local_validation=0,
+            backfill_rounds_used=0,
+            seeds_used=[],
+            status="completed_target_met",
+        )
+
+    try:
+        if row["sampling_method"] == "download_all_available":
+            raw_works = fetch_all_available_raw_works(client, row, config)
+            raw_ids_seen.update(
+                work_id
+                for work_id in (short_openalex_id(work.get("id")) for work in raw_works)
+                if work_id
             )
-            if normalized is not None:
-                records.append(normalized)
-            if fetched >= planned_sample_size:
-                break
+            accepted, metrics = process_raw_works(
+                raw_works,
+                row,
+                config,
+                seen_work_ids,
+                cell_counts,
+                subfield_counts,
+                max_per_subfield,
+            )
+            new_records.extend(accepted)
+            raw_returned += metrics["raw_returned"]
+            valid_after_local_filter += metrics["valid_after_local_filter"]
+            duplicate_or_already_seen += metrics["duplicate_or_already_seen"]
+            discarded_local_validation += metrics["discarded_local_validation"]
+        elif row["sampling_method"] == "sample_api":
+            current_round = 0
+            while current_round <= max_backfill_rounds:
+                current_count = cell_counts.get(key, 0)
+                shortfall = target_keep - current_count
+                if shortfall <= 0:
+                    break
+                if subfield_counts.get(subfield_id, 0) >= max_per_subfield:
+                    break
+                if len(raw_ids_seen) >= available:
+                    break
 
-    return records
+                if current_round == 0:
+                    sample_size = int(row["api_initial_sample_size"])
+                    seed = int(row["seed"])
+                else:
+                    sample_size = min(
+                        available,
+                        math.ceil(shortfall * oversample_factor * 1.5),
+                        10000,
+                    )
+                    seed = stable_backfill_seed(
+                        int(row["seed"]), current_round, backfill_seed_step
+                    )
+                    backfill_rounds_used = current_round
+
+                seeds_used.append(seed)
+                raw_works = fetch_sampled_raw_works(
+                    client, row, config, sample_size=sample_size, seed=seed
+                )
+                before_count = cell_counts.get(key, 0)
+                raw_ids_seen.update(
+                    work_id
+                    for work_id in (short_openalex_id(work.get("id")) for work in raw_works)
+                    if work_id
+                )
+                accepted, metrics = process_raw_works(
+                    raw_works,
+                    row,
+                    config,
+                    seen_work_ids,
+                    cell_counts,
+                    subfield_counts,
+                    max_per_subfield,
+                )
+                new_records.extend(accepted)
+                raw_returned += metrics["raw_returned"]
+                valid_after_local_filter += metrics["valid_after_local_filter"]
+                duplicate_or_already_seen += metrics["duplicate_or_already_seen"]
+                discarded_local_validation += metrics["discarded_local_validation"]
+
+                if cell_counts.get(key, 0) >= target_keep:
+                    break
+                if cell_counts.get(key, 0) == before_count:
+                    break
+                if not raw_works:
+                    break
+                current_round += 1
+        else:
+            return make_manifest_record(
+                row,
+                raw_returned=0,
+                valid_after_local_filter=0,
+                kept_works=cell_counts.get(key, 0),
+                duplicate_or_already_seen=0,
+                discarded_local_validation=0,
+                backfill_rounds_used=0,
+                seeds_used=[],
+                status="failed",
+                error_message=f"Unknown sampling method: {row['sampling_method']}",
+            )
+    except Exception as exc:
+        return make_manifest_record(
+            row,
+            raw_returned=raw_returned,
+            valid_after_local_filter=valid_after_local_filter,
+            kept_works=cell_counts.get(key, 0),
+            duplicate_or_already_seen=duplicate_or_already_seen,
+            discarded_local_validation=discarded_local_validation,
+            backfill_rounds_used=backfill_rounds_used,
+            seeds_used=seeds_used,
+            status="failed",
+            error_message=str(exc),
+        )
+
+    kept = cell_counts.get(key, 0)
+    status = "completed_target_met" if kept >= target_keep else "completed_shortfall"
+    return make_manifest_record(
+        row,
+        raw_returned=raw_returned,
+        valid_after_local_filter=valid_after_local_filter,
+        kept_works=kept,
+        duplicate_or_already_seen=duplicate_or_already_seen,
+        discarded_local_validation=discarded_local_validation,
+        backfill_rounds_used=backfill_rounds_used,
+        seeds_used=seeds_used,
+        status=status,
+    )
 
 
 def main() -> None:
@@ -276,48 +652,84 @@ def main() -> None:
 
     interim_dir = ROOT / config["storage"]["interim_dir"]
     processed_dir = ROOT / config["storage"]["processed_dir"]
-    duckdb_path = ROOT / config["storage"]["duckdb_path"]
     sample_plan_path = interim_dir / "sample_plan.parquet"
     if not sample_plan_path.exists():
         raise FileNotFoundError(
             "Missing data/interim/sample_plan.parquet. Run scripts/03_build_sample_plan.py first."
         )
 
-    sample_plan = load_parquet(sample_plan_path)
-    sample_plan = selected_sample_plan(sample_plan, args.limit_subfields)
+    sample_plan = ensure_sample_plan_columns(load_parquet(sample_plan_path), config)
+    sample_plan = selected_sample_plan(
+        sample_plan, args.limit_subfields, args.only_subfield
+    )
 
     if args.dry_run:
-        print_dry_run(sample_plan, config)
+        print_dry_run(sample_plan, config, args)
         return
 
+    sampling = config["sampling"]
+    resume_enabled = bool(sampling.get("resume_existing_download", True)) or args.resume
+    if args.force:
+        resume_enabled = False
+    max_backfill_rounds = (
+        int(args.max_backfill_rounds)
+        if args.max_backfill_rounds is not None
+        else int(sampling.get("max_backfill_rounds", 0))
+    )
+    write_every_n_subfields = int(sampling.get("write_every_n_subfields", 5))
+
+    base_works, existing_manifest = load_existing_outputs(
+        processed_dir=processed_dir,
+        interim_dir=interim_dir,
+        resume_enabled=resume_enabled,
+        force=args.force,
+    )
+    base_works = cap_works_per_subfield(
+        base_works.drop_duplicates("work_id", keep="first").reset_index(drop=True),
+        int(sampling["max_sample_per_subfield"]),
+    )
+    manifest_records = manifest_dict_from_df(existing_manifest)
+    completed_keys = completed_cell_keys_from_manifest(existing_manifest) if resume_enabled else set()
+    cell_counts, subfield_counts = count_maps(base_works)
+    seen_work_ids = set(base_works["work_id"].astype(str).tolist()) if not base_works.empty else set()
+    new_records: list[dict[str, Any]] = []
+
     client = OpenAlexClient.from_config(config)
-    records = []
-    planned_rows = sample_plan[sample_plan["planned_sample_size"] > 0]
+    subfield_ids = sample_plan["subfield_id"].drop_duplicates().tolist()
 
-    for _, row in tqdm(
-        planned_rows.iterrows(), total=len(planned_rows), desc="Downloading sample plan"
-    ):
-        records.extend(fetch_works_for_row(client, row, config))
+    for index, subfield_id in enumerate(tqdm(subfield_ids, desc="Downloading subfields"), start=1):
+        subfield_rows = sample_plan[sample_plan["subfield_id"] == subfield_id]
+        for _, row in subfield_rows.iterrows():
+            key = cell_key(row["subfield_id"], row["publication_year"])
+            if resume_enabled and key in completed_keys:
+                continue
+            record = process_sample_plan_row(
+                client=client,
+                row=row,
+                config=config,
+                seen_work_ids=seen_work_ids,
+                cell_counts=cell_counts,
+                subfield_counts=subfield_counts,
+                new_records=new_records,
+                max_backfill_rounds=max_backfill_rounds,
+            )
+            manifest_records[key] = record
 
-    if records:
-        works_text = pd.DataFrame(records, columns=WORKS_TEXT_COLUMNS)
-    else:
-        works_text = pd.DataFrame(columns=WORKS_TEXT_COLUMNS)
+        if write_every_n_subfields > 0 and index % write_every_n_subfields == 0:
+            base_works = write_outputs(base_works, new_records, manifest_records, config)
+            new_records = []
+            cell_counts, subfield_counts = count_maps(base_works)
+            seen_work_ids = set(base_works["work_id"].astype(str).tolist())
 
-    works_text = works_text.drop_duplicates("work_id", keep="first").reset_index(drop=True)
-    save_parquet(works_text, processed_dir / "works_text.parquet")
-
-    con = connect_duckdb(duckdb_path)
-    try:
-        write_table(con, "works_text", works_text)
-    finally:
-        con.close()
-
+    final_works = write_outputs(base_works, new_records, manifest_records, config)
     summary = {
         "selected_subfields": int(sample_plan["subfield_id"].nunique()),
         "planned_works": int(sample_plan["planned_sample_size"].sum()),
-        "downloaded_works": len(works_text),
+        "downloaded_works": len(final_works),
+        "resume": resume_enabled,
+        "force": args.force,
         "limit_subfields": args.limit_subfields,
+        "only_subfield": args.only_subfield,
     }
     print(json.dumps(summary, indent=2))
 

@@ -62,7 +62,7 @@ Phase 1, active now: data infrastructure.
 - build yearly count tables
 - compute growth-ready corpus plan
 - build a subfield-year sample plan
-- download sampled 2010-2019 title and abstract corpus
+- download sampled 2010-2019 title and abstract corpus with oversampling, backfill, resume, and a manifest
 - validate the local DuckDB database and Parquet files
 
 Phase 2, later: semantic representation.

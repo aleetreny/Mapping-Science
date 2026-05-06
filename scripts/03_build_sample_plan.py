@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
 
 from src.sampling import (
     allocate_yearly_sample_sizes,
+    api_initial_sample_size,
     sampling_method_for_cell,
     stable_sample_seed,
 )
@@ -61,6 +62,7 @@ def build_sample_plan(
     target_per_year = int(sampling["target_per_year_per_subfield"])
     random_seed = int(sampling["random_seed"])
     use_sample_api = bool(sampling.get("use_openalex_sample_api", True))
+    oversample_factor = float(sampling.get("oversample_factor", 1.0))
 
     eligible = corpus_plan[corpus_plan["eligible_for_text_corpus"]].copy()
     counts = subfield_year_counts.copy()
@@ -95,6 +97,12 @@ def build_sample_plan(
                 target_per_year=target_per_year,
                 use_openalex_sample_api=use_sample_api,
             )
+            initial_sample_size = api_initial_sample_size(
+                available_valid_works=available,
+                planned_sample_size=planned,
+                sampling_method=method,
+                oversample_factor=oversample_factor,
+            )
             rows.append(
                 {
                     "subfield_id": subfield_id,
@@ -108,6 +116,10 @@ def build_sample_plan(
                     "planned_sample_size": planned,
                     "sampling_method": method,
                     "seed": stable_sample_seed(subfield_id, year, random_seed),
+                    "api_initial_sample_size": initial_sample_size,
+                    "expected_shortfall_risk": bool(
+                        planned > 0 and initial_sample_size == planned
+                    ),
                 }
             )
 
@@ -123,6 +135,8 @@ def build_sample_plan(
         "planned_sample_size",
         "sampling_method",
         "seed",
+        "api_initial_sample_size",
+        "expected_shortfall_risk",
     ]
     return pd.DataFrame(rows, columns=columns)
 
@@ -147,7 +161,7 @@ def print_summary(sample_plan: pd.DataFrame, per_page: int) -> None:
     estimated_requests = int(
         sum(
             math.ceil(size / min(size, per_page))
-            for size in sample_rows["planned_sample_size"]
+            for size in sample_rows["api_initial_sample_size"]
             if size > 0
         )
     ) + int(
@@ -167,6 +181,17 @@ def print_summary(sample_plan: pd.DataFrame, per_page: int) -> None:
         .sum()
         .astype(int)
         .to_string()
+    )
+    print("initial raw API requests by sampling method:")
+    print(
+        sample_plan.groupby("sampling_method")["api_initial_sample_size"]
+        .sum()
+        .astype(int)
+        .to_string()
+    )
+    print(
+        "cells with expected shortfall risk: "
+        f"{int(sample_plan['expected_shortfall_risk'].sum())}"
     )
 
 

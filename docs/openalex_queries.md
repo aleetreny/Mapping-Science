@@ -26,11 +26,13 @@ GET https://api.openalex.org/works?filter=publication_year:2019,is_retracted:fal
 
 ## Text Corpus Query
 
-Large subfield-year cells use OpenAlex API sampling:
+Large subfield-year cells use OpenAlex API sampling. The requested sample can be larger than the planned kept count because the downloader oversamples raw results before local validation:
 
 ```text
-GET https://api.openalex.org/works?filter=primary_topic.subfield.id:2613,publication_year:2019,has_abstract:true,language:en,type:article|preprint,is_retracted:false,is_paratext:false&sample=300&seed=4674&select=id,doi,title,display_name,abstract_inverted_index,publication_year,publication_date,type,language,primary_topic,cited_by_count,referenced_works_count,is_retracted,is_paratext
+GET https://api.openalex.org/works?filter=primary_topic.subfield.id:2613,publication_year:2019,has_abstract:true,language:en,type:article|preprint,is_retracted:false,is_paratext:false&sample=525&seed=4674&select=id,doi,title,display_name,abstract_inverted_index,publication_year,publication_date,type,language,primary_topic,cited_by_count,referenced_works_count,is_retracted,is_paratext
 ```
+
+If too few valid works remain after local validation, the downloader repeats sampled requests with deterministic backfill seeds.
 
 Small cells are downloaded in full with cursor pagination:
 

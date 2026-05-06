@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import re
 from typing import Any
 
@@ -15,6 +16,31 @@ def numeric_part_of_subfield_id(subfield_id: Any) -> int:
 def stable_sample_seed(subfield_id: Any, publication_year: int, random_seed: int) -> int:
     """Build a stable seed for one subfield-year cell."""
     return int(random_seed) + int(publication_year) + numeric_part_of_subfield_id(subfield_id)
+
+
+def stable_backfill_seed(base_seed: int, backfill_round: int, backfill_seed_step: int) -> int:
+    """Build a deterministic seed for a backfill round."""
+    return int(base_seed) + int(backfill_round) * int(backfill_seed_step)
+
+
+def api_initial_sample_size(
+    available_valid_works: int,
+    planned_sample_size: int,
+    sampling_method: str,
+    oversample_factor: float,
+    openalex_sample_limit: int = 10000,
+) -> int:
+    """Compute the initial raw API sample size for one sample-plan row."""
+    available = max(0, int(available_valid_works))
+    planned = max(0, int(planned_sample_size))
+    if planned <= 0 or available <= 0:
+        return 0
+    if sampling_method == "download_all_available":
+        return min(available, planned)
+    if sampling_method == "sample_api":
+        requested = math.ceil(planned * float(oversample_factor))
+        return min(available, requested, int(openalex_sample_limit))
+    return 0
 
 
 def allocate_yearly_sample_sizes(

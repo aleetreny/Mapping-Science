@@ -35,6 +35,12 @@ sampling:
   target_per_year_per_subfield: 300
   random_seed: 42
   use_openalex_sample_api: true
+  oversample_factor: 1.75
+  max_backfill_rounds: 4
+  backfill_seed_step: 100000
+  write_every_n_subfields: 5
+  resume_existing_download: true
+  save_download_manifest: true
 
 storage:
   duckdb_path: "warehouse/tfm_openalex.duckdb"

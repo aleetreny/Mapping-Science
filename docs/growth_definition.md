@@ -28,6 +28,6 @@ The same calculation is also made relative to the domain.
 
 The morphology corpus uses title plus abstract because those fields are widely available through OpenAlex and give a compact representation of a paper's semantic content.
 
-The corpus is planned at the subfield-year level. Large cells are sampled directly through the OpenAlex API with deterministic seeds, while small cells are downloaded in full. This keeps the corpus comparable without downloading every candidate work first.
+The corpus is planned at the subfield-year level. Large cells are sampled directly through the OpenAlex API with deterministic seeds, while small cells are downloaded in full. The production downloader oversamples and backfills sampled cells to get closer to 3,000 locally valid works per eligible subfield without downloading every candidate work first.
 
 Growth targets are based primarily on article and preprint counts, not only works with available abstracts. This avoids turning abstract availability into the growth outcome.

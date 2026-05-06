@@ -103,12 +103,47 @@ One row per eligible subfield-year cell in the 2010-2019 morphology window.
 - `planned_sample_size`
 - `sampling_method`
 - `seed`
+- `api_initial_sample_size`
+- `expected_shortfall_risk`
 
 `sampling_method` is one of:
 
 - `sample_api`
 - `download_all_available`
 - `skip_no_available_works`
+
+## `download_manifest`
+
+One row per processed subfield-year cell.
+
+- `subfield_id`
+- `subfield_display_name`
+- `field_id`
+- `field_display_name`
+- `domain_id`
+- `domain_display_name`
+- `publication_year`
+- `sampling_method`
+- `available_valid_works`
+- `planned_sample_size`
+- `api_initial_sample_size`
+- `raw_returned_works`
+- `valid_after_local_filter`
+- `kept_works`
+- `duplicate_or_already_seen`
+- `discarded_local_validation`
+- `shortfall`
+- `backfill_rounds_used`
+- `seeds_used`
+- `status`
+- `error_message`
+
+`status` is one of:
+
+- `completed_target_met`
+- `completed_shortfall`
+- `skipped_no_available_works`
+- `failed`
 
 ## `works_text`
 
