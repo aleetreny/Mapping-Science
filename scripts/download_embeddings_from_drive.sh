@@ -1,8 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REMOTE="gdrive:TFM/openalex_subfields/embeddings/specter2_v1"
-LOCAL="embeddings/specter2_v1"
+if [ -f ".env" ]; then
+  while IFS= read -r line; do
+    [[ "$line" =~ ^[[:space:]]*$ ]] && continue
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    if [[ "$line" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+      name="${BASH_REMATCH[1]}"
+      value="${BASH_REMATCH[2]}"
+      value="${value%\"}"
+      value="${value#\"}"
+      value="${value%\'}"
+      value="${value#\'}"
+      if [ -z "${!name:-}" ]; then
+        export "$name=$value"
+      fi
+    fi
+  done < ".env"
+fi
+
+RCLONE_REMOTE="${RCLONE_REMOTE:-gdrive}"
+DRIVE_EMBEDDINGS_PATH="${DRIVE_EMBEDDINGS_PATH:-TFM/openalex_subfields/embeddings/specter2_v1}"
+LOCAL="${LOCAL_EMBEDDINGS_DIR:-embeddings/specter2_v1}"
+
+if [[ "$DRIVE_EMBEDDINGS_PATH" == *:* ]]; then
+  REMOTE="$DRIVE_EMBEDDINGS_PATH"
+else
+  REMOTE="${RCLONE_REMOTE}:${DRIVE_EMBEDDINGS_PATH}"
+fi
 
 mkdir -p "$LOCAL"
 

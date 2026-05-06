@@ -4,7 +4,7 @@ The full thesis context is summarized in [research/README.md](research/README.md
 
 The project builds a clean OpenAlex database for later testing whether the title and abstract structure of a subfield before 2020 helps predict whether that subfield grows during 2020-2025.
 
-No dimensionality reduction, clustering, morphology metrics, regression models, prediction models, maps, dashboards, or ML infrastructure are implemented in this phase. SPECTER2 embeddings are managed only as external artifacts plus a local validation/indexing layer.
+No clustering, morphology metrics, regression models, prediction models, dashboards, or ML infrastructure are implemented in this phase. SPECTER2 embeddings are managed as external artifacts, with a local validation/indexing layer and a first sampled UMAP map for visual inspection.
 
 ## Current Data Design
 
@@ -66,6 +66,19 @@ Validation writes `data/processed/embedding_index.parquet` and the DuckDB `embed
 
 See [docs/embedding_data_model.md](docs/embedding_data_model.md) for shard loading and join examples.
 
+## Analysis Matrix And First UMAP
+
+Prepare the main-analysis matrix and first sampled UMAP map with:
+
+```bash
+python scripts/08_prepare_analysis_matrix.py
+python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
+```
+
+The matrix uses only `main_analysis_eligible_2500 == true` rows and preserves deterministic order by `subfield_id`, `publication_year`, and `work_id`. The UMAP script uses a balanced per-subfield sample for first visual inspection only.
+
+See [docs/analysis_matrix_and_first_umap.md](docs/analysis_matrix_and_first_umap.md) for outputs and options.
+
 ## Repository Layout
 
 ```text
@@ -100,6 +113,8 @@ python scripts/04_download_sampled_corpus.py --limit-subfields 5
 python scripts/06_build_analysis_subfields.py
 python scripts/05_validate_database.py
 python scripts/07_validate_embeddings.py
+python scripts/08_prepare_analysis_matrix.py
+python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
 ```
 
 The full corpus download may take time. Test first with `--limit-subfields 5`, then use the production runbook in [docs/full_download_runbook.md](docs/full_download_runbook.md).
@@ -122,8 +137,12 @@ data/interim/download_manifest.parquet
 data/processed/works_text.parquet
 data/processed/analysis_subfields.parquet
 data/processed/embedding_index.parquet
+data/processed/analysis_embedding_index.parquet
 data/interim/validation_report.md
 data/interim/validation_summary.json
+outputs/maps/umap_global_sample.parquet
+outputs/maps/umap_global_sample.png
+outputs/maps/umap_global_sample_summary.json
 ```
 
 Data files, secrets, and large artifacts are ignored by Git.

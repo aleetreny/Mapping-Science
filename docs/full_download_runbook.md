@@ -126,6 +126,17 @@ embeddings/specter2_v1/
 
 The validator checks the 37 embedding shards, 37 metadata shards, 37 summary files, float16 dtype, 768 dimensions, row-count consistency, work ID coverage against `works_text`, and eligibility joins against `analysis_subfields`. It writes `data/processed/embedding_index.parquet`, the DuckDB `embedding_index` table, and validation files inside `embeddings/specter2_v1/`.
 
+## Prepare Analysis Matrix And First Map
+
+After embedding validation succeeds, prepare the main-analysis matrix and first sampled UMAP map:
+
+```bash
+python scripts/08_prepare_analysis_matrix.py
+python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
+```
+
+The matrix uses only rows where `main_analysis_eligible_2500 == true`. The first map uses a balanced sample per subfield for visual inspection.
+
 ## Resume After Interruption
 
 Run the same command again:
@@ -164,9 +175,13 @@ python scripts/05_validate_database.py
 - `data/processed/works_text.parquet`
 - `data/processed/analysis_subfields.parquet`
 - `data/processed/embedding_index.parquet`
+- `data/processed/analysis_embedding_index.parquet`
 - `warehouse/tfm_openalex.duckdb`
 - `data/interim/validation_report.md`
 - `data/interim/validation_summary.json`
+- `outputs/maps/umap_global_sample.parquet`
+- `outputs/maps/umap_global_sample.png`
+- `outputs/maps/umap_global_sample_summary.json`
 
 ## Shortfall Guidance
 

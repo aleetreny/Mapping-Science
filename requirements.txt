@@ -7,4 +7,7 @@ pyyaml
 python-dotenv
 tqdm
 tenacity
+umap-learn
+scikit-learn
+matplotlib
 pytest

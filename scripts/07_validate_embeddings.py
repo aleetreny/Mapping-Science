@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import yaml
+from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -32,10 +34,11 @@ def load_config() -> dict[str, Any]:
 
 
 def parse_args() -> argparse.Namespace:
+    load_dotenv(ROOT / ".env")
     parser = argparse.ArgumentParser(description="Validate local SPECTER2 embeddings.")
     parser.add_argument(
         "--embedding-dir",
-        default="embeddings/specter2_v1",
+        default=os.getenv("LOCAL_EMBEDDINGS_DIR", "embeddings/specter2_v1"),
         help="Local folder containing SPECTER2 embedding shards.",
     )
     parser.add_argument(

@@ -1,7 +1,34 @@
 $ErrorActionPreference = "Stop"
 
-$Remote = "gdrive:TFM/openalex_subfields/embeddings/specter2_v1"
-$Local = "embeddings/specter2_v1"
+function Import-DotEnv {
+  param([string]$Path)
+  if (-not (Test-Path -LiteralPath $Path)) { return }
+
+  Get-Content -LiteralPath $Path | ForEach-Object {
+    $line = $_.Trim()
+    if ($line -eq "" -or $line.StartsWith("#") -or -not $line.Contains("=")) { return }
+    $parts = $line.Split("=", 2)
+    $name = $parts[0].Trim()
+    $value = $parts[1].Trim().Trim('"').Trim("'")
+    if ($name -and -not [Environment]::GetEnvironmentVariable($name)) {
+      [Environment]::SetEnvironmentVariable($name, $value, "Process")
+    }
+  }
+}
+
+function Resolve-RemotePath {
+  param([string]$RemoteName, [string]$DrivePath)
+  if ($DrivePath -match "^[^:]+:") { return $DrivePath }
+  return "${RemoteName}:$DrivePath"
+}
+
+$Root = Split-Path -Parent $PSScriptRoot
+Import-DotEnv -Path (Join-Path $Root ".env")
+
+$RemoteName = if ($env:RCLONE_REMOTE) { $env:RCLONE_REMOTE } else { "gdrive" }
+$DriveEmbeddingsPath = if ($env:DRIVE_EMBEDDINGS_PATH) { $env:DRIVE_EMBEDDINGS_PATH } else { "TFM/openalex_subfields/embeddings/specter2_v1" }
+$Remote = Resolve-RemotePath -RemoteName $RemoteName -DrivePath $DriveEmbeddingsPath
+$Local = if ($env:LOCAL_EMBEDDINGS_DIR) { $env:LOCAL_EMBEDDINGS_DIR } else { "embeddings/specter2_v1" }
 
 New-Item -ItemType Directory -Force -Path $Local | Out-Null
 

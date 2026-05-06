@@ -34,6 +34,14 @@ Then validate and build the local index:
 python scripts/07_validate_embeddings.py
 ```
 
+The defaults can be overridden in `.env`:
+
+```bash
+RCLONE_REMOTE=gdrive
+DRIVE_EMBEDDINGS_PATH=TFM/openalex_subfields/embeddings/specter2_v1
+LOCAL_EMBEDDINGS_DIR=embeddings/specter2_v1
+```
+
 ## Shard Format
 
 The SPECTER2 artifact set contains 37 shards:
@@ -106,6 +114,43 @@ robustness = index[index["robustness_eligible_500"]]
 ```
 
 The full `works_text.parquet` and full embedding shard set remain available. The eligibility flags select rows for analysis without deleting downloaded papers or embedding vectors.
+
+## Main-Analysis Matrix
+
+Build the row-aligned main-analysis matrix with:
+
+```bash
+python scripts/08_prepare_analysis_matrix.py
+```
+
+Outputs:
+
+```text
+data/processed/analysis_embedding_index.parquet
+embeddings/specter2_v1/analysis/main_embeddings.float16.npy
+embeddings/specter2_v1/analysis/main_work_ids.parquet
+embeddings/specter2_v1/analysis/main_matrix_summary.json
+```
+
+`analysis_embedding_index.parquet` adds `analysis_row_id`, which points to rows in `main_embeddings.float16.npy`.
+
+## First UMAP Map
+
+Build the first balanced-sample visual inspection map with:
+
+```bash
+python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
+```
+
+Outputs:
+
+```text
+outputs/maps/umap_global_sample.parquet
+outputs/maps/umap_global_sample.png
+outputs/maps/umap_global_sample_summary.json
+```
+
+See [analysis_matrix_and_first_umap.md](analysis_matrix_and_first_umap.md) for details.
 
 ## Joining Shard Metadata
 
