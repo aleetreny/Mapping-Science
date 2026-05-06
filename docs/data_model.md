@@ -199,3 +199,30 @@ One row per planned subfield. This table is an analysis eligibility layer; it do
 - `main_analysis_included`
 - `below_2500_valid_works`
 - `below_500_valid_works`
+
+## `embedding_index`
+
+One row per embedded work. This table is a lightweight pointer from `work_id` to a SPECTER2 shard and row position. It does not store embedding vectors.
+
+- `work_id`
+- `embedding_model`
+- `embedding_version`
+- `embedding_dim`
+- `embedding_dtype`
+- `embedding_shard_id`
+- `embedding_shard_file`
+- `embedding_row_in_shard`
+- `metadata_shard_file`
+- `subfield_id`
+- `subfield_display_name`
+- `field_id`
+- `field_display_name`
+- `domain_id`
+- `domain_display_name`
+- `primary_topic_id`
+- `primary_topic_display_name`
+- `publication_year`
+- `main_analysis_eligible_2500`
+- `robustness_eligible_500`
+
+The SPECTER2 shard files live in `embeddings/specter2_v1/`, which is ignored by Git. See [embedding_data_model.md](embedding_data_model.md) for the Drive path, download commands, validation checks, and examples for loading one shard with NumPy.

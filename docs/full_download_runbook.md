@@ -94,6 +94,38 @@ analysis_subfields
 
 The full corpus remains in `works_text`. No downloaded papers are deleted. Main morphology analysis uses subfields with `n_valid_works >= 2500`; robustness checks can use subfields with `n_valid_works >= 500`. The 2,500 threshold avoids unstable morphology metrics in very small semantic clouds while keeping the full `works_text.parquet` available for embeddings and later sensitivity checks.
 
+## Embedding Artifacts
+
+SPECTER2 embeddings were generated externally and should be downloaded from Drive, not regenerated as part of this repo workflow.
+
+PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\download_embeddings_from_drive.ps1
+python scripts/07_validate_embeddings.py
+```
+
+Bash:
+
+```bash
+bash scripts/download_embeddings_from_drive.sh
+python scripts/07_validate_embeddings.py
+```
+
+The remote folder is:
+
+```text
+gdrive:TFM/openalex_subfields/embeddings/specter2_v1
+```
+
+The local folder is:
+
+```text
+embeddings/specter2_v1/
+```
+
+The validator checks the 37 embedding shards, 37 metadata shards, 37 summary files, float16 dtype, 768 dimensions, row-count consistency, work ID coverage against `works_text`, and eligibility joins against `analysis_subfields`. It writes `data/processed/embedding_index.parquet`, the DuckDB `embedding_index` table, and validation files inside `embeddings/specter2_v1/`.
+
 ## Resume After Interruption
 
 Run the same command again:
@@ -131,6 +163,7 @@ python scripts/05_validate_database.py
 - `data/interim/download_manifest.parquet`
 - `data/processed/works_text.parquet`
 - `data/processed/analysis_subfields.parquet`
+- `data/processed/embedding_index.parquet`
 - `warehouse/tfm_openalex.duckdb`
 - `data/interim/validation_report.md`
 - `data/interim/validation_summary.json`
@@ -150,9 +183,9 @@ Look first at:
 
 For the completed production corpus, do not retry shortfalls just to force every subfield above 2,500 works. Use `analysis_subfields` to keep the main analysis stable and preserve lower-sample subfields for robustness checks when they have at least 500 valid works.
 
-## Later Embedding Size Estimate
+## Embedding Size
 
-Do not compute embeddings now, but the expected storage later is approximately:
+The local SPECTER2 artifact set is about 1 GiB. For reference, dense storage is approximately:
 
 ```text
 762,000 x 768 x float32 ~= 2.34 GB

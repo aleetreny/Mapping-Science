@@ -4,7 +4,7 @@ The full thesis context is summarized in [research/README.md](research/README.md
 
 The project builds a clean OpenAlex database for later testing whether the title and abstract structure of a subfield before 2020 helps predict whether that subfield grows during 2020-2025.
 
-No embeddings, dimensionality reduction, clustering, morphology metrics, regression models, prediction models, maps, dashboards, or ML infrastructure are implemented in this phase.
+No dimensionality reduction, clustering, morphology metrics, regression models, prediction models, maps, dashboards, or ML infrastructure are implemented in this phase. SPECTER2 embeddings are managed only as external artifacts plus a local validation/indexing layer.
 
 ## Current Data Design
 
@@ -42,7 +42,29 @@ The full downloaded corpus remains available in `data/processed/works_text.parqu
 
 Main morphology analysis should use subfields where `n_valid_works >= 2500`. Robustness checks can also use subfields where `n_valid_works >= 500`. The 2,500-work threshold is intended to avoid unstable morphology metrics in very small semantic clouds while preserving the full corpus for embeddings, diagnostics, and later sensitivity checks.
 
-The eligibility layer is stored in `data/processed/analysis_subfields.parquet` and the DuckDB `analysis_subfields` table. Embeddings should still be generated from the full `works_text.parquet`; later morphology scripts can join against `analysis_subfields` and select `main_analysis_eligible_2500 == true`.
+The eligibility layer is stored in `data/processed/analysis_subfields.parquet` and the DuckDB `analysis_subfields` table. Embedding artifacts are kept for the full `works_text.parquet`; later morphology scripts can join against `analysis_subfields` and select `main_analysis_eligible_2500 == true`.
+
+## Embedding Artifacts
+
+SPECTER2 embeddings live outside Git in `embeddings/specter2_v1/` and on Drive at `gdrive:TFM/openalex_subfields/embeddings/specter2_v1`. The local folder contains 37 float16, 768-dimensional embedding shards plus matching metadata and summary files.
+
+Download and validate on Windows PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\download_embeddings_from_drive.ps1
+python scripts/07_validate_embeddings.py
+```
+
+Or with Bash:
+
+```bash
+bash scripts/download_embeddings_from_drive.sh
+python scripts/07_validate_embeddings.py
+```
+
+Validation writes `data/processed/embedding_index.parquet` and the DuckDB `embedding_index` table. The index maps each `work_id` to a shard and row position, then joins subfield metadata and analysis flags. It does not store embedding vectors.
+
+See [docs/embedding_data_model.md](docs/embedding_data_model.md) for shard loading and join examples.
 
 ## Repository Layout
 
@@ -77,6 +99,7 @@ python scripts/04_download_sampled_corpus.py --dry-run
 python scripts/04_download_sampled_corpus.py --limit-subfields 5
 python scripts/06_build_analysis_subfields.py
 python scripts/05_validate_database.py
+python scripts/07_validate_embeddings.py
 ```
 
 The full corpus download may take time. Test first with `--limit-subfields 5`, then use the production runbook in [docs/full_download_runbook.md](docs/full_download_runbook.md).
@@ -98,6 +121,7 @@ data/interim/sample_plan.parquet
 data/interim/download_manifest.parquet
 data/processed/works_text.parquet
 data/processed/analysis_subfields.parquet
+data/processed/embedding_index.parquet
 data/interim/validation_report.md
 data/interim/validation_summary.json
 ```
