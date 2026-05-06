@@ -220,6 +220,14 @@ def empty_works_df() -> pd.DataFrame:
     return pd.DataFrame(columns=WORKS_TEXT_COLUMNS)
 
 
+def ensure_works_text_columns(works: pd.DataFrame) -> pd.DataFrame:
+    result = works.copy()
+    for column in WORKS_TEXT_COLUMNS:
+        if column not in result.columns:
+            result[column] = None
+    return result[WORKS_TEXT_COLUMNS]
+
+
 def empty_manifest_df() -> pd.DataFrame:
     return pd.DataFrame(columns=MANIFEST_COLUMNS)
 
@@ -236,6 +244,7 @@ def load_existing_outputs(
     works_path = processed_dir / "works_text.parquet"
     manifest_path = interim_dir / "download_manifest.parquet"
     works = load_parquet(works_path) if works_path.exists() else empty_works_df()
+    works = ensure_works_text_columns(works)
     manifest = load_parquet(manifest_path) if manifest_path.exists() else empty_manifest_df()
     return works, manifest
 

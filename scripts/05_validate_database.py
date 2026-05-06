@@ -47,6 +47,19 @@ def describe_counts(counts: pd.Series) -> dict[str, Any]:
     return cleaned
 
 
+def missing_text_count(df: pd.DataFrame, column: str) -> int:
+    if column not in df:
+        return len(df)
+    return int(df[column].isna().sum() + (df[column] == "").sum())
+
+
+def describe_numeric_column(df: pd.DataFrame, column: str) -> dict[str, Any]:
+    if column not in df or df.empty:
+        return {}
+    values = pd.to_numeric(df[column], errors="coerce").dropna()
+    return describe_counts(values)
+
+
 def bytes_to_mb(value: int) -> float:
     return round(value / (1024 * 1024), 2)
 
@@ -211,16 +224,10 @@ def main() -> None:
     duplicate_work_ids = (
         int(works_text["work_id"].duplicated().sum()) if "work_id" in works_text else 0
     )
-    missing_titles = (
-        int(works_text["title"].isna().sum() + (works_text["title"] == "").sum())
-        if "title" in works_text
-        else 0
-    )
-    missing_abstracts = (
-        int(works_text["abstract"].isna().sum() + (works_text["abstract"] == "").sum())
-        if "abstract" in works_text
-        else 0
-    )
+    missing_titles = missing_text_count(works_text, "title")
+    missing_abstracts = missing_text_count(works_text, "abstract")
+    missing_primary_topic_id = missing_text_count(works_text, "primary_topic_id")
+    missing_topics_json = missing_text_count(works_text, "topics_json")
     language_distribution = (
         works_text["language"].value_counts(dropna=False).to_dict()
         if "language" in works_text
@@ -281,6 +288,17 @@ def main() -> None:
         "duplicate_work_ids": duplicate_work_ids,
         "missing_titles": missing_titles,
         "missing_abstracts": missing_abstracts,
+        "missing_primary_topic_id": missing_primary_topic_id,
+        "missing_topics_json": missing_topics_json,
+        "title_token_count_distribution": describe_numeric_column(
+            works_text, "title_token_count"
+        ),
+        "abstract_token_count_distribution": describe_numeric_column(
+            works_text, "abstract_token_count"
+        ),
+        "text_token_count_distribution": describe_numeric_column(
+            works_text, "text_token_count"
+        ),
         "works_per_subfield_distribution": describe_counts(works_per_subfield),
         "works_per_field_distribution": describe_counts(works_per_field),
         "works_per_year": {str(k): int(v) for k, v in works_per_year.to_dict().items()},
@@ -310,6 +328,8 @@ def main() -> None:
         f"- Duplicate work IDs: {duplicate_work_ids}",
         f"- Missing titles: {missing_titles}",
         f"- Missing abstracts: {missing_abstracts}",
+        f"- Missing primary_topic_id: {missing_primary_topic_id}",
+        f"- Missing topics_json: {missing_topics_json}",
         "",
         "## Planned Works By Sampling Method",
         "",
@@ -334,6 +354,17 @@ def main() -> None:
         "## Works Per Field Distribution",
         "",
         json.dumps(summary["works_per_field_distribution"], indent=2),
+        "",
+        "## Token Count Distributions",
+        "",
+        "title_token_count:",
+        json.dumps(summary["title_token_count_distribution"], indent=2),
+        "",
+        "abstract_token_count:",
+        json.dumps(summary["abstract_token_count_distribution"], indent=2),
+        "",
+        "text_token_count:",
+        json.dumps(summary["text_token_count_distribution"], indent=2),
         "",
         "## Works Per Year",
         "",

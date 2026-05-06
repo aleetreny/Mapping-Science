@@ -34,6 +34,7 @@ DEFAULT_SELECT_FIELDS = [
     "type",
     "language",
     "primary_topic",
+    "topics",
     "cited_by_count",
     "referenced_works_count",
     "is_retracted",

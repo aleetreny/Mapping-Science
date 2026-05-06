@@ -14,6 +14,7 @@ No embeddings, dimensionality reduction, clustering, morphology metrics, regress
 - Excluded year: 2026, because it is the current incomplete year
 - Text source: title plus abstract
 - OpenAlex classification: `primary_topic.subfield.id`
+- Topic metadata: stored only for later interpretation, not as the unit of analysis
 - Sample target: 3,000 papers per eligible subfield
 - Storage: one DuckDB database at `warehouse/tfm_openalex.duckdb`
 
@@ -22,6 +23,8 @@ No embeddings, dimensionality reduction, clustering, morphology metrics, regress
 OpenAlex topics are too numerous for the first stable thesis pipeline. Subfields are broad enough to form meaningful semantic spaces and give roughly a few hundred units, which is more realistic for a master thesis.
 
 The pipeline therefore uses `primary_topic.subfield.id` as the main classification. It does not use `topics.subfield.id` as the active unit of analysis.
+
+The downloaded corpus also stores compact topic metadata from OpenAlex so future morphology work can interpret semantic regions without re-querying hundreds of thousands of works. Topics remain contextual metadata, not the main unit.
 
 ## Why Not Download Everything
 

@@ -1,4 +1,5 @@
 from src.openalex import (
+    DEFAULT_SELECT_FIELDS,
     build_count_query_params,
     build_sampled_text_query_params,
     build_text_query_params,
@@ -30,6 +31,12 @@ def test_text_query_includes_select() -> None:
     assert "select" in params
     assert "abstract_inverted_index" in params["select"]
     assert "primary_topic" in params["select"]
+    assert "topics" in params["select"]
+
+
+def test_default_select_fields_include_topics() -> None:
+    assert "primary_topic" in DEFAULT_SELECT_FIELDS
+    assert "topics" in DEFAULT_SELECT_FIELDS
 
 
 def test_count_query_can_group_by_primary_subfield() -> None:

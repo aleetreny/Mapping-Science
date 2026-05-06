@@ -10,6 +10,8 @@ The target is roughly:
 
 The final valid count may be lower if some subfields do not have enough locally valid title and abstract works.
 
+The downloader stores compact OpenAlex topic metadata in `works_text` for later interpretation of subfield morphology. The unit of analysis remains `primary_topic.subfield.id`; topics are not used as the main unit.
+
 ## Setup
 
 ```bash

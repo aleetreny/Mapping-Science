@@ -162,5 +162,14 @@ One row per processed subfield-year cell.
 - `field_display_name`
 - `domain_id`
 - `domain_display_name`
+- `primary_topic_id`
+- `primary_topic_display_name`
+- `topics_json`
+- `title_token_count`
+- `abstract_token_count`
+- `text_token_count`
+- `downloaded_at`
 - `cited_by_count`
 - `referenced_works_count`
+
+`topics_json` is stored as compact JSON for later interpretation of subfield morphology. It does not make OpenAlex topics the unit of analysis.
