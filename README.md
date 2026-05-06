@@ -16,6 +16,8 @@ No embeddings, dimensionality reduction, clustering, morphology metrics, regress
 - OpenAlex classification: `primary_topic.subfield.id`
 - Topic metadata: stored only for later interpretation, not as the unit of analysis
 - Sample target: 3,000 papers per eligible subfield
+- Main analysis threshold: `n_valid_works >= 2500`
+- Robustness threshold: `n_valid_works >= 500`
 - Storage: one DuckDB database at `warehouse/tfm_openalex.duckdb`
 
 ## Why Subfields, Not Topics
@@ -33,6 +35,14 @@ Downloading all OpenAlex works for all subfields would be too large and unnecess
 The corpus download uses OpenAlex's `sample` and `seed` parameters for large subfield-year cells. Small cells are downloaded in full. The production downloader oversamples raw API results, backfills shortfalls with new seeds, writes a manifest, and can resume after interruption. This avoids downloading all candidates first and then sampling locally.
 
 Growth targets are based primarily on article and preprint counts, not only abstract-available works, because growth should measure scientific production rather than abstract availability.
+
+## Analysis Eligibility
+
+The full downloaded corpus remains available in `data/processed/works_text.parquet` and in the DuckDB `works_text` table. No downloaded papers are deleted by the analysis eligibility step.
+
+Main morphology analysis should use subfields where `n_valid_works >= 2500`. Robustness checks can also use subfields where `n_valid_works >= 500`. The 2,500-work threshold is intended to avoid unstable morphology metrics in very small semantic clouds while preserving the full corpus for embeddings, diagnostics, and later sensitivity checks.
+
+The eligibility layer is stored in `data/processed/analysis_subfields.parquet` and the DuckDB `analysis_subfields` table. Embeddings should still be generated from the full `works_text.parquet`; later morphology scripts can join against `analysis_subfields` and select `main_analysis_eligible_2500 == true`.
 
 ## Repository Layout
 
@@ -65,6 +75,7 @@ python scripts/02_build_corpus_plan.py
 python scripts/03_build_sample_plan.py
 python scripts/04_download_sampled_corpus.py --dry-run
 python scripts/04_download_sampled_corpus.py --limit-subfields 5
+python scripts/06_build_analysis_subfields.py
 python scripts/05_validate_database.py
 ```
 
@@ -86,6 +97,7 @@ data/interim/corpus_plan.parquet
 data/interim/sample_plan.parquet
 data/interim/download_manifest.parquet
 data/processed/works_text.parquet
+data/processed/analysis_subfields.parquet
 data/interim/validation_report.md
 data/interim/validation_summary.json
 ```

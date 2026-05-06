@@ -173,3 +173,29 @@ One row per processed subfield-year cell.
 - `referenced_works_count`
 
 `topics_json` is stored as compact JSON for later interpretation of subfield morphology. It does not make OpenAlex topics the unit of analysis.
+
+## `analysis_subfields`
+
+One row per planned subfield. This table is an analysis eligibility layer; it does not remove papers from `works_text`.
+
+- `subfield_id`
+- `subfield_display_name`
+- `field_id`
+- `field_display_name`
+- `domain_id`
+- `domain_display_name`
+- `n_valid_works`
+- `planned_works`
+- `shortfall`
+- `main_analysis_eligible_2500`
+- `robustness_eligible_500`
+- `is_low_sample`
+- `exclusion_reason`
+
+`main_analysis_eligible_2500` is true when `n_valid_works >= 2500`. `robustness_eligible_500` is true when `n_valid_works >= 500`. The main threshold avoids unstable morphology metrics in very small semantic clouds while keeping all downloaded works available for embeddings and sensitivity checks.
+
+`exclusion_reason` is one of:
+
+- `main_analysis_included`
+- `below_2500_valid_works`
+- `below_500_valid_works`

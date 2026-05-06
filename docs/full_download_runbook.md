@@ -53,6 +53,7 @@ Use `--force --limit-subfields 5` when you want the test to ignore an existing p
 
 ```bash
 python scripts/04_download_sampled_corpus.py --resume
+python scripts/06_build_analysis_subfields.py
 python scripts/05_validate_database.py
 ```
 
@@ -69,6 +70,29 @@ It also writes DuckDB tables:
 works_text
 download_manifest
 ```
+
+## Build Analysis Eligibility
+
+After the corpus download is complete, build the subfield eligibility layer:
+
+```bash
+python scripts/06_build_analysis_subfields.py
+python scripts/05_validate_database.py
+```
+
+This creates:
+
+```text
+data/processed/analysis_subfields.parquet
+```
+
+and the DuckDB table:
+
+```text
+analysis_subfields
+```
+
+The full corpus remains in `works_text`. No downloaded papers are deleted. Main morphology analysis uses subfields with `n_valid_works >= 2500`; robustness checks can use subfields with `n_valid_works >= 500`. The 2,500 threshold avoids unstable morphology metrics in very small semantic clouds while keeping the full `works_text.parquet` available for embeddings and later sensitivity checks.
 
 ## Resume After Interruption
 
@@ -106,6 +130,7 @@ python scripts/05_validate_database.py
 - `data/interim/sample_plan.parquet`
 - `data/interim/download_manifest.parquet`
 - `data/processed/works_text.parquet`
+- `data/processed/analysis_subfields.parquet`
 - `warehouse/tfm_openalex.duckdb`
 - `data/interim/validation_report.md`
 - `data/interim/validation_summary.json`
@@ -123,7 +148,7 @@ Look first at:
 - `duplicate_or_already_seen`
 - cells where `expected_shortfall_risk` is true in `sample_plan`
 
-If many subfields are below 2,500 valid works, consider increasing `oversample_factor` or `max_backfill_rounds` in `config.yaml`.
+For the completed production corpus, do not retry shortfalls just to force every subfield above 2,500 works. Use `analysis_subfields` to keep the main analysis stable and preserve lower-sample subfields for robustness checks when they have at least 500 valid works.
 
 ## Later Embedding Size Estimate
 

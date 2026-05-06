@@ -79,6 +79,7 @@ def load_pipeline_tables(config: dict[str, Any]) -> dict[str, pd.DataFrame]:
             "sample_plan": read_table_or_empty(con, "sample_plan"),
             "download_manifest": read_table_or_empty(con, "download_manifest"),
             "works_text": read_table_or_empty(con, "works_text"),
+            "analysis_subfields": read_table_or_empty(con, "analysis_subfields"),
         }
     finally:
         if con is not None:
@@ -92,6 +93,7 @@ def load_pipeline_tables(config: dict[str, Any]) -> dict[str, pd.DataFrame]:
         "sample_plan": interim_dir / "sample_plan.parquet",
         "download_manifest": interim_dir / "download_manifest.parquet",
         "works_text": processed_dir / "works_text.parquet",
+        "analysis_subfields": processed_dir / "analysis_subfields.parquet",
     }
     for name, path in fallback_paths.items():
         if tables[name].empty:
@@ -120,6 +122,32 @@ def bucket_counts(works_per_subfield: pd.Series) -> dict[str, int]:
     }
 
 
+def analysis_eligibility_counts(analysis_subfields: pd.DataFrame) -> dict[str, int]:
+    required = {
+        "n_valid_works",
+        "main_analysis_eligible_2500",
+        "robustness_eligible_500",
+    }
+    if analysis_subfields.empty or not required.issubset(analysis_subfields.columns):
+        return {}
+
+    n_valid_works = pd.to_numeric(
+        analysis_subfields["n_valid_works"], errors="coerce"
+    ).fillna(0)
+    main = analysis_subfields["main_analysis_eligible_2500"].fillna(False).astype(bool)
+    robust = analysis_subfields["robustness_eligible_500"].fillna(False).astype(bool)
+
+    return {
+        "main_analysis_subfields_2500": int(main.sum()),
+        "robustness_subfields_500": int(robust.sum()),
+        "main_analysis_works": int(n_valid_works[main].sum()),
+        "excluded_from_main_analysis_subfields": int((~main).sum()),
+        "excluded_from_main_analysis_works": int(n_valid_works[~main].sum()),
+        "excluded_from_robustness_subfields": int((~robust).sum()),
+        "excluded_from_robustness_works": int(n_valid_works[~robust].sum()),
+    }
+
+
 def main() -> None:
     config = load_config()
     ensure_dirs(config)
@@ -133,6 +161,7 @@ def main() -> None:
     sample_plan = tables["sample_plan"]
     manifest = tables["download_manifest"]
     works_text = tables["works_text"]
+    analysis_subfields = tables["analysis_subfields"]
 
     n_works = len(works_text)
     n_eligible = (
@@ -261,6 +290,7 @@ def main() -> None:
     embedding_float32_mb = bytes_to_mb(n_works * 768 * 4)
     embedding_float16_mb = bytes_to_mb(n_works * 768 * 2)
     buckets = bucket_counts(works_per_subfield)
+    eligibility_counts = analysis_eligibility_counts(analysis_subfields)
 
     summary = {
         "n_domains": len(domains),
@@ -273,6 +303,7 @@ def main() -> None:
         "downloaded_valid_works_over_planned_works": downloaded_ratio,
         "downloaded_valid_works_over_manifest_planned_works": manifest_downloaded_ratio,
         **buckets,
+        **eligibility_counts,
         "planned_vs_kept_per_subfield": planned_vs_kept_records,
         "worst_shortfalls": worst_shortfalls,
         "planned_works_by_sampling_method": {
@@ -308,6 +339,21 @@ def main() -> None:
         "estimated_embedding_size_mb_float16_768d": embedding_float16_mb,
     }
 
+    analysis_report_lines = []
+    if eligibility_counts:
+        analysis_report_lines = [
+            "",
+            "## Analysis Eligibility",
+            "",
+            f"- Main analysis subfields >=2,500: {eligibility_counts['main_analysis_subfields_2500']}",
+            f"- Robustness subfields >=500: {eligibility_counts['robustness_subfields_500']}",
+            f"- Main analysis works: {eligibility_counts['main_analysis_works']}",
+            f"- Excluded from main analysis subfields: {eligibility_counts['excluded_from_main_analysis_subfields']}",
+            f"- Excluded from main analysis works: {eligibility_counts['excluded_from_main_analysis_works']}",
+            f"- Excluded from robustness subfields: {eligibility_counts['excluded_from_robustness_subfields']}",
+            f"- Excluded from robustness works: {eligibility_counts['excluded_from_robustness_works']}",
+        ]
+
     report_lines = [
         "# Validation Report",
         "",
@@ -330,6 +376,7 @@ def main() -> None:
         f"- Missing abstracts: {missing_abstracts}",
         f"- Missing primary_topic_id: {missing_primary_topic_id}",
         f"- Missing topics_json: {missing_topics_json}",
+        *analysis_report_lines,
         "",
         "## Planned Works By Sampling Method",
         "",
