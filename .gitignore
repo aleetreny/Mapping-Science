@@ -35,5 +35,6 @@ research/__pycache__/
 *.grobid-xml
 logs/
 outputs/
+outputs/maps/per_subfield_umap/
 models/
 embeddings/

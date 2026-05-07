@@ -68,16 +68,26 @@ See [docs/embedding_data_model.md](docs/embedding_data_model.md) for shard loadi
 
 ## Analysis Matrix And First UMAP
 
-Prepare the main-analysis matrix and first sampled UMAP map with:
+Prepare the main-analysis matrix, first sampled UMAP map, and per-subfield
+visual inspection maps with:
 
 ```bash
 python scripts/08_prepare_analysis_matrix.py
 python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
+python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --max-papers-per-subfield 2000 --overwrite
 ```
 
 The matrix uses only `main_analysis_eligible_2500 == true` rows and preserves deterministic order by `subfield_id`, `publication_year`, and `work_id`. The UMAP script uses a balanced per-subfield sample for first visual inspection only.
 
-See [docs/analysis_matrix_and_first_umap.md](docs/analysis_matrix_and_first_umap.md) for outputs and options.
+The per-subfield UMAP stage fits one separate UMAP model per OpenAlex subfield,
+using only the morphology input window by default (`2010 <= publication_year <= 2019`).
+It writes one coordinate parquet and one scatter+density PNG per attempted
+subfield, plus a manifest and summary. It does not add PCA, clustering,
+morphology metrics, or predictive models.
+
+See [docs/analysis_matrix_and_first_umap.md](docs/analysis_matrix_and_first_umap.md)
+and [docs/per_subfield_umap_maps.md](docs/per_subfield_umap_maps.md) for outputs
+and options.
 
 ## Repository Layout
 
@@ -115,6 +125,7 @@ python scripts/05_validate_database.py
 python scripts/07_validate_embeddings.py
 python scripts/08_prepare_analysis_matrix.py
 python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
+python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --max-papers-per-subfield 2000 --overwrite
 ```
 
 The full corpus download may take time. Test first with `--limit-subfields 5`, then use the production runbook in [docs/full_download_runbook.md](docs/full_download_runbook.md).
@@ -143,6 +154,10 @@ data/interim/validation_summary.json
 outputs/maps/umap_global_sample.parquet
 outputs/maps/umap_global_sample.png
 outputs/maps/umap_global_sample_summary.json
+outputs/maps/per_subfield_umap/coordinates/*.parquet
+outputs/maps/per_subfield_umap/figures/*.png
+outputs/maps/per_subfield_umap/per_subfield_umap_manifest.parquet
+outputs/maps/per_subfield_umap/per_subfield_umap_summary.json
 ```
 
 Data files, secrets, and large artifacts are ignored by Git.

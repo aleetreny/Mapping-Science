@@ -88,3 +88,23 @@ Use a different deterministic sample:
 ```bash
 python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --random-seed 7 --force
 ```
+
+## Build Per-Subfield UMAP Maps
+
+After the main matrix exists, build one separate visual inspection map per
+OpenAlex subfield with:
+
+```bash
+python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --max-papers-per-subfield 2000 --overwrite
+```
+
+The per-subfield stage defaults to the morphology input window
+`2010 <= publication_year <= 2019`, uses the SPECTER2 matrix directly with no
+PCA, and writes scatter plus `viridis` density PNGs under:
+
+```text
+outputs/maps/per_subfield_umap/
+```
+
+See [per_subfield_umap_maps.md](per_subfield_umap_maps.md) for the full CLI,
+manifest schema, and runtime notes.
