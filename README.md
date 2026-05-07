@@ -4,7 +4,7 @@ The full thesis context is summarized in [research/README.md](research/README.md
 
 The project builds a clean OpenAlex database for later testing whether the title and abstract structure of a subfield before 2020 helps predict whether that subfield grows during 2020-2025.
 
-No clustering, morphology metrics, regression models, prediction models, dashboards, or ML infrastructure are implemented in this phase. SPECTER2 embeddings are managed as external artifacts, with a local validation/indexing layer and a first sampled UMAP map for visual inspection.
+The current pipeline prepares SPECTER2 embedding artifacts, UMAP visual inspection maps, and a tabular morphology-metrics dataset. It still does not add clustering, regression models, prediction models, growth-target joins, dashboards, or ML infrastructure.
 
 ## Current Data Design
 
@@ -68,13 +68,14 @@ See [docs/embedding_data_model.md](docs/embedding_data_model.md) for shard loadi
 
 ## Analysis Matrix And First UMAP
 
-Prepare the main-analysis matrix, first sampled UMAP map, and per-subfield
-visual inspection maps with:
+Prepare the main-analysis matrix, first sampled UMAP map, per-subfield visual
+inspection maps, and morphology metrics with:
 
 ```bash
 python scripts/08_prepare_analysis_matrix.py
 python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
 python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --max-papers-per-subfield 2000 --overwrite
+python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --overwrite
 ```
 
 The matrix uses only `main_analysis_eligible_2500 == true` rows and preserves deterministic order by `subfield_id`, `publication_year`, and `work_id`. The UMAP script uses a balanced per-subfield sample for first visual inspection only.
@@ -82,12 +83,16 @@ The matrix uses only `main_analysis_eligible_2500 == true` rows and preserves de
 The per-subfield UMAP stage fits one separate UMAP model per OpenAlex subfield,
 using only the morphology input window by default (`2010 <= publication_year <= 2019`).
 It writes one coordinate parquet and one scatter+density PNG per attempted
-subfield, plus a manifest and summary. It does not add PCA, clustering,
-morphology metrics, or predictive models.
+subfield, plus a manifest and summary. It does not add PCA, clustering, or
+predictive models.
 
 See [docs/analysis_matrix_and_first_umap.md](docs/analysis_matrix_and_first_umap.md)
-and [docs/per_subfield_umap_maps.md](docs/per_subfield_umap_maps.md) for outputs
-and options.
+and [docs/per_subfield_umap_maps.md](docs/per_subfield_umap_maps.md) for UMAP
+outputs and options.
+
+The morphology stage consumes the per-subfield coordinate parquets and writes
+one row per completed subfield map with 25 normalized-coordinate metrics. See
+[docs/subfield_morphology_metrics.md](docs/subfield_morphology_metrics.md).
 
 ## Repository Layout
 
@@ -126,6 +131,7 @@ python scripts/07_validate_embeddings.py
 python scripts/08_prepare_analysis_matrix.py
 python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
 python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --max-papers-per-subfield 2000 --overwrite
+python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --overwrite
 ```
 
 The full corpus download may take time. Test first with `--limit-subfields 5`, then use the production runbook in [docs/full_download_runbook.md](docs/full_download_runbook.md).
@@ -158,6 +164,10 @@ outputs/maps/per_subfield_umap/coordinates/*.parquet
 outputs/maps/per_subfield_umap/figures/*.png
 outputs/maps/per_subfield_umap/per_subfield_umap_manifest.parquet
 outputs/maps/per_subfield_umap/per_subfield_umap_summary.json
+data/processed/subfield_morphology_metrics.parquet
+data/processed/subfield_morphology_metrics.csv
+outputs/metrics/subfield_morphology_metrics_summary.json
+outputs/metrics/subfield_morphology_metrics_dictionary.csv
 ```
 
 Data files, secrets, and large artifacts are ignored by Git.

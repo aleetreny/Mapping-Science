@@ -9,5 +9,6 @@ tqdm
 tenacity
 umap-learn
 scikit-learn
+scipy
 matplotlib
 pytest

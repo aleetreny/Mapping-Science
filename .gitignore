@@ -36,5 +36,8 @@ research/__pycache__/
 logs/
 outputs/
 outputs/maps/per_subfield_umap/
+outputs/metrics/
+data/processed/subfield_morphology_metrics.parquet
+data/processed/subfield_morphology_metrics.csv
 models/
 embeddings/

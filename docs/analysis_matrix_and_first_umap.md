@@ -108,3 +108,29 @@ outputs/maps/per_subfield_umap/
 
 See [per_subfield_umap_maps.md](per_subfield_umap_maps.md) for the full CLI,
 manifest schema, and runtime notes.
+
+## Compute Morphology Metrics
+
+After the per-subfield coordinate parquets exist, compute the tabular morphology
+dataset with:
+
+```bash
+python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --overwrite
+```
+
+This stage reads the completed rows from
+`outputs/maps/per_subfield_umap/per_subfield_umap_manifest.parquet`, normalizes
+each subfield's coordinates independently, and writes:
+
+```text
+data/processed/subfield_morphology_metrics.parquet
+data/processed/subfield_morphology_metrics.csv
+outputs/metrics/subfield_morphology_metrics_summary.json
+outputs/metrics/subfield_morphology_metrics_dictionary.csv
+```
+
+It computes morphology metrics only. It does not add growth targets or
+prediction models.
+
+See [subfield_morphology_metrics.md](subfield_morphology_metrics.md) for the
+metric definitions and caveats.
