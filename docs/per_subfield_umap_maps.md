@@ -41,11 +41,29 @@ The index columns used for grouping are the existing OpenAlex subfield columns:
 ```text
 subfield_id
 subfield_display_name
+field_id
+field_display_name
+domain_id
+domain_display_name
 main_analysis_eligible_2500
 publication_year
 analysis_row_id
 work_id
 ```
+
+`subfield_id` is the primary key. `subfield_display_name` is not guaranteed to
+be unique in OpenAlex: for example, two different subfields can both be called
+`Biochemistry` under different fields or domains. For human-readable outputs,
+the script therefore adds:
+
+```text
+subfield_label_unique = "{subfield_id} | {domain_display_name} / {field_display_name} / {subfield_display_name}"
+subfield_label_short = "{subfield_id} | {field_display_name} / {subfield_display_name}"
+subfield_display_name_is_duplicated
+```
+
+The short label is used in PNG titles so ambiguous names are visible without
+having to inspect filenames.
 
 ## Outputs
 
@@ -70,7 +88,8 @@ Each PNG contains two panels:
 The coordinate parquet stores work metadata plus `umap_x` and `umap_y`.
 The manifest records one row per attempted subfield, including status,
 available papers, used papers, output paths, UMAP settings, and any error
-message.
+message. Label columns are included in both coordinate and manifest outputs for
+human-readable inspection, but downstream joins should still use `subfield_id`.
 
 ## Commands
 

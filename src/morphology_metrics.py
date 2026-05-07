@@ -15,6 +15,10 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.stats import gaussian_kde
 from sklearn.neighbors import NearestNeighbors
 
+from src.subfield_labels import add_subfield_label_columns
+
+
+DEFAULT_DENSITY_EXTENT = (-1.5, 1.5, -1.5, 1.5)
 
 REQUIRED_COORDINATE_COLUMNS = {
     "work_id",
@@ -30,15 +34,13 @@ REQUIRED_COORDINATE_COLUMNS = {
     "umap_y",
 }
 
-METRIC_COLUMNS = [
+CORE_METRIC_COLUMNS_V2 = [
     "radial_tail_index",
     "radial_iqr_index",
     "knn_median_distance",
     "knn_distance_cv",
     "density_entropy",
-    "density_gini",
     "peak_dominance",
-    "effective_area_50",
     "effective_area_90",
     "core_periphery_ratio",
     "density_peak_count",
@@ -49,18 +51,34 @@ METRIC_COLUMNS = [
     "mst_gap_index",
     "anisotropy_ratio",
     "support_solidity",
-    "support_circularity",
     "boundary_complexity",
-    "hole_count",
+    "max_normalized_radius",
+    "outlier_share_r_gt_1_5",
     "centroid_drift_early_late",
     "annual_centroid_path_length",
     "directionality_ratio",
     "radial_expansion_slope",
+    "annual_centroid_step_cv",
+    "radial_expansion_r2",
 ]
+
+DIAGNOSTIC_METRIC_COLUMNS = [
+    "density_gini",
+    "effective_area_50",
+    "support_circularity",
+    "hole_count",
+    "outlier_share_r_gt_1",
+    "outlier_share_outside_density_extent",
+]
+
+METRIC_COLUMNS = CORE_METRIC_COLUMNS_V2
 
 CONTROL_COLUMNS = [
     "subfield_id",
     "subfield_display_name",
+    "subfield_label_unique",
+    "subfield_label_short",
+    "subfield_display_name_is_duplicated",
     "field_id",
     "field_display_name",
     "domain_id",
@@ -81,6 +99,10 @@ CONTROL_COLUMNS = [
     "raw_center_y",
     "normalized_center_x",
     "normalized_center_y",
+    "density_x_min",
+    "density_x_max",
+    "density_y_min",
+    "density_y_max",
     "grid_size",
     "k_neighbors",
     "mst_points_used",
@@ -90,7 +112,9 @@ CONTROL_COLUMNS = [
     "n_late_points",
 ]
 
-OUTPUT_COLUMNS = CONTROL_COLUMNS + METRIC_COLUMNS
+OUTPUT_COLUMNS = list(
+    dict.fromkeys(CONTROL_COLUMNS + CORE_METRIC_COLUMNS_V2 + DIAGNOSTIC_METRIC_COLUMNS)
+)
 TEMPORAL_MIN_POINTS = 3
 EPS = 1e-12
 
@@ -113,6 +137,7 @@ class DensityGrid:
     y_centers: np.ndarray
     cell_area: float
     method: str
+    extent: tuple[float, float, float, float]
 
 
 def stable_int_seed(random_state: int, key: object) -> int:
@@ -136,6 +161,22 @@ def validate_morphology_year_window(year_min: int, year_max: int) -> None:
             "morphology metrics must use a year window inside 2010-2019; "
             f"got {year_min}-{year_max}"
         )
+
+
+def validate_density_extent(
+    density_extent: tuple[float, float, float, float],
+) -> tuple[float, float, float, float]:
+    if len(density_extent) != 4:
+        raise ValueError("density_extent must contain exactly four values")
+    x_min, x_max, y_min, y_max = (float(value) for value in density_extent)
+    values = np.array([x_min, x_max, y_min, y_max], dtype=float)
+    if not np.isfinite(values).all():
+        raise ValueError(f"density_extent values must be finite: {density_extent}")
+    if x_min >= x_max:
+        raise ValueError(f"density_extent requires x_min < x_max: {density_extent}")
+    if y_min >= y_max:
+        raise ValueError(f"density_extent requires y_min < y_max: {density_extent}")
+    return x_min, x_max, y_min, y_max
 
 
 def finite_coordinate_frame(
@@ -200,40 +241,44 @@ def normalize_coordinates(coords: np.ndarray) -> NormalizedCoordinates:
     )
 
 
-def density_grid_extent(coords_norm: np.ndarray) -> tuple[float, float, float, float]:
-    finite = np.asarray(coords_norm, dtype=float)
-    finite = finite[np.isfinite(finite).all(axis=1)]
-    max_abs = float(np.max(np.abs(finite))) if len(finite) else 1.0
-    half_range = max(1.25, max_abs * 1.05)
-    return -half_range, half_range, -half_range, half_range
-
-
 def build_density_grid(
     coords_norm: np.ndarray,
     *,
     grid_size: int = 160,
     kde_max_points: int = 5000,
+    density_extent: tuple[float, float, float, float] = DEFAULT_DENSITY_EXTENT,
 ) -> DensityGrid:
     if grid_size < 10:
         raise ValueError("grid_size must be at least 10")
+    x_min, x_max, y_min, y_max = validate_density_extent(density_extent)
 
     coords_norm = np.asarray(coords_norm, dtype=float)
     finite = coords_norm[np.isfinite(coords_norm).all(axis=1)]
     if len(finite) < 3:
         raise ValueError("at least three finite points are required for density")
 
-    x_min, x_max, y_min, y_max = density_grid_extent(finite)
     x_edges = np.linspace(x_min, x_max, grid_size + 1)
     y_edges = np.linspace(y_min, y_max, grid_size + 1)
     x_centers = (x_edges[:-1] + x_edges[1:]) / 2
     y_centers = (y_edges[:-1] + y_edges[1:]) / 2
     cell_area = float((x_edges[1] - x_edges[0]) * (y_edges[1] - y_edges[0]))
+    in_extent = (
+        (finite[:, 0] >= x_min)
+        & (finite[:, 0] <= x_max)
+        & (finite[:, 1] >= y_min)
+        & (finite[:, 1] <= y_max)
+    )
+    density_points = finite[in_extent]
+    if len(density_points) < 3:
+        raise ValueError(
+            "at least three finite points inside the density extent are required"
+        )
 
     method = "kde"
     try:
-        if len(finite) > kde_max_points:
+        if len(density_points) > kde_max_points:
             raise ValueError("point count above KDE threshold")
-        kde = gaussian_kde(finite.T)
+        kde = gaussian_kde(density_points.T)
         xx, yy = np.meshgrid(x_centers, y_centers, indexing="ij")
         density = kde(np.vstack([xx.ravel(), yy.ravel()])).reshape(
             grid_size,
@@ -241,7 +286,11 @@ def build_density_grid(
         )
     except Exception:
         method = "histogram_gaussian_filter"
-        hist, _, _ = np.histogram2d(finite[:, 0], finite[:, 1], bins=[x_edges, y_edges])
+        hist, _, _ = np.histogram2d(
+            density_points[:, 0],
+            density_points[:, 1],
+            bins=[x_edges, y_edges],
+        )
         density = ndimage.gaussian_filter(hist.astype(float), sigma=1.25)
 
     density = np.nan_to_num(density, nan=0.0, posinf=0.0, neginf=0.0)
@@ -256,7 +305,39 @@ def build_density_grid(
         y_centers=y_centers,
         cell_area=cell_area,
         method=method,
+        extent=(x_min, x_max, y_min, y_max),
     )
+
+
+def outlier_control_metrics(
+    coords_norm: np.ndarray,
+    *,
+    density_extent: tuple[float, float, float, float] = DEFAULT_DENSITY_EXTENT,
+) -> dict[str, float]:
+    coords_norm = np.asarray(coords_norm, dtype=float)
+    finite = coords_norm[np.isfinite(coords_norm).all(axis=1)]
+    if len(finite) == 0:
+        return {
+            "max_normalized_radius": np.nan,
+            "outlier_share_r_gt_1": np.nan,
+            "outlier_share_r_gt_1_5": np.nan,
+            "outlier_share_outside_density_extent": np.nan,
+        }
+
+    x_min, x_max, y_min, y_max = validate_density_extent(density_extent)
+    radial = np.linalg.norm(finite, axis=1)
+    outside_extent = (
+        (finite[:, 0] < x_min)
+        | (finite[:, 0] > x_max)
+        | (finite[:, 1] < y_min)
+        | (finite[:, 1] > y_max)
+    )
+    return {
+        "max_normalized_radius": float(np.max(radial)),
+        "outlier_share_r_gt_1": float(np.mean(radial > 1.0)),
+        "outlier_share_r_gt_1_5": float(np.mean(radial > 1.5)),
+        "outlier_share_outside_density_extent": float(np.mean(outside_extent)),
+    }
 
 
 def radial_metrics(radial_normalized: np.ndarray) -> dict[str, float]:
@@ -645,13 +726,31 @@ def temporal_metrics(
 
     if len(annual_centroids) >= 2:
         path = 0.0
+        step_distances = []
         for (_, previous), (_, current) in zip(annual_centroids, annual_centroids[1:]):
-            path += float(np.linalg.norm(current - previous))
+            step_distance = float(np.linalg.norm(current - previous))
+            step_distances.append(step_distance)
+            path += step_distance
     else:
         path = np.nan
+        step_distances = []
         warnings.append(
             "annual_centroid_path_length unavailable because fewer than two years "
             f"have at least {TEMPORAL_MIN_POINTS} papers"
+        )
+
+    if len(step_distances) >= 2:
+        mean_step = float(np.mean(step_distances))
+        step_cv = float(np.std(step_distances) / mean_step) if mean_step > 0 else np.nan
+        if not np.isfinite(step_cv):
+            warnings.append(
+                "annual_centroid_step_cv unavailable because mean annual step distance is zero"
+            )
+    else:
+        step_cv = np.nan
+        warnings.append(
+            "annual_centroid_step_cv unavailable because fewer than three annual "
+            f"centroids have at least {TEMPORAL_MIN_POINTS} papers"
         )
 
     if np.isfinite(drift) and np.isfinite(path) and path > 0:
@@ -672,12 +771,31 @@ def temporal_metrics(
             f"have at least {TEMPORAL_MIN_POINTS} papers"
         )
 
+    if len(annual_median_radius) >= 3:
+        raw_year_values = np.array([year for year, _ in annual_median_radius], dtype=float)
+        radius_values = np.array([radius for _, radius in annual_median_radius], dtype=float)
+        coefficients = np.polyfit(raw_year_values - raw_year_values.mean(), radius_values, deg=1)
+        fitted = np.polyval(coefficients, raw_year_values - raw_year_values.mean())
+        ss_residual = float(np.sum((radius_values - fitted) ** 2))
+        ss_total = float(np.sum((radius_values - radius_values.mean()) ** 2))
+        radial_r2 = float(1.0 - (ss_residual / ss_total)) if ss_total > 0 else np.nan
+        if not np.isfinite(radial_r2):
+            warnings.append("radial_expansion_r2 unavailable because annual radii are constant")
+    else:
+        radial_r2 = np.nan
+        warnings.append(
+            "radial_expansion_r2 unavailable because fewer than three years "
+            f"have at least {TEMPORAL_MIN_POINTS} papers"
+        )
+
     return (
         {
             "centroid_drift_early_late": drift,
             "annual_centroid_path_length": float(path),
             "directionality_ratio": directionality,
             "radial_expansion_slope": slope,
+            "annual_centroid_step_cv": step_cv,
+            "radial_expansion_r2": radial_r2,
         },
         {
             "n_years_available": int(len(available_years)),
@@ -699,9 +817,15 @@ def compute_core_metrics(
     k_neighbors: int,
     mst_max_points: int,
     random_state: int,
+    density_extent: tuple[float, float, float, float] = DEFAULT_DENSITY_EXTENT,
 ) -> tuple[dict[str, Any], dict[str, Any], list[str]]:
     warnings: list[str] = []
-    grid = build_density_grid(coords_norm, grid_size=grid_size)
+    x_min, x_max, y_min, y_max = validate_density_extent(density_extent)
+    grid = build_density_grid(
+        coords_norm,
+        grid_size=grid_size,
+        density_extent=(x_min, x_max, y_min, y_max),
+    )
     support_mask = mass_mask(grid.density, 0.95)
     core_mask = mass_mask(grid.density, 0.50)
     _, peak_indices = detect_density_peaks(
@@ -741,6 +865,14 @@ def compute_core_metrics(
     controls = {
         "grid_size": int(grid_size),
         "k_neighbors": int(k_neighbors),
+        "density_x_min": float(x_min),
+        "density_x_max": float(x_max),
+        "density_y_min": float(y_min),
+        "density_y_max": float(y_max),
+        **outlier_control_metrics(
+            coords_norm,
+            density_extent=(x_min, x_max, y_min, y_max),
+        ),
         "mst_points_used": int(mst_points_used),
         "mst_sampling_applied": bool(mst_sampling_applied),
         **temporal_controls,
@@ -812,7 +944,8 @@ def compute_subfield_metric_row(
         **controls,
         **metrics,
     }
-    return metric_row_frame([row]).iloc[0].to_dict()
+    labelled = add_subfield_label_columns(pd.DataFrame([row]))
+    return metric_row_frame(labelled.to_dict("records")).iloc[0].to_dict()
 
 
 def failed_metric_row(
@@ -826,6 +959,7 @@ def failed_metric_row(
     error_message: str,
 ) -> dict[str, Any]:
     getter = manifest_row.get
+    x_min, x_max, y_min, y_max = DEFAULT_DENSITY_EXTENT
     row: dict[str, Any] = {
         "subfield_id": str(getter("subfield_id", "")),
         "subfield_display_name": str(getter("subfield_name", "")),
@@ -842,6 +976,10 @@ def failed_metric_row(
         "coordinate_path": str(coordinate_path),
         "grid_size": int(grid_size),
         "k_neighbors": int(k_neighbors),
+        "density_x_min": float(x_min),
+        "density_x_max": float(x_max),
+        "density_y_min": float(y_min),
+        "density_y_max": float(y_max),
     }
     for column in CONTROL_COLUMNS:
         row.setdefault(column, np.nan)
@@ -852,6 +990,8 @@ def failed_metric_row(
 
 def metric_row_frame(rows: list[dict[str, Any]]) -> pd.DataFrame:
     frame = pd.DataFrame(rows)
+    if {"subfield_id", "subfield_display_name"}.issubset(frame.columns):
+        frame = add_subfield_label_columns(frame)
     for column in OUTPUT_COLUMNS:
         if column not in frame.columns:
             frame[column] = np.nan
@@ -1017,6 +1157,20 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
             "More irregular or elongated boundary.",
         ),
         (
+            "max_normalized_radius",
+            "Shape, support and outlier morphology",
+            "Maximum Euclidean radius after median/r95 normalization.",
+            "Measures the most extreme normalized semantic outlier distance.",
+            "More extreme normalized outlier distance.",
+        ),
+        (
+            "outlier_share_r_gt_1_5",
+            "Shape, support and outlier morphology",
+            "Share of normalized points with Euclidean radius greater than 1.5.",
+            "Measures the far-tail share beyond the fixed density extent's reference radius.",
+            "More far-tail normalized points.",
+        ),
+        (
             "hole_count",
             "Support topology",
             "Count of enclosed background components inside the 95 percent support mask.",
@@ -1051,6 +1205,20 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
             "Measures radial expansion or contraction during 2010-2019.",
             "Semantic expansion over time.",
         ),
+        (
+            "annual_centroid_step_cv",
+            "Temporal morphology",
+            "Coefficient of variation of consecutive annual centroid step distances.",
+            "Measures whether temporal semantic movement is smooth or erratic.",
+            "More erratic annual movement.",
+        ),
+        (
+            "radial_expansion_r2",
+            "Temporal morphology",
+            "R-squared from a linear trend of annual median normalized radius on year.",
+            "Measures coherence of expansion or contraction over time.",
+            "More coherent radial temporal trend.",
+        ),
     ]
     rows = [
         {
@@ -1060,10 +1228,29 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
             "interpretation": interpretation,
             "higher_means": higher,
             "computed_on": "Per-subfield normalized UMAP coordinates",
-            "notes": "Coordinates are median-centered and divided by raw r95 before computation.",
+            "notes": (
+                "Coordinates are median-centered and divided by raw r95 before computation. "
+                "Density and support metrics use the fixed normalized grid "
+                "[-1.5, 1.5] x [-1.5, 1.5]."
+            )
+            if family
+            in {
+                "Density concentration",
+                "Multimodality",
+                "Fragmentation",
+                "Support shape",
+                "Shape, support and outlier morphology",
+                "Support topology",
+            }
+            else "Coordinates are median-centered and divided by raw r95 before computation.",
         }
         for name, family, definition, interpretation, higher in metric_rows
     ]
+    for row in rows:
+        if row["metric_name"] in CORE_METRIC_COLUMNS_V2:
+            row["notes"] = f"Core v2 modeling feature. {row['notes']}"
+        elif row["metric_name"] in DIAGNOSTIC_METRIC_COLUMNS:
+            row["notes"] = f"Diagnostic metric, not recommended as a core v2 feature. {row['notes']}"
 
     control_rows = [
         (
@@ -1101,6 +1288,60 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
             "No substantive interpretation.",
             "Normalized UMAP coordinates",
             "Should be approximately zero.",
+        ),
+        (
+            "density_x_min",
+            "Quality/control",
+            "Minimum x coordinate of the fixed normalized density/support grid.",
+            "Records the horizontal grid extent used for density and support metrics.",
+            "No substantive interpretation.",
+            "Normalized UMAP coordinates",
+            "Default is -1.5 and is a control, not a core morphology metric.",
+        ),
+        (
+            "density_x_max",
+            "Quality/control",
+            "Maximum x coordinate of the fixed normalized density/support grid.",
+            "Records the horizontal grid extent used for density and support metrics.",
+            "No substantive interpretation.",
+            "Normalized UMAP coordinates",
+            "Default is 1.5 and is a control, not a core morphology metric.",
+        ),
+        (
+            "density_y_min",
+            "Quality/control",
+            "Minimum y coordinate of the fixed normalized density/support grid.",
+            "Records the vertical grid extent used for density and support metrics.",
+            "No substantive interpretation.",
+            "Normalized UMAP coordinates",
+            "Default is -1.5 and is a control, not a core morphology metric.",
+        ),
+        (
+            "density_y_max",
+            "Quality/control",
+            "Maximum y coordinate of the fixed normalized density/support grid.",
+            "Records the vertical grid extent used for density and support metrics.",
+            "No substantive interpretation.",
+            "Normalized UMAP coordinates",
+            "Default is 1.5 and is a control, not a core morphology metric.",
+        ),
+        (
+            "outlier_share_r_gt_1",
+            "Quality/control",
+            "Share of normalized points with Euclidean radius greater than 1.",
+            "Diagnostic share beyond the r95 normalization radius.",
+            "More points beyond normalized radius 1.",
+            "Normalized UMAP coordinates",
+            "Control only; not one of the 25 core morphology metrics.",
+        ),
+        (
+            "outlier_share_outside_density_extent",
+            "Quality/control",
+            "Share of normalized points outside [-1.5, 1.5] x [-1.5, 1.5].",
+            "Diagnostic share excluded from the fixed density/support grid.",
+            "More points outside the density grid.",
+            "Normalized UMAP coordinates",
+            "Control only; not one of the 25 core morphology metrics.",
         ),
         (
             "mst_points_used",

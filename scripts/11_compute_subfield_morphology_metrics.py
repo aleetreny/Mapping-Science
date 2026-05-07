@@ -16,12 +16,15 @@ if str(ROOT) not in sys.path:
 
 from src.morphology_metrics import (
     CONTROL_COLUMNS,
+    CORE_METRIC_COLUMNS_V2,
+    DIAGNOSTIC_METRIC_COLUMNS,
     METRIC_COLUMNS,
+    compute_subfield_metric_row,
     failed_metric_row,
     metric_dictionary_frame,
     metric_row_frame,
-    compute_subfield_metric_row,
 )
+from src.subfield_labels import add_subfield_label_columns, duplicate_subfield_names_report
 from src.storage import load_parquet, save_parquet
 
 
@@ -59,6 +62,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--dictionary-path",
         default="outputs/metrics/subfield_morphology_metrics_dictionary.csv",
+    )
+    parser.add_argument(
+        "--duplicate-report-path",
+        default="outputs/metrics/duplicate_subfield_names_report.csv",
     )
     parser.add_argument("--limit-subfields", type=int, default=None)
     parser.add_argument("--subfield-id", default=None)
@@ -158,8 +165,9 @@ def main() -> None:
     output_csv = resolve_path(args.output_csv)
     summary_path = resolve_path(args.summary_path)
     dictionary_path = resolve_path(args.dictionary_path)
+    duplicate_report_path = resolve_path(args.duplicate_report_path)
     ensure_outputs_do_not_exist(
-        [output_parquet, output_csv, summary_path, dictionary_path],
+        [output_parquet, output_csv, summary_path, dictionary_path, duplicate_report_path],
         args.overwrite,
     )
 
@@ -229,7 +237,7 @@ def main() -> None:
             )
             print(f"{prefix}: failed ({exc})")
 
-    metrics = metric_row_frame(rows)
+    metrics = add_subfield_label_columns(metric_row_frame(rows))
     output_parquet.parent.mkdir(parents=True, exist_ok=True)
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     save_parquet(metrics, output_parquet)
@@ -238,6 +246,9 @@ def main() -> None:
     dictionary = metric_dictionary_frame()
     dictionary_path.parent.mkdir(parents=True, exist_ok=True)
     dictionary.to_csv(dictionary_path, index=False)
+    duplicate_report = duplicate_subfield_names_report(metrics)
+    duplicate_report_path.parent.mkdir(parents=True, exist_ok=True)
+    duplicate_report.to_csv(duplicate_report_path, index=False)
 
     status_counts = metrics["metric_status"].value_counts().to_dict()
     failed = metrics.loc[
@@ -255,12 +266,21 @@ def main() -> None:
         "output_parquet": display_path(output_parquet),
         "output_csv": display_path(output_csv),
         "dictionary_path": display_path(dictionary_path),
+        "duplicate_report_path": display_path(duplicate_report_path),
         "n_subfields_in_manifest": int(len(manifest)),
         "n_subfields_attempted": int(len(metrics)),
         "n_completed": int(len(metrics) - n_failed),
         "n_failed": n_failed,
         "metric_columns": METRIC_COLUMNS,
+        "core_metric_columns_v2": CORE_METRIC_COLUMNS_V2,
+        "diagnostic_metric_columns": DIAGNOSTIC_METRIC_COLUMNS,
         "control_columns": CONTROL_COLUMNS,
+        "n_duplicate_display_name_rows": int(len(duplicate_report)),
+        "n_duplicated_display_names": int(
+            duplicate_report["subfield_display_name"].nunique()
+        )
+        if len(duplicate_report)
+        else 0,
         "grid_size": int(args.grid_size),
         "k_neighbors": int(args.k_neighbors),
         "mst_max_points": int(args.mst_max_points),
@@ -275,6 +295,7 @@ def main() -> None:
     print(f"Wrote {display_path(output_csv)}")
     print(f"Wrote {display_path(summary_path)}")
     print(f"Wrote {display_path(dictionary_path)}")
+    print(f"Wrote {display_path(duplicate_report_path)}")
     print(
         "Done: "
         f"{summary['n_completed']} completed, "

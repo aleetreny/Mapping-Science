@@ -10,17 +10,26 @@ import pandas as pd
 import pytest
 
 from src.morphology_metrics import (
+    CORE_METRIC_COLUMNS_V2,
+    DEFAULT_DENSITY_EXTENT,
+    DIAGNOSTIC_METRIC_COLUMNS,
     METRIC_COLUMNS,
     anisotropy_ratio,
     build_density_grid,
     component_metrics,
     compute_subfield_metric_row,
+    density_concentration_metrics,
     density_entropy,
     detect_density_peaks,
     mass_mask,
     normalize_coordinates,
+    outlier_control_metrics,
     radial_metrics,
     temporal_metrics,
+)
+from src.subfield_labels import (
+    add_subfield_label_columns,
+    duplicate_subfield_names_report,
 )
 
 
@@ -80,6 +89,62 @@ def moving_cloud(seed: int = 42) -> tuple[np.ndarray, np.ndarray]:
     return np.vstack(coords), np.asarray(years)
 
 
+def radial_trend_cloud(noisy: bool = False) -> tuple[np.ndarray, np.ndarray]:
+    rng = np.random.default_rng(55 if not noisy else 56)
+    coords = []
+    years = []
+    for year in range(2010, 2020):
+        if noisy:
+            radius = rng.uniform(0.25, 1.25)
+        else:
+            radius = 0.25 + 0.08 * (year - 2010)
+        angles = np.linspace(0, 2 * np.pi, 12, endpoint=False)
+        points = np.column_stack([np.cos(angles) * radius, np.sin(angles) * radius])
+        points += rng.normal(scale=0.01, size=points.shape)
+        coords.append(points)
+        years.extend([year] * len(points))
+    return np.vstack(coords), np.asarray(years)
+
+
+def erratic_moving_cloud(seed: int = 57) -> tuple[np.ndarray, np.ndarray]:
+    rng = np.random.default_rng(seed)
+    centers = np.array(
+        [
+            [0.0, 0.0],
+            [0.1, 0.0],
+            [1.0, 0.6],
+            [1.1, 0.6],
+            [2.0, -0.3],
+            [2.1, -0.3],
+            [3.0, 0.7],
+            [3.1, 0.7],
+            [4.0, -0.4],
+            [4.1, -0.4],
+        ]
+    )
+    coords = []
+    years = []
+    for year, center in zip(range(2010, 2020), centers):
+        coords.append(center + rng.normal(scale=0.01, size=(8, 2)))
+        years.extend([year] * 8)
+    return np.vstack(coords), np.asarray(years)
+
+
+def test_core_metric_columns_v2_are_curated_25() -> None:
+    assert len(CORE_METRIC_COLUMNS_V2) == 25
+    assert METRIC_COLUMNS == CORE_METRIC_COLUMNS_V2
+    for demoted in [
+        "density_gini",
+        "effective_area_50",
+        "support_circularity",
+        "hole_count",
+        "outlier_share_r_gt_1",
+        "outlier_share_outside_density_extent",
+    ]:
+        assert demoted not in CORE_METRIC_COLUMNS_V2
+        assert demoted in DIAGNOSTIC_METRIC_COLUMNS
+
+
 def test_coordinate_normalization_is_translation_and_scale_invariant() -> None:
     rng = np.random.default_rng(42)
     coords = rng.normal(size=(80, 2))
@@ -111,6 +176,25 @@ def test_density_grid_sums_to_one() -> None:
     assert grid.density.shape == (50, 50)
 
 
+def test_density_grid_uses_fixed_extent_by_default() -> None:
+    rng = np.random.default_rng(14)
+    coords_norm = normalize(rng.normal(size=(100, 2)))
+    grid = build_density_grid(coords_norm, grid_size=50)
+
+    assert grid.extent == DEFAULT_DENSITY_EXTENT
+    assert np.isclose(grid.x_centers[0], -1.5 + (3.0 / 50) / 2)
+    assert np.isclose(grid.x_centers[-1], 1.5 - (3.0 / 50) / 2)
+    assert np.isclose(grid.cell_area, (3.0 / 50) ** 2)
+
+
+def test_density_grid_rejects_invalid_extent() -> None:
+    rng = np.random.default_rng(15)
+    coords_norm = normalize(rng.normal(size=(100, 2)))
+
+    with pytest.raises(ValueError, match="x_min < x_max"):
+        build_density_grid(coords_norm, grid_size=50, density_extent=(1, -1, -1, 1))
+
+
 def test_density_entropy_higher_for_spread_cloud_than_concentrated_cloud() -> None:
     rng = np.random.default_rng(21)
     angles = rng.uniform(0, 2 * np.pi, size=220)
@@ -127,6 +211,33 @@ def test_density_entropy_higher_for_spread_cloud_than_concentrated_cloud() -> No
     )
 
     assert spread_entropy > concentrated_entropy
+
+
+def test_single_extreme_outlier_does_not_radically_change_effective_area() -> None:
+    rng = np.random.default_rng(22)
+    cloud = rng.normal(scale=0.20, size=(200, 2))
+    with_outlier = np.vstack([cloud, np.array([[100.0, 100.0]])])
+
+    base_grid = build_density_grid(normalize(cloud), grid_size=80)
+    outlier_grid = build_density_grid(normalize(with_outlier), grid_size=80)
+    base_metrics = density_concentration_metrics(base_grid)
+    outlier_metrics = density_concentration_metrics(outlier_grid)
+
+    for column in ["effective_area_50", "effective_area_90"]:
+        ratio = outlier_metrics[column] / base_metrics[column]
+        assert 0.5 < ratio < 2.0
+
+
+def test_outlier_controls_report_extreme_points() -> None:
+    rng = np.random.default_rng(23)
+    cloud = rng.normal(scale=0.20, size=(200, 2))
+    with_outlier = np.vstack([cloud, np.array([[100.0, 100.0]])])
+    base_controls = outlier_control_metrics(normalize(cloud))
+    outlier_controls = outlier_control_metrics(normalize(with_outlier))
+
+    assert outlier_controls["max_normalized_radius"] > base_controls["max_normalized_radius"]
+    assert outlier_controls["outlier_share_r_gt_1_5"] > 0
+    assert outlier_controls["outlier_share_outside_density_extent"] > 0
 
 
 def test_peak_count_detects_two_blob_cloud() -> None:
@@ -182,6 +293,48 @@ def test_temporal_drift_positive_for_steadily_moving_centroids() -> None:
     assert metrics["directionality_ratio"] > 0
     assert controls["n_years_available"] == 10
     assert warnings == []
+
+
+def test_annual_centroid_step_cv_is_higher_for_erratic_motion() -> None:
+    smooth_coords, smooth_years = moving_cloud(seed=61)
+    erratic_coords, erratic_years = erratic_moving_cloud(seed=62)
+    smooth_metrics, _, _ = temporal_metrics(
+        normalize(smooth_coords),
+        smooth_years,
+        year_min=2010,
+        year_max=2019,
+    )
+    erratic_metrics, _, _ = temporal_metrics(
+        normalize(erratic_coords),
+        erratic_years,
+        year_min=2010,
+        year_max=2019,
+    )
+
+    assert smooth_metrics["annual_centroid_step_cv"] < 0.5
+    assert erratic_metrics["annual_centroid_step_cv"] > smooth_metrics[
+        "annual_centroid_step_cv"
+    ]
+
+
+def test_radial_expansion_r2_tracks_cleaner_radial_trend() -> None:
+    clean_coords, clean_years = radial_trend_cloud(noisy=False)
+    noisy_coords, noisy_years = radial_trend_cloud(noisy=True)
+    clean_metrics, _, _ = temporal_metrics(
+        normalize(clean_coords),
+        clean_years,
+        year_min=2010,
+        year_max=2019,
+    )
+    noisy_metrics, _, _ = temporal_metrics(
+        normalize(noisy_coords),
+        noisy_years,
+        year_min=2010,
+        year_max=2019,
+    )
+
+    assert clean_metrics["radial_expansion_r2"] > 0.9
+    assert noisy_metrics["radial_expansion_r2"] < clean_metrics["radial_expansion_r2"]
 
 
 def test_cli_runs_on_tiny_manifest_and_coordinate_parquets(tmp_path: Path) -> None:
@@ -291,7 +444,63 @@ def test_compute_row_contains_all_25_metric_columns() -> None:
 
     assert set(METRIC_COLUMNS).issubset(row.keys())
     assert len(METRIC_COLUMNS) == 25
+    assert set(DIAGNOSTIC_METRIC_COLUMNS).issubset(row.keys())
     assert row["metric_status"] in {"completed", "completed_with_warnings"}
+    assert (
+        row["subfield_label_unique"]
+        == "1100 | Domain 1 / Field 1100 / Synthetic Subfield"
+    )
+    assert row["subfield_label_short"] == "1100 | Field 1100 / Synthetic Subfield"
+    assert row["density_x_min"] == DEFAULT_DENSITY_EXTENT[0]
+    assert row["density_x_max"] == DEFAULT_DENSITY_EXTENT[1]
+    assert row["density_y_min"] == DEFAULT_DENSITY_EXTENT[2]
+    assert row["density_y_max"] == DEFAULT_DENSITY_EXTENT[3]
+    assert "max_normalized_radius" in row
+    assert "outlier_share_outside_density_extent" in row
+
+
+def test_duplicate_display_names_do_not_break_metric_rows() -> None:
+    coords, years = moving_cloud(seed=90)
+    first = compute_subfield_metric_row(
+        coordinate_frame(coords, years, subfield_id="1303", subfield_name="Biochemistry"),
+        coordinate_path="first.parquet",
+        year_min=2010,
+        year_max=2019,
+        grid_size=50,
+        k_neighbors=5,
+        mst_max_points=80,
+        random_state=42,
+    )
+    second_frame = coordinate_frame(
+        coords + np.array([3.0, 0.0]),
+        years,
+        subfield_id="2704",
+        subfield_name="Biochemistry",
+    )
+    second_frame["field_display_name"] = "Medicine"
+    second_frame["domain_display_name"] = "Health Sciences"
+    second = compute_subfield_metric_row(
+        second_frame,
+        coordinate_path="second.parquet",
+        year_min=2010,
+        year_max=2019,
+        grid_size=50,
+        k_neighbors=5,
+        mst_max_points=80,
+        random_state=42,
+    )
+
+    rows = add_subfield_label_columns(pd.DataFrame([first, second]))
+    report = duplicate_subfield_names_report(rows)
+
+    assert rows["subfield_display_name_is_duplicated"].tolist() == [True, True]
+    assert len(report) == 2
+    assert "1303 | Domain 1 / Field 1303 / Biochemistry" in set(
+        report["subfield_label_unique"]
+    )
+    assert "2704 | Health Sciences / Medicine / Biochemistry" in set(
+        report["subfield_label_unique"]
+    )
 
 
 def test_compute_row_rejects_year_window_outside_morphology_period() -> None:

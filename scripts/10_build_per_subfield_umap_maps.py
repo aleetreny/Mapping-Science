@@ -219,10 +219,22 @@ def main() -> None:
     for position, subfield in attempted_subfields.iterrows():
         subfield_id = subfield["subfield_id"]
         subfield_name = subfield["subfield_display_name"]
+        subfield_label_short = subfield["subfield_label_short"]
         subfield_key = str(subfield_id)
         available = groups.get(subfield_key, window_index.head(0))
         n_available = int(len(available))
-        progress_prefix = f"[{position + 1}/{total}] {subfield_key} - {subfield_name}"
+        progress_prefix = f"[{position + 1}/{total}] {subfield_label_short}"
+        manifest_metadata = {
+            "field_id": subfield.get("field_id", ""),
+            "field_display_name": subfield.get("field_display_name", ""),
+            "domain_id": subfield.get("domain_id", ""),
+            "domain_display_name": subfield.get("domain_display_name", ""),
+            "subfield_label_unique": subfield.get("subfield_label_unique", ""),
+            "subfield_label_short": subfield.get("subfield_label_short", ""),
+            "subfield_display_name_is_duplicated": bool(
+                subfield.get("subfield_display_name_is_duplicated", False)
+            ),
+        }
 
         stem = safe_subfield_stem(subfield_id, subfield_name)
         coordinate_path = coordinates_dir / f"{stem}.parquet"
@@ -247,6 +259,7 @@ def main() -> None:
                     umap_min_dist=args.min_dist,
                     umap_metric=args.metric,
                     random_state=args.random_state,
+                    **manifest_metadata,
                 )
             )
             continue
@@ -285,7 +298,7 @@ def main() -> None:
             save_parquet(coordinate_frame, coordinate_path)
             density_method = plot_subfield_panels(
                 coordinates,
-                subfield_name=str(subfield_name),
+                subfield_name=str(subfield_label_short),
                 n_used=len(sampled),
                 year_min=args.year_min,
                 year_max=args.year_max,
@@ -312,6 +325,7 @@ def main() -> None:
                     umap_min_dist=args.min_dist,
                     umap_metric=args.metric,
                     random_state=args.random_state,
+                    **manifest_metadata,
                 )
             )
         except Exception as exc:
@@ -334,6 +348,7 @@ def main() -> None:
                     umap_min_dist=args.min_dist,
                     umap_metric=args.metric,
                     random_state=args.random_state,
+                    **manifest_metadata,
                 )
             )
 

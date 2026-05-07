@@ -11,6 +11,7 @@ import matplotlib
 import numpy as np
 import pandas as pd
 
+from src.subfield_labels import add_subfield_label_columns
 from src.umap_maps import UMAP_OUTPUT_COLUMNS
 
 matplotlib.use("Agg", force=True)
@@ -29,6 +30,13 @@ REQUIRED_INDEX_COLUMNS = {
 MANIFEST_COLUMNS = [
     "subfield_id",
     "subfield_name",
+    "field_id",
+    "field_display_name",
+    "domain_id",
+    "domain_display_name",
+    "subfield_label_unique",
+    "subfield_label_short",
+    "subfield_display_name_is_duplicated",
     "n_available",
     "n_used",
     "year_min",
@@ -103,7 +111,15 @@ def stable_sort_work_rows(rows: pd.DataFrame) -> pd.DataFrame:
 def main_analysis_subfields(index: pd.DataFrame) -> pd.DataFrame:
     validate_index_columns(index)
     main_mask = index["main_analysis_eligible_2500"].fillna(False).astype(bool)
-    main = index.loc[main_mask, ["subfield_id", "subfield_display_name"]].copy()
+    columns = [
+        "subfield_id",
+        "subfield_display_name",
+        "field_id",
+        "field_display_name",
+        "domain_id",
+        "domain_display_name",
+    ]
+    main = index.loc[main_mask, columns].copy()
     main["_subfield_sort_key"] = main["subfield_id"].astype(str)
     subfields = (
         main.sort_values(["_subfield_sort_key", "subfield_display_name"], kind="mergesort")
@@ -111,7 +127,7 @@ def main_analysis_subfields(index: pd.DataFrame) -> pd.DataFrame:
         .drop(columns="_subfield_sort_key")
         .reset_index(drop=True)
     )
-    return subfields
+    return add_subfield_label_columns(subfields)
 
 
 def filter_input_window(
@@ -181,16 +197,29 @@ def build_coordinate_frame(
     output = sampled_index.copy()
     output["umap_x"] = coordinates[:, 0].astype(np.float32)
     output["umap_y"] = coordinates[:, 1].astype(np.float32)
+    output = add_subfield_label_columns(output)
     for column in UMAP_OUTPUT_COLUMNS:
         if column not in output.columns:
             output[column] = pd.NA
-    return output[UMAP_OUTPUT_COLUMNS]
+    extra_columns = [
+        "subfield_label_unique",
+        "subfield_label_short",
+        "subfield_display_name_is_duplicated",
+    ]
+    return output[UMAP_OUTPUT_COLUMNS + extra_columns]
 
 
 @dataclass(frozen=True)
 class ManifestRow:
     subfield_id: str
     subfield_name: str
+    field_id: str
+    field_display_name: str
+    domain_id: str
+    domain_display_name: str
+    subfield_label_unique: str
+    subfield_label_short: str
+    subfield_display_name_is_duplicated: bool
     n_available: int
     n_used: int
     year_min: int
@@ -218,6 +247,13 @@ def build_manifest_row(
     umap_min_dist: float,
     umap_metric: str,
     random_state: int,
+    field_id: object = "",
+    field_display_name: object = "",
+    domain_id: object = "",
+    domain_display_name: object = "",
+    subfield_label_unique: object = "",
+    subfield_label_short: object = "",
+    subfield_display_name_is_duplicated: bool = False,
     coordinate_path: str | Path | None = None,
     figure_path: str | Path | None = None,
     error_message: str | None = None,
@@ -230,6 +266,15 @@ def build_manifest_row(
     row = ManifestRow(
         subfield_id=str(subfield_id),
         subfield_name="" if pd.isna(subfield_name) else str(subfield_name),
+        field_id="" if pd.isna(field_id) else str(field_id),
+        field_display_name="" if pd.isna(field_display_name) else str(field_display_name),
+        domain_id="" if pd.isna(domain_id) else str(domain_id),
+        domain_display_name="" if pd.isna(domain_display_name) else str(domain_display_name),
+        subfield_label_unique=""
+        if pd.isna(subfield_label_unique)
+        else str(subfield_label_unique),
+        subfield_label_short="" if pd.isna(subfield_label_short) else str(subfield_label_short),
+        subfield_display_name_is_duplicated=bool(subfield_display_name_is_duplicated),
         n_available=int(n_available),
         n_used=int(n_used),
         year_min=int(year_min),

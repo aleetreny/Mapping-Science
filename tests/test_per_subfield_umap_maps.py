@@ -14,6 +14,7 @@ from src.per_subfield_umap_maps import (
     MANIFEST_COLUMNS,
     build_manifest_row,
     filter_input_window,
+    main_analysis_subfields,
     manifest_frame,
     plot_subfield_panels,
     safe_subfield_stem,
@@ -170,6 +171,19 @@ def test_filter_input_window_uses_main_analysis_and_year_bounds() -> None:
     assert index.loc[index.index[0], "analysis_row_id"] not in set(
         filtered["analysis_row_id"]
     )
+
+
+def test_main_analysis_subfields_adds_unique_labels_for_duplicate_names() -> None:
+    index = synthetic_index()
+    index.loc[index["subfield_id"] == "2200", "subfield_display_name"] = "Shared Name"
+    index.loc[index["subfield_id"] == "1100", "subfield_display_name"] = "Shared Name"
+
+    subfields = main_analysis_subfields(index)
+
+    assert subfields["subfield_display_name_is_duplicated"].all()
+    labels = set(subfields["subfield_label_unique"])
+    assert "1100 | Domain 1 / Field 1100 / Shared Name" in labels
+    assert "2200 | Domain 1 / Field 2200 / Shared Name" in labels
 
 
 def test_validate_index_columns_fails_clearly_without_publication_year() -> None:

@@ -4,6 +4,13 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .ipynb_checkpoints/
+.vscode/
+
+# Temporary local prompts for coding agents
+*_agent_prompt*.md
+*_patch_prompt*.md
+!docs/*_agent_prompt*.md
+!docs/*_patch_prompt*.md
 
 # Data and generated artifacts
 data/raw/**

@@ -1,9 +1,10 @@
 # Subfield Morphology Metrics
 
 This stage converts the per-subfield UMAP coordinate files into a tabular
-dataset with one row per OpenAlex subfield and 25 morphology metrics. It does
-not build prediction models, add growth targets, run clustering, use PCA, or
-create dashboards.
+dataset with one row per OpenAlex subfield. It writes a curated set of 25 core
+v2 morphology metrics for later modeling plus diagnostic metrics and controls.
+It does not build prediction models, add growth targets, run paper clustering,
+or create dashboards.
 
 ## Inputs
 
@@ -35,6 +36,19 @@ umap_x
 umap_y
 ```
 
+`subfield_id` is the primary key. `subfield_display_name` is not unique in
+OpenAlex, so the output table also contains:
+
+```text
+subfield_label_unique
+subfield_label_short
+subfield_display_name_is_duplicated
+```
+
+`subfield_label_unique` has the form
+`{subfield_id} | {domain_display_name} / {field_display_name} / {subfield_display_name}`.
+Duplicate display names are reported, not treated as data errors.
+
 ## Outputs
 
 Primary outputs:
@@ -44,6 +58,7 @@ data/processed/subfield_morphology_metrics.parquet
 data/processed/subfield_morphology_metrics.csv
 outputs/metrics/subfield_morphology_metrics_summary.json
 outputs/metrics/subfield_morphology_metrics_dictionary.csv
+outputs/metrics/duplicate_subfield_names_report.csv
 ```
 
 The parquet file is the machine-readable table. The CSV is for quick
@@ -62,37 +77,134 @@ metrics, each subfield is normalized independently:
 4. Compute `raw_r95`, the 95th percentile of raw radial distances.
 5. Divide centered coordinates by `raw_r95`.
 
-All 25 morphology metrics are computed from these normalized coordinates. Raw
-UMAP bounds and `raw_r95` are saved only as diagnostics, not as morphology
-features.
+All core and diagnostic morphology metrics are computed from these normalized
+coordinates. Raw UMAP bounds and `raw_r95` are saved only as diagnostics, not as
+morphology features.
 
-## Metric Families
+## Fixed Density Grid And Outliers
 
-The table contains exactly these 25 metric columns:
+Density and support metrics are computed on a fixed normalized grid:
+
+```text
+[-1.5, 1.5] x [-1.5, 1.5]
+```
+
+The fixed extent is used because coordinates have already been median-centered
+and divided by `raw_r95`. Most semantic mass should lie within radius about 1,
+so using the same grid for every subfield keeps density cell areas comparable.
+It also prevents one extreme UMAP outlier from stretching the KDE or support
+grid and distorting area, solidity, circularity, component, or hole metrics.
+
+Points outside this rectangle are not used to stretch the density/support grid.
+They are instead recorded with explicit control columns:
+
+```text
+max_normalized_radius
+outlier_share_r_gt_1
+outlier_share_r_gt_1_5
+outlier_share_outside_density_extent
+density_x_min
+density_x_max
+density_y_min
+density_y_max
+```
+
+`max_normalized_radius` and `outlier_share_r_gt_1_5` are retained as core v2
+outlier morphology features. `outlier_share_r_gt_1` and
+`outlier_share_outside_density_extent` are diagnostic only because they are
+partly mechanical after `r95` normalization or tied to the fixed grid.
+
+## Core V2 Metric Families
+
+`CORE_METRIC_COLUMNS_V2` contains exactly these 25 curated metrics recommended
+for later modeling:
 
 - Radial dispersion and local granularity:
   `radial_tail_index`, `radial_iqr_index`, `knn_median_distance`,
   `knn_distance_cv`.
 - Density concentration:
-  `density_entropy`, `density_gini`, `peak_dominance`,
-  `effective_area_50`, `effective_area_90`, `core_periphery_ratio`.
+  `density_entropy`, `peak_dominance`, `effective_area_90`,
+  `core_periphery_ratio`.
 - Multimodality and fragmentation:
   `density_peak_count`, `peak_mass_entropy`, `dense_component_count`,
   `largest_component_mass_share`, `component_separation_index`,
   `mst_gap_index`.
-- Shape and topology of occupied support:
-  `anisotropy_ratio`, `support_solidity`, `support_circularity`,
-  `boundary_complexity`, `hole_count`.
+- Shape, support and outlier morphology:
+  `anisotropy_ratio`, `support_solidity`, `boundary_complexity`,
+  `max_normalized_radius`, `outlier_share_r_gt_1_5`.
 - Temporal morphology inside the morphology window:
   `centroid_drift_early_late`, `annual_centroid_path_length`,
-  `directionality_ratio`, `radial_expansion_slope`.
+  `directionality_ratio`, `radial_expansion_slope`,
+  `annual_centroid_step_cv`, `radial_expansion_r2`.
 
-Density metrics use a normalized KDE-like grid. The preferred density estimator
-is `scipy.stats.gaussian_kde`; if KDE is numerically unstable or the point count
-is high, the code falls back to a smoothed 2D histogram.
+The output table also keeps diagnostic metrics:
+
+```text
+density_gini
+effective_area_50
+support_circularity
+hole_count
+outlier_share_r_gt_1
+outlier_share_outside_density_extent
+```
+
+These were demoted because they are redundant with core metrics or weakly
+varying in the first full run. `density_gini` and `effective_area_50` strongly
+track density entropy/effective area, `support_circularity` is the inverse view
+of `boundary_complexity`, `hole_count` has little variation, and
+`outlier_share_r_gt_1` is nearly mechanical because `r95` normalization places
+about five percent of points beyond radius 1.
+
+Density metrics use the fixed normalized KDE-like grid described above. The
+preferred density estimator is `scipy.stats.gaussian_kde`; if KDE is
+numerically unstable or the point count is high, the code falls back to a
+smoothed 2D histogram.
 
 The MST gap metric can be expensive, so it deterministically samples at most
 `--mst-max-points` normalized coordinates per subfield.
+
+## Morphology Analysis Stage
+
+After computing the metric table, run:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\12_analyze_morphology_metrics.py --overwrite
+```
+
+For a quick check:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\12_analyze_morphology_metrics.py --limit-subfields 20 --overwrite
+```
+
+The analysis stage writes:
+
+```text
+outputs/metrics/morphology_analysis/metric_descriptive_stats.csv
+outputs/metrics/morphology_analysis/metric_missingness.csv
+outputs/metrics/morphology_analysis/metric_correlation_matrix.csv
+outputs/metrics/morphology_analysis/high_correlation_pairs.csv
+outputs/metrics/morphology_analysis/low_variance_metrics.csv
+outputs/metrics/morphology_analysis/top_bottom_subfields_by_metric.csv
+outputs/metrics/morphology_analysis/domain_metric_summary.csv
+outputs/metrics/morphology_analysis/field_metric_summary.csv
+outputs/metrics/morphology_analysis/duplicate_subfield_names_report.csv
+outputs/metrics/morphology_analysis/family_scores.csv
+outputs/metrics/morphology_analysis/curated_model_features.parquet
+outputs/metrics/morphology_analysis/curated_model_features.csv
+outputs/metrics/morphology_analysis/morphology_analysis_summary.json
+```
+
+It also writes exploratory figures under
+`outputs/metrics/morphology_analysis/figures/`.
+
+Family scores are robust-z composites of the core v2 metrics. They are intended
+as interpretable reduced features for later prediction work, but no growth
+target is joined here.
+
+The analysis script also runs an exploratory PCA on the final metric table.
+This is not PCA-before-UMAP; it is a post-metric diagnostic to understand
+redundancy among already computed morphology descriptors.
 
 ## Temporal Leakage Guardrail
 
