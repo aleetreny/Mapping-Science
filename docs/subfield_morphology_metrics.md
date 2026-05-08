@@ -194,26 +194,39 @@ For a quick check:
 .\.venv\Scripts\python.exe scripts\12_analyze_morphology_metrics.py --limit-subfields 20 --overwrite
 ```
 
-The analysis stage writes:
+Stage 12 is a descriptive morphology exploration suite. It does not join
+growth targets, estimate prediction models, or tune morphology features using
+future outcomes. Its purpose is to make the final morphology layer
+interpretable before growth-target construction.
+
+The canonical outputs are organized as:
 
 ```text
-outputs/metrics/morphology_analysis/metric_descriptive_stats.csv
-outputs/metrics/morphology_analysis/metric_missingness.csv
-outputs/metrics/morphology_analysis/metric_correlation_matrix.csv
-outputs/metrics/morphology_analysis/high_correlation_pairs.csv
-outputs/metrics/morphology_analysis/low_variance_metrics.csv
-outputs/metrics/morphology_analysis/top_bottom_subfields_by_metric.csv
-outputs/metrics/morphology_analysis/domain_metric_summary.csv
-outputs/metrics/morphology_analysis/field_metric_summary.csv
-outputs/metrics/morphology_analysis/duplicate_subfield_names_report.csv
-outputs/metrics/morphology_analysis/family_scores.csv
-outputs/metrics/morphology_analysis/curated_model_features.parquet
-outputs/metrics/morphology_analysis/curated_model_features.csv
+outputs/metrics/morphology_analysis/
+  tables/
+  figures/
+    00_quality/
+    01_distributions/
+    02_correlations/
+    03_family_scores/
+    04_domain_field_profiles/
+    05_metric_space_pca/
+    06_rankings_extremes/
+    07_case_study_atlas/
 outputs/metrics/morphology_analysis/morphology_analysis_summary.json
+outputs/metrics/morphology_analysis/morphology_analysis_report.md
+outputs/metrics/morphology_analysis/morphology_analysis_figure_index.csv
 ```
 
-It also writes exploratory figures under
-`outputs/metrics/morphology_analysis/figures/`.
+Key tables include data-quality summaries, metric descriptive statistics,
+Pearson and Spearman correlation matrices, redundancy clusters, family scores,
+domain/field profiles, PCA loadings, top/bottom rankings, case-study
+candidates, and transparent rule-based morphology archetypes.
+
+The figure folders separate quality checks, distributions, correlation and
+redundancy views, family-score plots, domain/field profiles, metric-table PCA,
+rankings, and a case-study atlas. The figure index CSV explains what each PNG
+answers and which tables support it.
 
 Family scores are robust-z composites of the core v2 metrics. They are intended
 as interpretable reduced features for later prediction work, but no growth
@@ -225,6 +238,13 @@ The family-score table includes a `diversification_score` based on
 The analysis script also runs an exploratory PCA on the final metric table.
 This is not PCA-before-UMAP; it is a post-metric diagnostic to understand
 redundancy among already computed morphology descriptors.
+
+Useful Stage 12 options:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\12_analyze_morphology_metrics.py --high-correlation-threshold 0.85 --top-n 10 --label-top-n 8 --overwrite
+.\.venv\Scripts\python.exe scripts\12_analyze_morphology_metrics.py --limit-subfields 20 --skip-pca --skip-heavy-plots --overwrite
+```
 
 ## Temporal Leakage Guardrail
 

@@ -102,9 +102,16 @@ features. See
 [docs/subfield_morphology_metrics.md](docs/subfield_morphology_metrics.md).
 
 The morphology analysis stage writes distributions, correlations, low-variance
-checks, duplicate-name reports, family scores, curated model-feature tables, and
-exploratory metric-table PCA diagnostics. This PCA is applied only to the final
-metric table, not to SPECTER2 embeddings before UMAP.
+checks, duplicate-name reports, family scores, domain/field profiles,
+rankings, rule-based archetypes, case-study candidates, a Markdown report, a
+figure index, and exploratory metric-table PCA diagnostics. Its canonical
+outputs are organized under
+`outputs/metrics/morphology_analysis/tables/` and
+`outputs/metrics/morphology_analysis/figures/`, with figure subfolders for
+quality, distributions, correlations, family scores, domain/field profiles,
+PCA, rankings, and the case-study atlas. This PCA is applied only to the final
+metric table, not to SPECTER2 embeddings before UMAP. Stage 12 is descriptive:
+it does not join growth targets and does not estimate prediction models.
 
 ## Repository Layout
 
@@ -183,6 +190,10 @@ outputs/metrics/subfield_morphology_metrics_summary.json
 outputs/metrics/subfield_morphology_metrics_dictionary.csv
 outputs/metrics/duplicate_subfield_names_report.csv
 outputs/metrics/morphology_analysis/
+outputs/metrics/morphology_analysis/tables/
+outputs/metrics/morphology_analysis/figures/
+outputs/metrics/morphology_analysis/morphology_analysis_report.md
+outputs/metrics/morphology_analysis/morphology_analysis_figure_index.csv
 ```
 
 Data files, secrets, and large artifacts are ignored by Git.
