@@ -1,10 +1,10 @@
 # OpenAlex Subfield Morphology and Scientific Growth Prediction
 
-The full thesis context is summarized in [research/README.md](research/README.md). This codebase is currently implementing the data collection and database organization phase only.
+The full thesis context is summarized in [research/README.md](research/README.md).
 
 The project builds a clean OpenAlex database for later testing whether the title and abstract structure of a subfield before 2020 helps predict whether that subfield grows during 2020-2025.
 
-The current pipeline prepares SPECTER2 embedding artifacts, UMAP visual inspection maps, a tabular morphology-metrics dataset, and pre-prediction morphology diagnostics. It still does not add paper clustering, regression models, prediction models, growth-target joins, dashboards, or ML infrastructure.
+The current pipeline prepares SPECTER2 embedding artifacts, UMAP visual inspection maps, a tabular morphology-metrics dataset, pre-prediction morphology diagnostics, and standalone annualized growth targets. It still does not add paper clustering, regression models, prediction models, dashboards, or ML infrastructure.
 
 ## Current Data Design
 
@@ -18,6 +18,7 @@ The current pipeline prepares SPECTER2 embedding artifacts, UMAP visual inspecti
 - Sample target: 3,000 papers per eligible subfield
 - Main analysis threshold: `n_valid_works >= 2500`
 - Robustness threshold: `n_valid_works >= 500`
+- Growth target count source: full OpenAlex grouped article/preprint counts, not the sampled morphology corpus
 - Storage: one DuckDB database at `warehouse/tfm_openalex.duckdb`
 
 ## Why Subfields, Not Topics
@@ -69,7 +70,7 @@ See [docs/embedding_data_model.md](docs/embedding_data_model.md) for shard loadi
 ## Analysis Matrix And First UMAP
 
 Prepare the main-analysis matrix, first sampled UMAP map, per-subfield visual
-inspection maps, morphology metrics, and metric diagnostics with:
+inspection maps, morphology metrics, metric diagnostics, and growth targets with:
 
 ```bash
 python scripts/08_prepare_analysis_matrix.py
@@ -77,6 +78,7 @@ python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
 python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --max-papers-per-subfield 2000 --overwrite
 python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --overwrite
 python scripts/12_analyze_morphology_metrics.py --limit-subfields 20 --overwrite
+python scripts/13_build_subfield_growth_targets.py --overwrite
 ```
 
 The matrix uses only `main_analysis_eligible_2500 == true` rows and preserves deterministic order by `subfield_id`, `publication_year`, and `work_id`. The UMAP script uses a balanced per-subfield sample for first visual inspection only.
@@ -112,6 +114,16 @@ quality, distributions, correlations, family scores, domain/field profiles,
 PCA, rankings, and the case-study atlas. This PCA is applied only to the final
 metric table, not to SPECTER2 embeddings before UMAP. Stage 12 is descriptive:
 it does not join growth targets and does not estimate prediction models.
+
+The growth-target stage uses full OpenAlex yearly count tables, restricts to the
+same 240 main-analysis subfields, completes the 2010-2025 subfield-year panel,
+and computes annualized rates before comparing growth across the unequal
+10-year and 6-year windows. The main continuous target is
+`annualized_log_growth = log1p(annual_rate_2020_2025) - log1p(annual_rate_2010_2019)`.
+The main binary target is `growth_above_median`, with a strict global median
+threshold. It also writes `domain_adjusted_annualized_log_growth` and
+`growth_above_domain_median`. See
+[docs/subfield_growth_targets.md](docs/subfield_growth_targets.md).
 
 ## Repository Layout
 
@@ -152,6 +164,7 @@ python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
 python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --max-papers-per-subfield 2000 --overwrite
 python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --overwrite
 python scripts/12_analyze_morphology_metrics.py --limit-subfields 20 --overwrite
+python scripts/13_build_subfield_growth_targets.py --overwrite
 ```
 
 The full corpus download may take time. Test first with `--limit-subfields 5`, then use the production runbook in [docs/full_download_runbook.md](docs/full_download_runbook.md).
@@ -194,6 +207,14 @@ outputs/metrics/morphology_analysis/tables/
 outputs/metrics/morphology_analysis/figures/
 outputs/metrics/morphology_analysis/morphology_analysis_report.md
 outputs/metrics/morphology_analysis/morphology_analysis_figure_index.csv
+data/processed/subfield_growth_targets.parquet
+data/processed/subfield_growth_targets.csv
+outputs/growth/subfield_growth_targets_summary.json
+outputs/growth/subfield_year_counts_panel.parquet
+outputs/growth/subfield_year_counts_panel.csv
+outputs/growth/growth_rankings.csv
+outputs/growth/domain_growth_summary.csv
+outputs/growth/figures/
 ```
 
 Data files, secrets, and large artifacts are ignored by Git.

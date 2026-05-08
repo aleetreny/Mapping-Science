@@ -1,5 +1,13 @@
 # Growth Definition
 
+For the current thesis target table, use
+[subfield_growth_targets.md](subfield_growth_targets.md). That Stage 13 target
+uses annualized OpenAlex article/preprint counts and corrects for the different
+window lengths: 2010-2019 has 10 years, while 2020-2025 has 6 years.
+
+The share-based definitions below were used earlier for corpus planning and
+relative-growth exploration. They are not the final prediction target columns.
+
 The unit of analysis is the OpenAlex subfield. Subfields are broad enough to support stable text samples, but numerous enough to compare different areas of science in a master thesis.
 
 ## Time Windows
@@ -10,7 +18,7 @@ Growth uses works from 2020-2025. This gives a later outcome window that is sepa
 
 The year 2026 is excluded from the main analysis because it is the current incomplete year and would bias publication counts downward.
 
-## Relative Growth
+## Earlier Relative-Growth Exploration
 
 Growth is measured as change in publication share, not just raw counts. Larger fields and domains produce more papers, so subfield growth is compared against its containing field and domain.
 
