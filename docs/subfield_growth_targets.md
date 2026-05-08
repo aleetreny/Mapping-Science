@@ -134,6 +134,46 @@ outputs/growth/figures/
 The figures include histograms, annual-rate scatter plots, domain boxplots,
 top/bottom barplots, yearly count examples, and size-vs-growth checks.
 
+## Extreme Count Validation
+
+Stage 13b is a small sanity check for unusually large or influential growth
+counts. It does not modify the Stage 13 target table. Instead, it compares the
+local `data/interim/subfield_year_counts.parquet` value in
+`n_works_article_preprint` with direct OpenAlex `/works` counts for selected
+subfield-year pairs.
+
+Run:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\13b_validate_growth_count_extremes.py --overwrite
+```
+
+The direct OpenAlex query uses the same count filters as Stage 01:
+
+```text
+primary_topic.subfield.id:<subfield_id>
+publication_year:<year>
+type:article|preprint
+is_retracted:false
+is_paratext:false
+```
+
+Default checks include `2202` Aerospace Engineering, `2200` General
+Engineering, `3500` General Dentistry, `2611` Modeling and Simulation, `2725`
+Infectious Diseases, and `3307` Human Factors and Ergonomics for 2010, 2019,
+2020, and 2025.
+
+Outputs:
+
+```text
+outputs/growth/count_validation/growth_count_extremes_validation.csv
+outputs/growth/count_validation/growth_count_extremes_validation.json
+```
+
+The CSV records local counts, API counts, differences, exact-match status,
+query filters, timestamps, and any API error message. The JSON summary counts
+matches, mismatches, missing local rows, API failures, and suspicious cases.
+
 ## Interpretation Caveats
 
 The target is an OpenAlex snapshot. Late 2025 records may still reflect
