@@ -4,7 +4,7 @@ The full thesis context is summarized in [research/README.md](research/README.md
 
 The project builds a clean OpenAlex database for later testing whether the title and abstract structure of a subfield before 2020 helps predict whether that subfield grows during 2020-2025.
 
-The current pipeline prepares SPECTER2 embedding artifacts, UMAP visual inspection maps, a tabular morphology-metrics dataset, pre-prediction morphology diagnostics, and standalone annualized growth targets. It still does not add paper clustering, regression models, prediction models, dashboards, or ML infrastructure.
+The current pipeline prepares SPECTER2 embedding artifacts, UMAP visual inspection maps, a tabular morphology-metrics dataset, pre-prediction morphology diagnostics, standalone annualized growth targets, and a joined morphology-growth modelling dataset. It still does not add paper clustering, regression models, prediction models, dashboards, or ML infrastructure.
 
 ## Current Data Design
 
@@ -70,7 +70,8 @@ See [docs/embedding_data_model.md](docs/embedding_data_model.md) for shard loadi
 ## Analysis Matrix And First UMAP
 
 Prepare the main-analysis matrix, first sampled UMAP map, per-subfield visual
-inspection maps, morphology metrics, metric diagnostics, and growth targets with:
+inspection maps, morphology metrics, metric diagnostics, growth targets, and
+the joined modelling dataset with:
 
 ```bash
 python scripts/08_prepare_analysis_matrix.py
@@ -79,6 +80,7 @@ python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --max-pape
 python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --overwrite
 python scripts/12_analyze_morphology_metrics.py --limit-subfields 20 --overwrite
 python scripts/13_build_subfield_growth_targets.py --overwrite
+python scripts/14_build_morphology_growth_dataset.py --overwrite
 ```
 
 The matrix uses only `main_analysis_eligible_2500 == true` rows and preserves deterministic order by `subfield_id`, `publication_year`, and `work_id`. The UMAP script uses a balanced per-subfield sample for first visual inspection only.
@@ -125,6 +127,13 @@ threshold. It also writes `domain_adjusted_annualized_log_growth` and
 `growth_above_domain_median`. See
 [docs/subfield_growth_targets.md](docs/subfield_growth_targets.md).
 
+The morphology-growth dataset stage joins the Stage 12 feature layer and Stage
+13 targets strictly by `subfield_id`, validates the one-to-one 240-row match,
+adds safe size controls such as `log_papers_2010_2019`, and writes feature
+groups for Stage 15. It is an audited dataset-building step only; it does not
+train prediction models. See
+[docs/morphology_growth_dataset.md](docs/morphology_growth_dataset.md).
+
 ## Repository Layout
 
 ```text
@@ -165,6 +174,7 @@ python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --max-pape
 python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --overwrite
 python scripts/12_analyze_morphology_metrics.py --limit-subfields 20 --overwrite
 python scripts/13_build_subfield_growth_targets.py --overwrite
+python scripts/14_build_morphology_growth_dataset.py --overwrite
 ```
 
 The full corpus download may take time. Test first with `--limit-subfields 5`, then use the production runbook in [docs/full_download_runbook.md](docs/full_download_runbook.md).
@@ -215,6 +225,13 @@ outputs/growth/subfield_year_counts_panel.csv
 outputs/growth/growth_rankings.csv
 outputs/growth/domain_growth_summary.csv
 outputs/growth/figures/
+data/processed/subfield_morphology_growth_dataset.parquet
+data/processed/subfield_morphology_growth_dataset.csv
+outputs/modeling/stage14_morphology_growth_dataset_summary.json
+outputs/modeling/stage14_morphology_growth_dataset_dictionary.csv
+outputs/modeling/stage14_feature_groups.json
+outputs/modeling/stage14_join_audit.csv
+outputs/modeling/stage14_figures/
 ```
 
 Data files, secrets, and large artifacts are ignored by Git.
