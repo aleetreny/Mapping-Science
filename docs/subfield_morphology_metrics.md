@@ -103,16 +103,19 @@ max_normalized_radius
 outlier_share_r_gt_1
 outlier_share_r_gt_1_5
 outlier_share_outside_density_extent
+density_entropy_slope_r2
+n_density_entropy_years
 density_x_min
 density_x_max
 density_y_min
 density_y_max
 ```
 
-`max_normalized_radius` and `outlier_share_r_gt_1_5` are retained as core v2
-outlier morphology features. `outlier_share_r_gt_1` and
+`max_normalized_radius` is retained as a core v2 outlier morphology feature.
+`outlier_share_r_gt_1`, `outlier_share_r_gt_1_5`, and
 `outlier_share_outside_density_extent` are diagnostic only because they are
-partly mechanical after `r95` normalization or tied to the fixed grid.
+sparse, low-variance, partly mechanical after `r95` normalization, or tied to
+the fixed grid.
 
 ## Core V2 Metric Families
 
@@ -131,11 +134,20 @@ for later modeling:
   `mst_gap_index`.
 - Shape, support and outlier morphology:
   `anisotropy_ratio`, `support_solidity`, `boundary_complexity`,
-  `max_normalized_radius`, `outlier_share_r_gt_1_5`.
+  `max_normalized_radius`.
 - Temporal morphology inside the morphology window:
   `centroid_drift_early_late`, `annual_centroid_path_length`,
   `directionality_ratio`, `radial_expansion_slope`,
-  `annual_centroid_step_cv`, `radial_expansion_r2`.
+  `annual_centroid_step_cv`, `radial_expansion_r2`,
+  `density_entropy_slope_by_year`.
+
+`density_entropy_slope_by_year` is a temporal semantic-diversification metric:
+for each publication year inside 2010-2019, the script computes density entropy
+on the normalized fixed grid where enough papers are available, then fits a
+linear trend of yearly density entropy on year. Positive values mean the
+subfield became spatially more diversified within the morphology window;
+negative values mean it became more concentrated. It never reads 2020-2025
+works.
 
 The output table also keeps diagnostic metrics:
 
@@ -145,7 +157,9 @@ effective_area_50
 support_circularity
 hole_count
 outlier_share_r_gt_1
+outlier_share_r_gt_1_5
 outlier_share_outside_density_extent
+density_entropy_slope_r2
 ```
 
 These were demoted because they are redundant with core metrics or weakly
@@ -153,7 +167,10 @@ varying in the first full run. `density_gini` and `effective_area_50` strongly
 track density entropy/effective area, `support_circularity` is the inverse view
 of `boundary_complexity`, `hole_count` has little variation, and
 `outlier_share_r_gt_1` is nearly mechanical because `r95` normalization places
-about five percent of points beyond radius 1.
+about five percent of points beyond radius 1. `outlier_share_r_gt_1_5` was also
+demoted because the first analysis showed it was sparse and low-variance.
+`density_entropy_slope_r2` is retained as diagnostic trend-fit strength because
+R-squared has no direction by itself.
 
 Density metrics use the fixed normalized KDE-like grid described above. The
 preferred density estimator is `scipy.stats.gaussian_kde`; if KDE is
@@ -201,6 +218,9 @@ It also writes exploratory figures under
 Family scores are robust-z composites of the core v2 metrics. They are intended
 as interpretable reduced features for later prediction work, but no growth
 target is joined here.
+
+The family-score table includes a `diversification_score` based on
+`density_entropy_slope_by_year`.
 
 The analysis script also runs an exploratory PCA on the final metric table.
 This is not PCA-before-UMAP; it is a post-metric diagnostic to understand

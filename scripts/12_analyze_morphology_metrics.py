@@ -72,7 +72,9 @@ FAMILY_SCORE_DEFINITIONS = {
     ],
     "expansion_score": [
         ("radial_expansion_slope", 1.0),
-        ("radial_expansion_r2", 1.0),
+    ],
+    "diversification_score": [
+        ("density_entropy_slope_by_year", 1.0),
     ],
 }
 

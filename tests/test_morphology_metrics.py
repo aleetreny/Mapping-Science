@@ -130,6 +130,18 @@ def erratic_moving_cloud(seed: int = 57) -> tuple[np.ndarray, np.ndarray]:
     return np.vstack(coords), np.asarray(years)
 
 
+def entropy_trend_cloud(increasing: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    rng = np.random.default_rng(72 if increasing else 73)
+    coords = []
+    years = []
+    for year in range(2010, 2020):
+        step = year - 2010
+        scale = 0.05 + 0.05 * step if increasing else 0.50 - 0.045 * step
+        coords.append(rng.normal(scale=scale, size=(35, 2)))
+        years.extend([year] * 35)
+    return np.vstack(coords), np.asarray(years)
+
+
 def test_core_metric_columns_v2_are_curated_25() -> None:
     assert len(CORE_METRIC_COLUMNS_V2) == 25
     assert METRIC_COLUMNS == CORE_METRIC_COLUMNS_V2
@@ -140,9 +152,12 @@ def test_core_metric_columns_v2_are_curated_25() -> None:
         "hole_count",
         "outlier_share_r_gt_1",
         "outlier_share_outside_density_extent",
+        "outlier_share_r_gt_1_5",
     ]:
         assert demoted not in CORE_METRIC_COLUMNS_V2
         assert demoted in DIAGNOSTIC_METRIC_COLUMNS
+    assert "density_entropy_slope_by_year" in CORE_METRIC_COLUMNS_V2
+    assert "density_entropy_slope_r2" in DIAGNOSTIC_METRIC_COLUMNS
 
 
 def test_coordinate_normalization_is_translation_and_scale_invariant() -> None:
@@ -337,6 +352,56 @@ def test_radial_expansion_r2_tracks_cleaner_radial_trend() -> None:
     assert noisy_metrics["radial_expansion_r2"] < clean_metrics["radial_expansion_r2"]
 
 
+def test_density_entropy_slope_tracks_temporal_diversification() -> None:
+    expanding_coords, expanding_years = entropy_trend_cloud(increasing=True)
+    concentrating_coords, concentrating_years = entropy_trend_cloud(increasing=False)
+    expanding_metrics, expanding_controls, expanding_warnings = temporal_metrics(
+        normalize(expanding_coords),
+        expanding_years,
+        year_min=2010,
+        year_max=2019,
+        grid_size=50,
+    )
+    concentrating_metrics, concentrating_controls, concentrating_warnings = temporal_metrics(
+        normalize(concentrating_coords),
+        concentrating_years,
+        year_min=2010,
+        year_max=2019,
+        grid_size=50,
+    )
+
+    assert expanding_metrics["density_entropy_slope_by_year"] > 0
+    assert concentrating_metrics["density_entropy_slope_by_year"] < 0
+    assert expanding_controls["n_density_entropy_years"] == 10
+    assert concentrating_controls["n_density_entropy_years"] == 10
+    assert not any("density_entropy_slope_by_year unavailable" in warning for warning in expanding_warnings)
+    assert not any("density_entropy_slope_by_year unavailable" in warning for warning in concentrating_warnings)
+
+
+def test_density_entropy_slope_warns_when_too_few_years() -> None:
+    rng = np.random.default_rng(74)
+    coords = np.vstack(
+        [
+            rng.normal(scale=0.10, size=(10, 2)),
+            rng.normal(scale=0.30, size=(10, 2)),
+        ]
+    )
+    years = np.array([2010] * 10 + [2011] * 10)
+
+    metrics, controls, warnings = temporal_metrics(
+        normalize(coords),
+        years,
+        year_min=2010,
+        year_max=2019,
+        grid_size=40,
+    )
+
+    assert np.isnan(metrics["density_entropy_slope_by_year"])
+    assert np.isnan(metrics["density_entropy_slope_r2"])
+    assert controls["n_density_entropy_years"] == 2
+    assert any("density_entropy_slope_by_year unavailable" in warning for warning in warnings)
+
+
 def test_cli_runs_on_tiny_manifest_and_coordinate_parquets(tmp_path: Path) -> None:
     first_coords, first_years = moving_cloud(seed=101)
     second_coords = two_blob_cloud(seed=102, n=100)
@@ -445,6 +510,9 @@ def test_compute_row_contains_all_25_metric_columns() -> None:
     assert set(METRIC_COLUMNS).issubset(row.keys())
     assert len(METRIC_COLUMNS) == 25
     assert set(DIAGNOSTIC_METRIC_COLUMNS).issubset(row.keys())
+    assert "density_entropy_slope_by_year" in row
+    assert "density_entropy_slope_r2" in row
+    assert "n_density_entropy_years" in row
     assert row["metric_status"] in {"completed", "completed_with_warnings"}
     assert (
         row["subfield_label_unique"]

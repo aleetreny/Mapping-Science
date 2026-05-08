@@ -53,13 +53,13 @@ CORE_METRIC_COLUMNS_V2 = [
     "support_solidity",
     "boundary_complexity",
     "max_normalized_radius",
-    "outlier_share_r_gt_1_5",
     "centroid_drift_early_late",
     "annual_centroid_path_length",
     "directionality_ratio",
     "radial_expansion_slope",
     "annual_centroid_step_cv",
     "radial_expansion_r2",
+    "density_entropy_slope_by_year",
 ]
 
 DIAGNOSTIC_METRIC_COLUMNS = [
@@ -68,7 +68,9 @@ DIAGNOSTIC_METRIC_COLUMNS = [
     "support_circularity",
     "hole_count",
     "outlier_share_r_gt_1",
+    "outlier_share_r_gt_1_5",
     "outlier_share_outside_density_extent",
+    "density_entropy_slope_r2",
 ]
 
 METRIC_COLUMNS = CORE_METRIC_COLUMNS_V2
@@ -110,6 +112,7 @@ CONTROL_COLUMNS = [
     "n_years_available",
     "n_early_points",
     "n_late_points",
+    "n_density_entropy_years",
 ]
 
 OUTPUT_COLUMNS = list(
@@ -692,6 +695,7 @@ def temporal_metrics(
     *,
     year_min: int,
     year_max: int,
+    grid_size: int = 160,
 ) -> tuple[dict[str, float], dict[str, int], list[str]]:
     coords_norm = np.asarray(coords_norm, dtype=float)
     years = np.asarray(years, dtype=int)
@@ -717,12 +721,22 @@ def temporal_metrics(
     annual_centroids: list[tuple[int, np.ndarray]] = []
     annual_median_radius: list[tuple[int, float]] = []
     radial = np.linalg.norm(coords_norm, axis=1)
+    yearly_entropy: list[tuple[int, float]] = []
     for year in range(year_min, year_max + 1):
         year_mask = years == year
         if np.count_nonzero(year_mask) < TEMPORAL_MIN_POINTS:
             continue
         annual_centroids.append((year, np.median(coords_norm[year_mask], axis=0)))
         annual_median_radius.append((year, float(np.median(radial[year_mask]))))
+        try:
+            year_grid = build_density_grid(
+                coords_norm[year_mask],
+                grid_size=grid_size,
+                density_extent=DEFAULT_DENSITY_EXTENT,
+            )
+            yearly_entropy.append((year, density_entropy(year_grid.density)))
+        except Exception:
+            continue
 
     if len(annual_centroids) >= 2:
         path = 0.0
@@ -788,6 +802,31 @@ def temporal_metrics(
             f"have at least {TEMPORAL_MIN_POINTS} papers"
         )
 
+    if len(yearly_entropy) >= 3:
+        entropy_years = np.array([year for year, _ in yearly_entropy], dtype=float)
+        entropy_values = np.array([value for _, value in yearly_entropy], dtype=float)
+        centered_entropy_years = entropy_years - entropy_years.mean()
+        coefficients = np.polyfit(centered_entropy_years, entropy_values, deg=1)
+        fitted = np.polyval(coefficients, centered_entropy_years)
+        density_entropy_slope = float(coefficients[0])
+        ss_residual = float(np.sum((entropy_values - fitted) ** 2))
+        ss_total = float(np.sum((entropy_values - entropy_values.mean()) ** 2))
+        density_entropy_r2 = (
+            float(1.0 - (ss_residual / ss_total)) if ss_total > 0 else np.nan
+        )
+        if not np.isfinite(density_entropy_r2):
+            warnings.append(
+                "density_entropy_slope_r2 unavailable because annual density "
+                "entropy values are constant"
+            )
+    else:
+        density_entropy_slope = np.nan
+        density_entropy_r2 = np.nan
+        warnings.append(
+            "density_entropy_slope_by_year unavailable because fewer than three "
+            "years have enough points for yearly density entropy"
+        )
+
     return (
         {
             "centroid_drift_early_late": drift,
@@ -796,11 +835,14 @@ def temporal_metrics(
             "radial_expansion_slope": slope,
             "annual_centroid_step_cv": step_cv,
             "radial_expansion_r2": radial_r2,
+            "density_entropy_slope_by_year": density_entropy_slope,
+            "density_entropy_slope_r2": density_entropy_r2,
         },
         {
             "n_years_available": int(len(available_years)),
             "n_early_points": n_early,
             "n_late_points": n_late,
+            "n_density_entropy_years": int(len(yearly_entropy)),
         },
         warnings,
     )
@@ -858,6 +900,7 @@ def compute_core_metrics(
         years,
         year_min=year_min,
         year_max=year_max,
+        grid_size=grid_size,
     )
     metrics.update(temporal)
     warnings.extend(temporal_warnings)
@@ -1219,6 +1262,20 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
             "Measures coherence of expansion or contraction over time.",
             "More coherent radial temporal trend.",
         ),
+        (
+            "density_entropy_slope_by_year",
+            "Temporal morphology",
+            "Least-squares slope of annual density entropy on publication year.",
+            "Measures whether normalized semantic density became more dispersed or concentrated during 2010-2019.",
+            "Increasing spatial diversification over time.",
+        ),
+        (
+            "density_entropy_slope_r2",
+            "Temporal morphology",
+            "R-squared from the annual density entropy trend on publication year.",
+            "Diagnostic fit strength for the density entropy trend.",
+            "More coherent entropy trend, regardless of direction.",
+        ),
     ]
     rows = [
         {
@@ -1387,6 +1444,15 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
             "More late-period papers.",
             "publication_year in coordinate parquet",
             "Used for centroid_drift_early_late.",
+        ),
+        (
+            "n_density_entropy_years",
+            "Quality/control",
+            "Number of years with enough points to compute yearly density entropy.",
+            "Temporal coverage diagnostic for density_entropy_slope_by_year.",
+            "More yearly observations for the entropy trend.",
+            "publication_year and normalized UMAP coordinates",
+            "Requires at least three valid yearly entropy values for the slope.",
         ),
     ]
     for name, family, definition, interpretation, higher, computed_on, notes in control_rows:

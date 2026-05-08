@@ -105,6 +105,15 @@ def test_analysis_cli_writes_required_outputs(tmp_path: Path) -> None:
 
     assert set(CORE_METRIC_COLUMNS_V2).issubset(curated.columns)
     assert "diffuseness_score" in curated.columns
+    assert "diversification_score" in curated.columns
     assert len(duplicate_report) == 2
     assert summary["n_rows_analyzed"] == 12
     assert summary["n_duplicate_display_name_rows"] == 2
+
+    descriptive = pd.read_csv(output_dir / "metric_descriptive_stats.csv")
+    top_bottom = pd.read_csv(output_dir / "top_bottom_subfields_by_metric.csv")
+    correlation = pd.read_csv(output_dir / "metric_correlation_matrix.csv", index_col=0)
+    assert "density_entropy_slope_by_year" in set(descriptive["metric_name"])
+    assert "outlier_share_r_gt_1_5" not in set(descriptive["metric_name"])
+    assert "density_entropy_slope_by_year" in set(top_bottom["metric_name"])
+    assert "density_entropy_slope_by_year" in correlation.columns

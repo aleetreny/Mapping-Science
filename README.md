@@ -95,7 +95,10 @@ The morphology stage consumes the per-subfield coordinate parquets and writes
 one row per completed subfield map with 25 curated core v2 normalized-coordinate
 metrics plus diagnostic metrics. OpenAlex `subfield_display_name` values are not
 unique, so outputs include `subfield_label_unique` and use `subfield_id` as the
-primary key. See
+primary key. The core v2 set includes `density_entropy_slope_by_year`, a
+2010-2019-only temporal semantic-diversification metric; sparse outlier shares
+such as `outlier_share_r_gt_1_5` remain diagnostics rather than modeling
+features. See
 [docs/subfield_morphology_metrics.md](docs/subfield_morphology_metrics.md).
 
 The morphology analysis stage writes distributions, correlations, low-variance
