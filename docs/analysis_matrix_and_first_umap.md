@@ -1,8 +1,8 @@
 # Analysis Matrix And First UMAP
 
-This layer prepares the first local visual inspection inputs from the validated SPECTER2 shards.
-
-It does not add clustering, morphology metrics, prediction models, or dashboards.
+This layer prepares the row-aligned SPECTER2 matrix used by the active
+2010-2025 morphology pipeline. It does not add clustering, dashboards, or
+predictive models.
 
 ## Prepare Main-Analysis Matrix
 
@@ -10,7 +10,7 @@ Run:
 
 ```bash
 python scripts/07_validate_embeddings.py
-python scripts/08_prepare_analysis_matrix.py
+python scripts/08_prepare_analysis_matrix.py --force
 ```
 
 The matrix script reads:
@@ -42,23 +42,22 @@ The row order is deterministic:
 subfield_id, publication_year, work_id
 ```
 
-`analysis_embedding_index.parquet` has the same row order as the matrix and adds `analysis_row_id`, a zero-based row pointer into `main_embeddings.float16.npy`.
-
-If outputs already exist, use:
-
-```bash
-python scripts/08_prepare_analysis_matrix.py --force
-```
+`analysis_embedding_index.parquet` has the same row order as the matrix and
+adds `analysis_row_id`, a zero-based row pointer into
+`main_embeddings.float16.npy`.
 
 ## Build First UMAP Map
 
 Run:
 
 ```bash
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
+python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025 --force
 ```
 
-The script samples within each `subfield_id`, keeping at most 500 rows per subfield by default. Subfields with fewer rows keep all available rows. The sample is deterministic for a fixed random seed.
+The first UMAP is a global visual inspection map. It uses a balanced sample
+within each `subfield_id`, keeping at most 500 rows per subfield by default.
+Subfields with fewer rows keep all available rows. The sample is deterministic
+for a fixed random seed.
 
 Outputs:
 
@@ -80,27 +79,20 @@ The parquet output includes:
 Use a smaller sample for quick checks:
 
 ```bash
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 100 --force
-```
-
-Use a different deterministic sample:
-
-```bash
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --random-seed 7 --force
+python scripts/09_build_first_umap_maps.py --sample-per-subfield 100 --year-min 2010 --year-max 2025 --force
 ```
 
 ## Build Per-Subfield UMAP Maps
 
-After the main matrix exists, build one separate visual inspection map per
-OpenAlex subfield with:
+After the main matrix exists, build one separate map per OpenAlex subfield:
 
 ```bash
-python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --max-papers-per-subfield 2000 --overwrite
+python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --year-min 2010 --year-max 2025 --max-papers-per-subfield 2000 --overwrite
 ```
 
-The per-subfield stage defaults to the morphology input window
-`2010 <= publication_year <= 2019`, uses the SPECTER2 matrix directly with no
-PCA, and writes scatter plus `viridis` density PNGs under:
+The per-subfield stage defaults to the active analysis period
+`2010 <= publication_year <= 2025`, uses the SPECTER2 matrix directly with no
+PCA, and writes scatter plus density PNGs under:
 
 ```text
 outputs/maps/per_subfield_umap/
@@ -109,28 +101,25 @@ outputs/maps/per_subfield_umap/
 See [per_subfield_umap_maps.md](per_subfield_umap_maps.md) for the full CLI,
 manifest schema, and runtime notes.
 
-## Compute Morphology Metrics
+## Compute Metric Tables
 
-After the per-subfield coordinate parquets exist, compute the tabular morphology
-dataset with:
+Projected UMAP morphology metrics:
 
 ```bash
-python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --overwrite
+python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
 ```
 
-This stage reads the completed rows from
-`outputs/maps/per_subfield_umap/per_subfield_umap_manifest.parquet`, normalizes
-each subfield's coordinates independently, and writes:
+Embedding-space structure metrics:
 
-```text
-data/processed/subfield_morphology_metrics.parquet
-data/processed/subfield_morphology_metrics.csv
-outputs/metrics/subfield_morphology_metrics_summary.json
-outputs/metrics/subfield_morphology_metrics_dictionary.csv
+```bash
+python scripts/12_compute_subfield_embedding_space_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
 ```
 
-It computes morphology metrics only. It does not add growth targets or
-prediction models.
+The projected morphology stage reads completed per-subfield coordinate
+parquets, normalizes each subfield's 2D UMAP coordinates independently, and
+writes one row per subfield. The embedding-space stage reads
+`analysis_embedding_index.parquet` plus the memory-mapped SPECTER2 matrix and
+computes one row per subfield directly in the original embedding space.
 
-See [subfield_morphology_metrics.md](subfield_morphology_metrics.md) for the
-metric definitions and caveats.
+See [subfield_morphology_metrics.md](subfield_morphology_metrics.md) and
+[subfield_embedding_space_metrics.md](subfield_embedding_space_metrics.md).

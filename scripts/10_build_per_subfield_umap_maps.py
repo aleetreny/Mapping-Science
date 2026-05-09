@@ -51,7 +51,7 @@ def parse_args() -> argparse.Namespace:
         help="Directory for per-subfield coordinates, figures, manifest, and summary.",
     )
     parser.add_argument("--year-min", type=int, default=2010)
-    parser.add_argument("--year-max", type=int, default=2019)
+    parser.add_argument("--year-max", type=int, default=2025)
     parser.add_argument("--min-papers", type=int, default=250)
     parser.add_argument("--max-papers-per-subfield", type=int, default=10000)
     parser.add_argument("--subfield-id", default=None)
@@ -259,6 +259,8 @@ def main() -> None:
                     umap_min_dist=args.min_dist,
                     umap_metric=args.metric,
                     random_state=args.random_state,
+                    max_papers_per_subfield=args.max_papers_per_subfield,
+                    sampling_applied=False,
                     **manifest_metadata,
                 )
             )
@@ -279,6 +281,7 @@ def main() -> None:
                 random_state=args.random_state,
                 subfield_id=subfield_id,
             )
+            sampling_applied = len(sampled) < n_available
             row_ids = sampled["analysis_row_id"].astype(int).to_numpy()
             embeddings = np.asarray(matrix[row_ids], dtype=np.float32)
 
@@ -325,6 +328,8 @@ def main() -> None:
                     umap_min_dist=args.min_dist,
                     umap_metric=args.metric,
                     random_state=args.random_state,
+                    max_papers_per_subfield=args.max_papers_per_subfield,
+                    sampling_applied=sampling_applied,
                     **manifest_metadata,
                 )
             )
@@ -348,6 +353,8 @@ def main() -> None:
                     umap_min_dist=args.min_dist,
                     umap_metric=args.metric,
                     random_state=args.random_state,
+                    max_papers_per_subfield=args.max_papers_per_subfield,
+                    sampling_applied=False,
                     **manifest_metadata,
                 )
             )

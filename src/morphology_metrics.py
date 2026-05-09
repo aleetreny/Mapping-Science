@@ -19,6 +19,10 @@ from src.subfield_labels import add_subfield_label_columns
 
 
 DEFAULT_DENSITY_EXTENT = (-1.5, 1.5, -1.5, 1.5)
+ACTIVE_YEAR_MIN = 2010
+ACTIVE_YEAR_MAX = 2025
+EARLY_WINDOW = (2010, 2012)
+LATE_WINDOW = (2023, 2025)
 
 REQUIRED_COORDINATE_COLUMNS = {
     "work_id",
@@ -159,9 +163,9 @@ def validate_coordinate_frame(frame: pd.DataFrame) -> None:
 
 
 def validate_morphology_year_window(year_min: int, year_max: int) -> None:
-    if year_min < 2010 or year_max > 2019 or year_min > year_max:
+    if year_min < ACTIVE_YEAR_MIN or year_max > ACTIVE_YEAR_MAX or year_min > year_max:
         raise ValueError(
-            "morphology metrics must use a year window inside 2010-2019; "
+            "projected morphology metrics must use a year window inside 2010-2025; "
             f"got {year_min}-{year_max}"
         )
 
@@ -702,8 +706,8 @@ def temporal_metrics(
     warnings: list[str] = []
 
     available_years = sorted(int(year) for year in np.unique(years))
-    early_mask = (years >= 2010) & (years <= 2012)
-    late_mask = (years >= 2017) & (years <= 2019)
+    early_mask = (years >= EARLY_WINDOW[0]) & (years <= EARLY_WINDOW[1])
+    late_mask = (years >= LATE_WINDOW[0]) & (years <= LATE_WINDOW[1])
     n_early = int(np.count_nonzero(early_mask))
     n_late = int(np.count_nonzero(late_mask))
 
@@ -1223,8 +1227,8 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
         (
             "centroid_drift_early_late",
             "Temporal morphology",
-            "Distance between median centroids for 2010-2012 and 2017-2019.",
-            "Measures net semantic displacement before 2020.",
+            "Distance between median centroids for 2010-2012 and 2023-2025.",
+            "Measures net semantic displacement across the active analysis period.",
             "Larger early-to-late displacement.",
         ),
         (
@@ -1245,7 +1249,7 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
             "radial_expansion_slope",
             "Temporal morphology",
             "Least-squares slope of annual median normalized radius on year.",
-            "Measures radial expansion or contraction during 2010-2019.",
+            "Measures radial expansion or contraction during 2010-2025.",
             "Semantic expansion over time.",
         ),
         (
@@ -1266,7 +1270,7 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
             "density_entropy_slope_by_year",
             "Temporal morphology",
             "Least-squares slope of annual density entropy on publication year.",
-            "Measures whether normalized semantic density became more dispersed or concentrated during 2010-2019.",
+            "Measures whether normalized semantic density became more dispersed or concentrated during 2010-2025.",
             "Increasing spatial diversification over time.",
         ),
         (
@@ -1305,7 +1309,7 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
     ]
     for row in rows:
         if row["metric_name"] in CORE_METRIC_COLUMNS_V2:
-            row["notes"] = f"Core v2 modeling feature. {row['notes']}"
+            row["notes"] = f"Core projected morphology metric. {row['notes']}"
         elif row["metric_name"] in DIAGNOSTIC_METRIC_COLUMNS:
             row["notes"] = f"Diagnostic metric, not recommended as a core v2 feature. {row['notes']}"
 
@@ -1439,7 +1443,7 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
         (
             "n_late_points",
             "Quality/control",
-            "Number of points in 2017-2019.",
+            "Number of points in 2023-2025.",
             "Late-period temporal sample size.",
             "More late-period papers.",
             "publication_year in coordinate parquet",

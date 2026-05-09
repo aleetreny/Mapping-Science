@@ -41,7 +41,7 @@ REQUIRED_MANIFEST_COLUMNS = {
 def parse_args() -> argparse.Namespace:
     load_dotenv(ROOT / ".env")
     parser = argparse.ArgumentParser(
-        description="Compute one row of morphology metrics per completed subfield UMAP."
+        description="Compute projected morphology metrics per completed subfield UMAP."
     )
     parser.add_argument(
         "--manifest-path",
@@ -69,6 +69,18 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--limit-subfields", type=int, default=None)
     parser.add_argument("--subfield-id", default=None)
+    parser.add_argument(
+        "--year-min",
+        type=int,
+        default=None,
+        help="Override the manifest year_min when filtering coordinate rows.",
+    )
+    parser.add_argument(
+        "--year-max",
+        type=int,
+        default=None,
+        help="Override the manifest year_max when filtering coordinate rows.",
+    )
     parser.add_argument("--grid-size", type=int, default=160)
     parser.add_argument("--k-neighbors", type=int, default=15)
     parser.add_argument("--mst-max-points", type=int, default=3000)
@@ -196,8 +208,8 @@ def main() -> None:
         percent = ((position + 1) / total) * 100
         prefix = f"[{position + 1}/{total} | {percent:.1f}%] {subfield_id} - {subfield_name}"
         coordinate_path = None
-        year_min = int(manifest_row["year_min"])
-        year_max = int(manifest_row["year_max"])
+        year_min = int(args.year_min if args.year_min is not None else manifest_row["year_min"])
+        year_max = int(args.year_max if args.year_max is not None else manifest_row["year_max"])
 
         try:
             coordinate_path = resolve_coordinate_path(manifest_row["coordinate_path"])
@@ -285,6 +297,10 @@ def main() -> None:
         "k_neighbors": int(args.k_neighbors),
         "mst_max_points": int(args.mst_max_points),
         "random_state": int(args.random_state),
+        "year_override": {
+            "year_min": args.year_min,
+            "year_max": args.year_max,
+        },
         "status_counts": {str(key): int(value) for key, value in status_counts.items()},
         "failed_subfields": failed,
         "warnings": warnings,

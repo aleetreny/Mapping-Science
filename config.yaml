@@ -10,9 +10,7 @@ openalex:
 
 windows:
   morphology_start_year: 2010
-  morphology_end_year: 2019
-  growth_start_year: 2020
-  growth_end_year: 2025
+  morphology_end_year: 2025
   exclude_years: [2026]
 
 filters:

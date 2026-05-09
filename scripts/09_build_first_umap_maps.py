@@ -23,6 +23,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.storage import ensure_dirs, load_parquet, save_parquet
+from src.per_subfield_umap_maps import validate_year_window
 from src.umap_maps import (
     balanced_sample_by_subfield,
     build_umap_output_frame,
@@ -45,6 +46,8 @@ def parse_args() -> argparse.Namespace:
         help="Local folder containing SPECTER2 embedding artifacts.",
     )
     parser.add_argument("--sample-per-subfield", type=int, default=500)
+    parser.add_argument("--year-min", type=int, default=2010)
+    parser.add_argument("--year-max", type=int, default=2025)
     parser.add_argument("--random-seed", type=int, default=42)
     parser.add_argument("--force", action="store_true")
     return parser.parse_args()
@@ -117,6 +120,7 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 def main() -> None:
     args = parse_args()
+    validate_year_window(args.year_min, args.year_max)
     config = load_config()
     ensure_dirs(config)
 
@@ -144,6 +148,17 @@ def main() -> None:
         )
 
     analysis_index = load_parquet(analysis_index_path)
+    if "publication_year" not in analysis_index.columns:
+        raise ValueError("analysis_embedding_index.parquet must contain publication_year")
+    years = pd.to_numeric(analysis_index["publication_year"], errors="coerce")
+    analysis_index = analysis_index.loc[
+        years.between(args.year_min, args.year_max, inclusive="both")
+    ].copy()
+    analysis_index["publication_year"] = years.loc[analysis_index.index].astype("int64")
+    if analysis_index.empty:
+        raise ValueError(
+            f"No analysis rows remain in year window {args.year_min}-{args.year_max}"
+        )
     sampled = balanced_sample_by_subfield(
         analysis_index=analysis_index,
         sample_per_subfield=args.sample_per_subfield,
@@ -176,6 +191,10 @@ def main() -> None:
 
     summary = {
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "year_window": {
+            "year_min": args.year_min,
+            "year_max": args.year_max,
+        },
         "sample_per_subfield": args.sample_per_subfield,
         "random_seed": args.random_seed,
         "n_points": int(len(output)),

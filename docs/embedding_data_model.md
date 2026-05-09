@@ -113,7 +113,11 @@ main = index[index["main_analysis_eligible_2500"]]
 robustness = index[index["robustness_eligible_500"]]
 ```
 
-The full `works_text.parquet` and full embedding shard set remain available. The eligibility flags select rows for analysis without deleting downloaded papers or embedding vectors.
+The full `works_text.parquet` and full embedding shard set remain available.
+The eligibility flags select rows for analysis without deleting downloaded
+papers or embedding vectors. Active morphology scripts then filter those rows
+to `2010 <= publication_year <= 2025`; 2026 is excluded because it is
+incomplete/current.
 
 ## Main-Analysis Matrix
 
@@ -139,7 +143,7 @@ embeddings/specter2_v1/analysis/main_matrix_summary.json
 Build the first balanced-sample visual inspection map with:
 
 ```bash
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
+python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025
 ```
 
 Outputs:
@@ -151,6 +155,19 @@ outputs/maps/umap_global_sample_summary.json
 ```
 
 See [analysis_matrix_and_first_umap.md](analysis_matrix_and_first_umap.md) for details.
+
+## Embedding-Space Metrics
+
+Compute direct high-dimensional structure metrics from the row-aligned matrix:
+
+```bash
+python scripts/12_compute_subfield_embedding_space_metrics.py --year-min 2010 --year-max 2025 --overwrite
+```
+
+This stage memory-maps `main_embeddings.float16.npy`, reads only each
+subfield's selected rows, converts the subfield slice to `float32`, and
+L2-normalizes rows before cosine-based metrics. See
+[subfield_embedding_space_metrics.md](subfield_embedding_space_metrics.md).
 
 ## Joining Shard Metadata
 

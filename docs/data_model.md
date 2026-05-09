@@ -70,27 +70,18 @@ The pipeline writes one DuckDB database at `warehouse/tfm_openalex.duckdb` and m
 - `field_display_name`
 - `domain_id`
 - `domain_display_name`
-- `past_count_2010_2019`
-- `future_count_2020_2025`
-- `past_text_count_2010_2019`
-- `field_past_count_2010_2019`
-- `field_future_count_2020_2025`
-- `domain_past_count_2010_2019`
-- `domain_future_count_2020_2025`
-- `past_share_within_field`
-- `future_share_within_field`
-- `past_share_within_domain`
-- `future_share_within_domain`
-- `log_growth_within_field`
-- `log_growth_within_domain`
-- `growth_above_field_median`
-- `growth_above_domain_median`
+- `analysis_count_2010_2025`
+- `analysis_text_count_2010_2025`
+- `field_analysis_count_2010_2025`
+- `domain_analysis_count_2010_2025`
+- `analysis_share_within_field`
+- `analysis_share_within_domain`
 - `eligible_for_text_corpus`
 - `planned_sample_size`
 
 ## `sample_plan`
 
-One row per eligible subfield-year cell in the 2010-2019 morphology window.
+One row per eligible subfield-year cell in the 2010-2025 analysis window.
 
 - `subfield_id`
 - `subfield_display_name`
@@ -276,3 +267,27 @@ The PNG companion is:
 ```text
 outputs/maps/umap_global_sample.png
 ```
+
+## Metric Tables
+
+Projected UMAP morphology metrics:
+
+```text
+data/processed/subfield_morphology_metrics.parquet
+data/processed/subfield_morphology_metrics.csv
+```
+
+These contain one row per completed subfield UMAP map, with control columns,
+25 core projected morphology metrics, and diagnostic columns.
+
+Embedding-space structure metrics:
+
+```text
+data/processed/subfield_embedding_space_metrics.parquet
+data/processed/subfield_embedding_space_metrics.csv
+```
+
+These contain one row per attempted main-analysis subfield, with control
+columns, 25 core embedding-space metrics, and diagnostic columns. Joins should
+use `subfield_id`; display names are included for readability but are not
+unique.

@@ -11,7 +11,6 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.growth import assign_above_median_within_group, compute_log_relative_growth
 from src.storage import connect_duckdb, ensure_dirs, load_parquet, save_parquet, write_table
 
 
@@ -67,10 +66,8 @@ def main() -> None:
     windows = config["windows"]
     sampling = config["sampling"]
 
-    morph_start = int(windows["morphology_start_year"])
-    morph_end = int(windows["morphology_end_year"])
-    growth_start = int(windows["growth_start_year"])
-    growth_end = int(windows["growth_end_year"])
+    analysis_start = int(windows["morphology_start_year"])
+    analysis_end = int(windows["morphology_end_year"])
     target_sample = int(sampling["target_sample_per_subfield"])
     min_texts = int(sampling["min_valid_texts_per_subfield"])
 
@@ -80,73 +77,46 @@ def main() -> None:
     domain_counts = read_required_parquet(interim_dir, "domain_year_counts.parquet")
 
     sub_group = ["subfield_id", "field_id", "domain_id"]
-    sub_past = window_sum(
+    sub_total = window_sum(
         sub_counts,
         sub_group,
-        morph_start,
-        morph_end,
+        analysis_start,
+        analysis_end,
         "n_works_article_preprint",
-        "past_count_2010_2019",
-    )
-    sub_future = window_sum(
-        sub_counts,
-        sub_group,
-        growth_start,
-        growth_end,
-        "n_works_article_preprint",
-        "future_count_2020_2025",
+        "analysis_count_2010_2025",
     )
     sub_text = window_sum(
         sub_counts,
         sub_group,
-        morph_start,
-        morph_end,
+        analysis_start,
+        analysis_end,
         "n_works_article_preprint_en_with_abstract",
-        "past_text_count_2010_2019",
+        "analysis_text_count_2010_2025",
     )
 
     field_group = ["field_id", "domain_id"]
-    field_past = window_sum(
+    field_total = window_sum(
         field_counts,
         field_group,
-        morph_start,
-        morph_end,
+        analysis_start,
+        analysis_end,
         "n_works_article_preprint",
-        "field_past_count_2010_2019",
-    )
-    field_future = window_sum(
-        field_counts,
-        field_group,
-        growth_start,
-        growth_end,
-        "n_works_article_preprint",
-        "field_future_count_2020_2025",
+        "field_analysis_count_2010_2025",
     )
 
     domain_group = ["domain_id"]
-    domain_past = window_sum(
+    domain_total = window_sum(
         domain_counts,
         domain_group,
-        morph_start,
-        morph_end,
+        analysis_start,
+        analysis_end,
         "n_works_article_preprint",
-        "domain_past_count_2010_2019",
-    )
-    domain_future = window_sum(
-        domain_counts,
-        domain_group,
-        growth_start,
-        growth_end,
-        "n_works_article_preprint",
-        "domain_future_count_2020_2025",
+        "domain_analysis_count_2010_2025",
     )
 
-    plan = sub_past.merge(sub_future, on=sub_group, how="outer")
-    plan = plan.merge(sub_text, on=sub_group, how="outer")
-    plan = plan.merge(field_past, on=field_group, how="left")
-    plan = plan.merge(field_future, on=field_group, how="left")
-    plan = plan.merge(domain_past, on=domain_group, how="left")
-    plan = plan.merge(domain_future, on=domain_group, how="left")
+    plan = sub_total.merge(sub_text, on=sub_group, how="outer")
+    plan = plan.merge(field_total, on=field_group, how="left")
+    plan = plan.merge(domain_total, on=domain_group, how="left")
 
     display_cols = [
         "subfield_id",
@@ -159,80 +129,36 @@ def main() -> None:
     plan = plan.merge(subfields[display_cols], on=sub_group, how="left")
 
     numeric_cols = [
-        "past_count_2010_2019",
-        "future_count_2020_2025",
-        "past_text_count_2010_2019",
-        "field_past_count_2010_2019",
-        "field_future_count_2020_2025",
-        "domain_past_count_2010_2019",
-        "domain_future_count_2020_2025",
+        "analysis_count_2010_2025",
+        "analysis_text_count_2010_2025",
+        "field_analysis_count_2010_2025",
+        "domain_analysis_count_2010_2025",
     ]
     for column in numeric_cols:
         plan[column] = plan[column].fillna(0).astype("int64")
 
     add_safe_share(
         plan,
-        "past_count_2010_2019",
-        "field_past_count_2010_2019",
-        "past_share_within_field",
+        "analysis_count_2010_2025",
+        "field_analysis_count_2010_2025",
+        "analysis_share_within_field",
     )
     add_safe_share(
         plan,
-        "future_count_2020_2025",
-        "field_future_count_2020_2025",
-        "future_share_within_field",
-    )
-    add_safe_share(
-        plan,
-        "past_count_2010_2019",
-        "domain_past_count_2010_2019",
-        "past_share_within_domain",
-    )
-    add_safe_share(
-        plan,
-        "future_count_2020_2025",
-        "domain_future_count_2020_2025",
-        "future_share_within_domain",
-    )
-
-    plan["log_growth_within_field"] = plan.apply(
-        lambda row: compute_log_relative_growth(
-            float(row["past_share_within_field"]),
-            float(row["future_share_within_field"]),
-        ),
-        axis=1,
-    )
-    plan["log_growth_within_domain"] = plan.apply(
-        lambda row: compute_log_relative_growth(
-            float(row["past_share_within_domain"]),
-            float(row["future_share_within_domain"]),
-        ),
-        axis=1,
-    )
-
-    plan = assign_above_median_within_group(
-        plan,
-        "log_growth_within_field",
-        "field_id",
-        "growth_above_field_median",
-    )
-    plan = assign_above_median_within_group(
-        plan,
-        "log_growth_within_domain",
-        "domain_id",
-        "growth_above_domain_median",
+        "analysis_count_2010_2025",
+        "domain_analysis_count_2010_2025",
+        "analysis_share_within_domain",
     )
 
     plan["eligible_for_text_corpus"] = (
-        (plan["past_text_count_2010_2019"] >= min_texts)
-        & (plan["future_count_2020_2025"] > 0)
+        (plan["analysis_text_count_2010_2025"] >= min_texts)
         & plan["field_id"].notna()
         & plan["domain_id"].notna()
     )
     plan["planned_sample_size"] = 0
     eligible_mask = plan["eligible_for_text_corpus"]
     plan.loc[eligible_mask, "planned_sample_size"] = plan.loc[
-        eligible_mask, "past_text_count_2010_2019"
+        eligible_mask, "analysis_text_count_2010_2025"
     ].clip(upper=target_sample)
 
     ordered_cols = [
@@ -242,21 +168,12 @@ def main() -> None:
         "field_display_name",
         "domain_id",
         "domain_display_name",
-        "past_count_2010_2019",
-        "future_count_2020_2025",
-        "past_text_count_2010_2019",
-        "field_past_count_2010_2019",
-        "field_future_count_2020_2025",
-        "domain_past_count_2010_2019",
-        "domain_future_count_2020_2025",
-        "past_share_within_field",
-        "future_share_within_field",
-        "past_share_within_domain",
-        "future_share_within_domain",
-        "log_growth_within_field",
-        "log_growth_within_domain",
-        "growth_above_field_median",
-        "growth_above_domain_median",
+        "analysis_count_2010_2025",
+        "analysis_text_count_2010_2025",
+        "field_analysis_count_2010_2025",
+        "domain_analysis_count_2010_2025",
+        "analysis_share_within_field",
+        "analysis_share_within_domain",
         "eligible_for_text_corpus",
         "planned_sample_size",
     ]
@@ -270,7 +187,8 @@ def main() -> None:
         con.close()
 
     print(
-        "Wrote corpus_plan with "
+        "Wrote corpus_plan for the "
+        f"{analysis_start}-{analysis_end} analysis period with "
         f"{int(plan['eligible_for_text_corpus'].sum())} eligible subfields."
     )
 

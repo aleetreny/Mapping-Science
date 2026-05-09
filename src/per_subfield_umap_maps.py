@@ -49,6 +49,8 @@ MANIFEST_COLUMNS = [
     "umap_min_dist",
     "umap_metric",
     "random_state",
+    "max_papers_per_subfield",
+    "sampling_applied",
 ]
 
 VALID_STATUSES = {"completed", "skipped", "failed"}
@@ -232,6 +234,8 @@ class ManifestRow:
     umap_min_dist: float
     umap_metric: str
     random_state: int
+    max_papers_per_subfield: int
+    sampling_applied: bool
 
 
 def build_manifest_row(
@@ -247,6 +251,8 @@ def build_manifest_row(
     umap_min_dist: float,
     umap_metric: str,
     random_state: int,
+    max_papers_per_subfield: int,
+    sampling_applied: bool,
     field_id: object = "",
     field_display_name: object = "",
     domain_id: object = "",
@@ -287,6 +293,8 @@ def build_manifest_row(
         umap_min_dist=float(umap_min_dist),
         umap_metric=str(umap_metric),
         random_state=int(random_state),
+        max_papers_per_subfield=int(max_papers_per_subfield),
+        sampling_applied=bool(sampling_applied),
     )
     return asdict(row)
 

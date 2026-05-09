@@ -50,7 +50,7 @@ def year_range(config: dict[str, Any]) -> list[int]:
     return list(
         range(
             int(windows["morphology_start_year"]),
-            int(windows["growth_end_year"]) + 1,
+            int(windows["morphology_end_year"]) + 1,
         )
     )
 

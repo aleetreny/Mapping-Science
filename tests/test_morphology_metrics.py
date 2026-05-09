@@ -44,7 +44,7 @@ def coordinate_frame(
     subfield_name: str = "Synthetic Subfield",
 ) -> pd.DataFrame:
     if years is None:
-        years = np.resize(np.arange(2010, 2020), len(coords))
+        years = np.resize(np.arange(2010, 2026), len(coords))
     records = []
     for row_id, ((x, y), year) in enumerate(zip(coords, years)):
         records.append(
@@ -82,7 +82,7 @@ def moving_cloud(seed: int = 42) -> tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
     coords = []
     years = []
-    for year in range(2010, 2020):
+    for year in range(2010, 2026):
         center = np.array([(year - 2010) * 0.25, 0.0])
         coords.append(center + rng.normal(scale=0.04, size=(8, 2)))
         years.extend([year] * 8)
@@ -93,11 +93,11 @@ def radial_trend_cloud(noisy: bool = False) -> tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(55 if not noisy else 56)
     coords = []
     years = []
-    for year in range(2010, 2020):
+    for year in range(2010, 2026):
         if noisy:
             radius = rng.uniform(0.25, 1.25)
         else:
-            radius = 0.25 + 0.08 * (year - 2010)
+            radius = 0.25 + 0.04 * (year - 2010)
         angles = np.linspace(0, 2 * np.pi, 12, endpoint=False)
         points = np.column_stack([np.cos(angles) * radius, np.sin(angles) * radius])
         points += rng.normal(scale=0.01, size=points.shape)
@@ -120,11 +120,17 @@ def erratic_moving_cloud(seed: int = 57) -> tuple[np.ndarray, np.ndarray]:
             [3.1, 0.7],
             [4.0, -0.4],
             [4.1, -0.4],
+            [5.0, 0.5],
+            [5.1, 0.5],
+            [6.0, -0.5],
+            [6.1, -0.5],
+            [7.0, 0.4],
+            [7.1, 0.4],
         ]
     )
     coords = []
     years = []
-    for year, center in zip(range(2010, 2020), centers):
+    for year, center in zip(range(2010, 2026), centers):
         coords.append(center + rng.normal(scale=0.01, size=(8, 2)))
         years.extend([year] * 8)
     return np.vstack(coords), np.asarray(years)
@@ -134,9 +140,9 @@ def entropy_trend_cloud(increasing: bool = True) -> tuple[np.ndarray, np.ndarray
     rng = np.random.default_rng(72 if increasing else 73)
     coords = []
     years = []
-    for year in range(2010, 2020):
+    for year in range(2010, 2026):
         step = year - 2010
-        scale = 0.05 + 0.05 * step if increasing else 0.50 - 0.045 * step
+        scale = 0.05 + 0.025 * step if increasing else 0.50 - 0.025 * step
         coords.append(rng.normal(scale=scale, size=(35, 2)))
         years.extend([year] * 35)
     return np.vstack(coords), np.asarray(years)
@@ -300,13 +306,13 @@ def test_temporal_drift_positive_for_steadily_moving_centroids() -> None:
         coords_norm,
         years,
         year_min=2010,
-        year_max=2019,
+        year_max=2025,
     )
 
     assert metrics["centroid_drift_early_late"] > 0
     assert metrics["annual_centroid_path_length"] > metrics["centroid_drift_early_late"]
     assert metrics["directionality_ratio"] > 0
-    assert controls["n_years_available"] == 10
+    assert controls["n_years_available"] == 16
     assert warnings == []
 
 
@@ -317,13 +323,13 @@ def test_annual_centroid_step_cv_is_higher_for_erratic_motion() -> None:
         normalize(smooth_coords),
         smooth_years,
         year_min=2010,
-        year_max=2019,
+        year_max=2025,
     )
     erratic_metrics, _, _ = temporal_metrics(
         normalize(erratic_coords),
         erratic_years,
         year_min=2010,
-        year_max=2019,
+        year_max=2025,
     )
 
     assert smooth_metrics["annual_centroid_step_cv"] < 0.5
@@ -339,13 +345,13 @@ def test_radial_expansion_r2_tracks_cleaner_radial_trend() -> None:
         normalize(clean_coords),
         clean_years,
         year_min=2010,
-        year_max=2019,
+        year_max=2025,
     )
     noisy_metrics, _, _ = temporal_metrics(
         normalize(noisy_coords),
         noisy_years,
         year_min=2010,
-        year_max=2019,
+        year_max=2025,
     )
 
     assert clean_metrics["radial_expansion_r2"] > 0.9
@@ -359,21 +365,21 @@ def test_density_entropy_slope_tracks_temporal_diversification() -> None:
         normalize(expanding_coords),
         expanding_years,
         year_min=2010,
-        year_max=2019,
+        year_max=2025,
         grid_size=50,
     )
     concentrating_metrics, concentrating_controls, concentrating_warnings = temporal_metrics(
         normalize(concentrating_coords),
         concentrating_years,
         year_min=2010,
-        year_max=2019,
+        year_max=2025,
         grid_size=50,
     )
 
     assert expanding_metrics["density_entropy_slope_by_year"] > 0
     assert concentrating_metrics["density_entropy_slope_by_year"] < 0
-    assert expanding_controls["n_density_entropy_years"] == 10
-    assert concentrating_controls["n_density_entropy_years"] == 10
+    assert expanding_controls["n_density_entropy_years"] == 16
+    assert concentrating_controls["n_density_entropy_years"] == 16
     assert not any("density_entropy_slope_by_year unavailable" in warning for warning in expanding_warnings)
     assert not any("density_entropy_slope_by_year unavailable" in warning for warning in concentrating_warnings)
 
@@ -392,7 +398,7 @@ def test_density_entropy_slope_warns_when_too_few_years() -> None:
         normalize(coords),
         years,
         year_min=2010,
-        year_max=2019,
+        year_max=2025,
         grid_size=40,
     )
 
@@ -405,7 +411,7 @@ def test_density_entropy_slope_warns_when_too_few_years() -> None:
 def test_cli_runs_on_tiny_manifest_and_coordinate_parquets(tmp_path: Path) -> None:
     first_coords, first_years = moving_cloud(seed=101)
     second_coords = two_blob_cloud(seed=102, n=100)
-    second_years = np.resize(np.arange(2010, 2020), len(second_coords))
+    second_years = np.resize(np.arange(2010, 2026), len(second_coords))
 
     first_path = tmp_path / "1100.parquet"
     second_path = tmp_path / "2200.parquet"
@@ -428,7 +434,7 @@ def test_cli_runs_on_tiny_manifest_and_coordinate_parquets(tmp_path: Path) -> No
                 "n_available": len(first_coords),
                 "n_used": len(first_coords),
                 "year_min": 2010,
-                "year_max": 2019,
+                "year_max": 2025,
                 "status": "completed",
                 "coordinate_path": str(first_path),
             },
@@ -438,7 +444,7 @@ def test_cli_runs_on_tiny_manifest_and_coordinate_parquets(tmp_path: Path) -> No
                 "n_available": len(second_coords),
                 "n_used": len(second_coords),
                 "year_min": 2010,
-                "year_max": 2019,
+                "year_max": 2025,
                 "status": "completed",
                 "coordinate_path": str(second_path),
             },
@@ -500,7 +506,7 @@ def test_compute_row_contains_all_25_metric_columns() -> None:
         coordinate_frame(coords, years),
         coordinate_path="synthetic.parquet",
         year_min=2010,
-        year_max=2019,
+        year_max=2025,
         grid_size=50,
         k_neighbors=5,
         mst_max_points=80,
@@ -533,7 +539,7 @@ def test_duplicate_display_names_do_not_break_metric_rows() -> None:
         coordinate_frame(coords, years, subfield_id="1303", subfield_name="Biochemistry"),
         coordinate_path="first.parquet",
         year_min=2010,
-        year_max=2019,
+        year_max=2025,
         grid_size=50,
         k_neighbors=5,
         mst_max_points=80,
@@ -551,7 +557,7 @@ def test_duplicate_display_names_do_not_break_metric_rows() -> None:
         second_frame,
         coordinate_path="second.parquet",
         year_min=2010,
-        year_max=2019,
+        year_max=2025,
         grid_size=50,
         k_neighbors=5,
         mst_max_points=80,
@@ -574,12 +580,12 @@ def test_duplicate_display_names_do_not_break_metric_rows() -> None:
 def test_compute_row_rejects_year_window_outside_morphology_period() -> None:
     coords, years = moving_cloud(seed=89)
 
-    with pytest.raises(ValueError, match="2010-2019"):
+    with pytest.raises(ValueError, match="2010-2025"):
         compute_subfield_metric_row(
             coordinate_frame(coords, years),
             coordinate_path="synthetic.parquet",
             year_min=2010,
-            year_max=2020,
+            year_max=2026,
             grid_size=50,
             k_neighbors=5,
             mst_max_points=80,
