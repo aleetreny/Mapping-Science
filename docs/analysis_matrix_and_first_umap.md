@@ -51,7 +51,7 @@ adds `analysis_row_id`, a zero-based row pointer into
 Run:
 
 ```bash
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025 --force
+python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025 --color-by domain --force
 ```
 
 The first UMAP is a global visual inspection map. It uses a balanced sample
@@ -82,6 +82,9 @@ Use a smaller sample for quick checks:
 python scripts/09_build_first_umap_maps.py --sample-per-subfield 100 --year-min 2010 --year-max 2025 --force
 ```
 
+The PNG can be colored by `domain`, `field`, or `subfield` with `--color-by`.
+Large legends are skipped automatically.
+
 ## Build Per-Subfield UMAP Maps
 
 After the main matrix exists, build one separate map per OpenAlex subfield:
@@ -100,6 +103,18 @@ outputs/maps/per_subfield_umap/
 
 See [per_subfield_umap_maps.md](per_subfield_umap_maps.md) for the full CLI,
 manifest schema, and runtime notes.
+
+## Build Supporting Field And Domain Maps
+
+Subfields remain the main analysis unit. Field and domain maps are optional
+supporting inspection outputs:
+
+```bash
+python scripts/10b_build_per_category_umap_maps.py --level field --year-min 2010 --year-max 2025 --overwrite
+python scripts/10b_build_per_category_umap_maps.py --level domain --year-min 2010 --year-max 2025 --overwrite
+```
+
+See [higher_level_umap_maps.md](higher_level_umap_maps.md).
 
 ## Compute Metric Tables
 
@@ -123,3 +138,15 @@ computes one row per subfield directly in the original embedding space.
 
 See [subfield_morphology_metrics.md](subfield_morphology_metrics.md) and
 [subfield_embedding_space_metrics.md](subfield_embedding_space_metrics.md).
+
+## Compare And Diagnose Metrics
+
+After both metric tables exist:
+
+```bash
+python scripts/13_compare_metric_families.py --overwrite
+python scripts/14_summarize_metric_distributions.py --overwrite
+```
+
+These scripts write readable CSV, Markdown, and PNG diagnostics under
+`outputs/analysis/`.

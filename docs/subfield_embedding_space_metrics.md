@@ -208,3 +208,14 @@ The projected and embedding-space families both contain 25 core metrics for a
 balanced, interpretable design. This does not give them equal statistical
 weight automatically. Later analysis should standardize features and may use
 block weighting if needed.
+
+After both projected and embedding-space tables exist, run:
+
+```bash
+python scripts/13_compare_metric_families.py --overwrite
+python scripts/14_summarize_metric_distributions.py --overwrite
+```
+
+These scripts summarize cross-family correlations and simple metric
+distribution diagnostics. They are not clustering, regression, or final
+interpretive analysis.

@@ -185,3 +185,13 @@ normalization removes raw translation and scale, but UMAP is still a nonlinear
 2D projection. Treat these metrics as projected morphology descriptors and
 compare them with the direct embedding-space metrics rather than as physical
 distances in the original SPECTER2 space.
+
+After both projected and embedding-space tables exist, run:
+
+```bash
+python scripts/13_compare_metric_families.py --overwrite
+python scripts/14_summarize_metric_distributions.py --overwrite
+```
+
+These scripts are diagnostics only. They do not cluster subfields or make
+scientific claims.

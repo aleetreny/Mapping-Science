@@ -268,6 +268,29 @@ The PNG companion is:
 outputs/maps/umap_global_sample.png
 ```
 
+## Higher-Level UMAP Outputs
+
+Field and domain UMAP maps are supporting inspection outputs. Subfield remains
+the main analysis unit.
+
+Field outputs:
+
+```text
+outputs/maps/per_field_umap/coordinates/*.parquet
+outputs/maps/per_field_umap/figures/*.png
+outputs/maps/per_field_umap/per_field_umap_manifest.parquet
+outputs/maps/per_field_umap/per_field_umap_summary.json
+```
+
+Domain outputs:
+
+```text
+outputs/maps/per_domain_umap/coordinates/*.parquet
+outputs/maps/per_domain_umap/figures/*.png
+outputs/maps/per_domain_umap/per_domain_umap_manifest.parquet
+outputs/maps/per_domain_umap/per_domain_umap_summary.json
+```
+
 ## Metric Tables
 
 Projected UMAP morphology metrics:
@@ -291,3 +314,10 @@ These contain one row per attempted main-analysis subfield, with control
 columns, 25 core embedding-space metrics, and diagnostic columns. Joins should
 use `subfield_id`; display names are included for readability but are not
 unique.
+
+Metric diagnostics are written under:
+
+```text
+outputs/analysis/metric_family_comparison/
+outputs/analysis/metric_distributions/
+```

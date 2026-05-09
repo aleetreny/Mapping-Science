@@ -48,6 +48,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sample-per-subfield", type=int, default=500)
     parser.add_argument("--year-min", type=int, default=2010)
     parser.add_argument("--year-max", type=int, default=2025)
+    parser.add_argument(
+        "--color-by",
+        choices=["domain", "field", "subfield"],
+        default="domain",
+        help="Metadata level used to color the global UMAP PNG.",
+    )
     parser.add_argument("--random-seed", type=int, default=42)
     parser.add_argument("--force", action="store_true")
     return parser.parse_args()
@@ -62,10 +68,19 @@ def ensure_outputs_do_not_exist(paths: list[Path], force: bool) -> None:
         )
 
 
-def plot_umap(output: pd.DataFrame, png_path: Path) -> None:
+def color_column_for_choice(color_by: str) -> str:
+    return {
+        "domain": "domain_display_name",
+        "field": "field_display_name",
+        "subfield": "subfield_display_name",
+    }[color_by]
+
+
+def plot_umap(output: pd.DataFrame, png_path: Path, *, color_by: str) -> None:
     png_path.parent.mkdir(parents=True, exist_ok=True)
-    domains = pd.Categorical(output["domain_display_name"].fillna("Unknown"))
-    codes = domains.codes
+    color_column = color_column_for_choice(color_by)
+    categories = pd.Categorical(output[color_column].fillna("Unknown").astype(str))
+    codes = categories.codes
 
     fig, ax = plt.subplots(figsize=(11, 8), dpi=180)
     scatter = ax.scatter(
@@ -79,29 +94,33 @@ def plot_umap(output: pd.DataFrame, png_path: Path) -> None:
     )
     ax.set_xlabel("UMAP 1")
     ax.set_ylabel("UMAP 2")
-    ax.set_title("SPECTER2 UMAP Balanced Main-Analysis Sample")
+    ax.set_title(
+        f"SPECTER2 UMAP Balanced Main-Analysis Sample\n"
+        f"Colored by {color_by}"
+    )
     ax.grid(False)
 
     handles = []
-    labels = [str(label) for label in domains.categories]
+    labels = [str(label) for label in categories.categories]
     color_values = np.linspace(0, 1, max(len(labels), 1))
     cmap = scatter.cmap
-    for label, color_value in zip(labels, color_values):
-        handles.append(
-            Line2D(
-                [0],
-                [0],
-                marker="o",
-                color="none",
-                markerfacecolor=cmap(color_value),
-                markersize=5,
-                label=label,
+    if len(labels) <= 25:
+        for label, color_value in zip(labels, color_values):
+            handles.append(
+                Line2D(
+                    [0],
+                    [0],
+                    marker="o",
+                    color="none",
+                    markerfacecolor=cmap(color_value),
+                    markersize=5,
+                    label=label,
+                )
             )
-        )
     if handles:
         ax.legend(
             handles=handles,
-            title="Domain",
+            title=color_by.title(),
             loc="best",
             fontsize=7,
             title_fontsize=8,
@@ -187,7 +206,7 @@ def main() -> None:
 
     output = build_umap_output_frame(sampled, coordinates)
     save_parquet(output, parquet_path)
-    plot_umap(output, png_path)
+    plot_umap(output, png_path, color_by=args.color_by)
 
     summary = {
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -210,7 +229,9 @@ def main() -> None:
             "metric": "cosine",
             "low_memory": True,
         },
-        "color": "domain_display_name",
+        "color_by": args.color_by,
+        "color_column": color_column_for_choice(args.color_by),
+        "legend_included": bool(output[color_column_for_choice(args.color_by)].nunique() <= 25),
     }
     write_json(summary_path, summary)
 

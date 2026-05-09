@@ -93,14 +93,20 @@ python scripts/08_prepare_analysis_matrix.py --force
 
 python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025 --force
 python scripts/10_build_per_subfield_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
+python scripts/10b_build_per_category_umap_maps.py --level field --year-min 2010 --year-max 2025 --overwrite
+python scripts/10b_build_per_category_umap_maps.py --level domain --year-min 2010 --year-max 2025 --overwrite
 
 python scripts/11_compute_subfield_morphology_metrics.py --year-min 2010 --year-max 2025 --overwrite
 python scripts/12_compute_subfield_embedding_space_metrics.py --year-min 2010 --year-max 2025 --overwrite
+python scripts/13_compare_metric_families.py --overwrite
+python scripts/14_summarize_metric_distributions.py --overwrite
 ```
 
 The per-subfield UMAP stage fits one separate 2D UMAP model per OpenAlex
 subfield. It may cap papers per subfield for runtime, but records
 `n_available`, `n_used`, and `sampling_applied` in the manifest.
+Field and domain UMAPs are supporting inspection outputs only; subfields remain
+the main analysis unit.
 
 The active analysis produces two complementary metric tables:
 
@@ -137,6 +143,9 @@ outputs/metrics/subfield_embedding_space_metrics_dictionary.csv
 See [docs/subfield_morphology_metrics.md](docs/subfield_morphology_metrics.md)
 and
 [docs/subfield_embedding_space_metrics.md](docs/subfield_embedding_space_metrics.md).
+Metric-family comparison and distribution diagnostics are documented in
+[docs/metric_family_comparison.md](docs/metric_family_comparison.md) and
+[docs/metric_distribution_diagnostics.md](docs/metric_distribution_diagnostics.md).
 
 ## Repository Layout
 
@@ -176,8 +185,12 @@ python scripts/07_validate_embeddings.py
 python scripts/08_prepare_analysis_matrix.py --force
 python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025 --force
 python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --year-min 2010 --year-max 2025 --max-papers-per-subfield 2000 --overwrite
+python scripts/10b_build_per_category_umap_maps.py --level field --limit-groups 3 --year-min 2010 --year-max 2025 --max-papers-per-group 2000 --overwrite
+python scripts/10b_build_per_category_umap_maps.py --level domain --limit-groups 2 --year-min 2010 --year-max 2025 --max-papers-per-group 2000 --overwrite
 python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
 python scripts/12_compute_subfield_embedding_space_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
+python scripts/13_compare_metric_families.py --overwrite
+python scripts/14_summarize_metric_distributions.py --overwrite
 ```
 
 The full corpus download may take time. Test first with `--limit-subfields 5`,
@@ -208,6 +221,14 @@ outputs/maps/per_subfield_umap/coordinates/*.parquet
 outputs/maps/per_subfield_umap/figures/*.png
 outputs/maps/per_subfield_umap/per_subfield_umap_manifest.parquet
 outputs/maps/per_subfield_umap/per_subfield_umap_summary.json
+outputs/maps/per_field_umap/coordinates/*.parquet
+outputs/maps/per_field_umap/figures/*.png
+outputs/maps/per_field_umap/per_field_umap_manifest.parquet
+outputs/maps/per_field_umap/per_field_umap_summary.json
+outputs/maps/per_domain_umap/coordinates/*.parquet
+outputs/maps/per_domain_umap/figures/*.png
+outputs/maps/per_domain_umap/per_domain_umap_manifest.parquet
+outputs/maps/per_domain_umap/per_domain_umap_summary.json
 data/processed/subfield_morphology_metrics.parquet
 data/processed/subfield_morphology_metrics.csv
 data/processed/subfield_embedding_space_metrics.parquet
@@ -217,6 +238,8 @@ outputs/metrics/subfield_morphology_metrics_dictionary.csv
 outputs/metrics/subfield_embedding_space_metrics_summary.json
 outputs/metrics/subfield_embedding_space_metrics_dictionary.csv
 outputs/metrics/duplicate_subfield_names_report.csv
+outputs/analysis/metric_family_comparison/*
+outputs/analysis/metric_distributions/*
 ```
 
 Data files, secrets, and large artifacts are ignored by Git.

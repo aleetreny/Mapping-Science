@@ -138,3 +138,16 @@ all UMAP coordinates in memory. For each attempted subfield, it:
 The default cap is 10,000 papers per subfield and the default minimum is 250
 papers. The cap is a runtime control, not a conceptual exclusion from the active
 2010-2025 period.
+
+## Supporting Higher Levels
+
+Fields and domains can also be mapped for inspection with:
+
+```bash
+python scripts/10b_build_per_category_umap_maps.py --level field --year-min 2010 --year-max 2025 --overwrite
+python scripts/10b_build_per_category_umap_maps.py --level domain --year-min 2010 --year-max 2025 --overwrite
+```
+
+These outputs are backup/inspection maps. They do not change the main unit of
+analysis, which remains OpenAlex subfield. See
+[higher_level_umap_maps.md](higher_level_umap_maps.md).
