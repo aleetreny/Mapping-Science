@@ -1,7 +1,7 @@
 # Analysis Matrix And First UMAP
 
 This layer prepares the row-aligned SPECTER2 matrix used by the active
-2010-2025 morphology pipeline. It does not add clustering, dashboards, or
+2010-2025 morphology pipeline. This layer itself does not add dashboards or
 predictive models.
 
 ## Prepare Main-Analysis Matrix
@@ -110,8 +110,8 @@ Subfields remain the main analysis unit. Field and domain maps are optional
 supporting inspection outputs:
 
 ```bash
-python scripts/10b_build_per_category_umap_maps.py --level field --year-min 2010 --year-max 2025 --overwrite
-python scripts/10b_build_per_category_umap_maps.py --level domain --year-min 2010 --year-max 2025 --overwrite
+python scripts/10b_build_per_field_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
+python scripts/10c_build_per_domain_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
 ```
 
 See [higher_level_umap_maps.md](higher_level_umap_maps.md).
@@ -146,7 +146,9 @@ After both metric tables exist:
 ```bash
 python scripts/13_compare_metric_families.py --overwrite
 python scripts/14_summarize_metric_distributions.py --overwrite
+python scripts/15_cluster_metric_spaces.py --default-k 5 --overwrite
 ```
 
 These scripts write readable CSV, Markdown, and PNG diagnostics under
-`outputs/analysis/`.
+`outputs/analysis/`. The clustering stage is documented in
+[metric_clustering.md](metric_clustering.md).

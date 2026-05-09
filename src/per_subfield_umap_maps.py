@@ -53,6 +53,8 @@ MANIFEST_COLUMNS = [
     "sampling_applied",
 ]
 
+VALID_DENSITY_METHODS = {"auto", "kde", "smooth_hist"}
+
 VALID_STATUSES = {"completed", "skipped", "failed"}
 
 
@@ -330,14 +332,67 @@ def coordinate_limits(coordinates: np.ndarray) -> tuple[tuple[float, float], tup
     return (x_min - x_pad, x_max + x_pad), (y_min - y_pad, y_max + y_pad)
 
 
+def plot_continuous_density_panel(
+    ax: plt.Axes,
+    coordinates: np.ndarray,
+    *,
+    xlim: tuple[float, float],
+    ylim: tuple[float, float],
+    grid_size: int = 180,
+    sigma: float = 1.5,
+) -> Any:
+    if grid_size < 10:
+        raise ValueError("density grid_size must be at least 10")
+    if sigma <= 0:
+        raise ValueError("density sigma must be positive")
+
+    coordinates = np.asarray(coordinates, dtype=float)
+    finite = np.isfinite(coordinates).all(axis=1)
+    coordinates = coordinates[finite]
+    if len(coordinates):
+        hist, _, _ = np.histogram2d(
+            coordinates[:, 0],
+            coordinates[:, 1],
+            bins=grid_size,
+            range=[[xlim[0], xlim[1]], [ylim[0], ylim[1]]],
+        )
+    else:
+        hist = np.zeros((grid_size, grid_size), dtype=float)
+
+    from scipy.ndimage import gaussian_filter
+
+    density = gaussian_filter(hist.T, sigma=sigma)
+    density = np.nan_to_num(density, nan=0.0, posinf=0.0, neginf=0.0)
+    max_density = float(density.max()) if density.size else 0.0
+    if max_density > 0:
+        density = density / max_density
+
+    artist = ax.imshow(
+        density,
+        origin="lower",
+        extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
+        aspect="auto",
+        cmap="viridis",
+    )
+    return artist
+
+
 def plot_density_panel(
     ax: plt.Axes,
     coordinates: np.ndarray,
     *,
     xlim: tuple[float, float],
     ylim: tuple[float, float],
+    density_method: str = "auto",
     kde_max_points: int = 5000,
+    density_grid_size: int = 180,
+    density_sigma: float = 1.5,
 ) -> tuple[Any, str]:
+    if density_method not in VALID_DENSITY_METHODS:
+        raise ValueError(
+            "density_method must be one of "
+            f"{', '.join(sorted(VALID_DENSITY_METHODS))}: {density_method}"
+        )
     coordinates = np.asarray(coordinates, dtype=float)
     finite = np.isfinite(coordinates).all(axis=1)
     coordinates = coordinates[finite]
@@ -347,7 +402,12 @@ def plot_density_panel(
     ax.set_xlabel("UMAP 1")
     ax.set_ylabel("UMAP 2")
 
-    if len(coordinates) >= 3 and len(coordinates) <= kde_max_points:
+    use_kde = (
+        density_method in {"auto", "kde"}
+        and len(coordinates) >= 3
+        and len(coordinates) <= kde_max_points
+    )
+    if use_kde:
         try:
             from scipy.stats import gaussian_kde
 
@@ -367,16 +427,15 @@ def plot_density_panel(
         except Exception:
             pass
 
-    artist = ax.hexbin(
-        coordinates[:, 0],
-        coordinates[:, 1],
-        gridsize=80,
-        extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
-        cmap="viridis",
-        mincnt=1,
-        linewidths=0,
+    artist = plot_continuous_density_panel(
+        ax,
+        coordinates,
+        xlim=xlim,
+        ylim=ylim,
+        grid_size=density_grid_size,
+        sigma=density_sigma,
     )
-    return artist, "hexbin"
+    return artist, "smooth_hist"
 
 
 def plot_subfield_panels(
@@ -388,6 +447,9 @@ def plot_subfield_panels(
     year_max: int,
     output_path: str | Path,
     dpi: int,
+    density_method: str = "auto",
+    density_grid_size: int = 180,
+    density_sigma: float = 1.5,
 ) -> str:
     coordinates = np.asarray(coordinates, dtype=float)
     xlim, ylim = coordinate_limits(coordinates)
@@ -421,6 +483,9 @@ def plot_subfield_panels(
             coordinates,
             xlim=xlim,
             ylim=ylim,
+            density_method=density_method,
+            density_grid_size=density_grid_size,
+            density_sigma=density_sigma,
         )
         axes[1].set_title("B. Density", fontsize=10)
         fig.colorbar(density_artist, ax=axes[1], fraction=0.046, pad=0.04)

@@ -144,8 +144,8 @@ papers. The cap is a runtime control, not a conceptual exclusion from the active
 Fields and domains can also be mapped for inspection with:
 
 ```bash
-python scripts/10b_build_per_category_umap_maps.py --level field --year-min 2010 --year-max 2025 --overwrite
-python scripts/10b_build_per_category_umap_maps.py --level domain --year-min 2010 --year-max 2025 --overwrite
+python scripts/10b_build_per_field_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
+python scripts/10c_build_per_domain_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
 ```
 
 These outputs are backup/inspection maps. They do not change the main unit of

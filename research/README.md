@@ -71,8 +71,9 @@ Phase 5, later: interpretation and comparison.
 
 - compare projected and embedding-space metric families
 - inspect robust patterns by field/domain
+- run exploratory metric-space clustering once both metric tables are stable
 - decide whether feature standardization, block weighting, or sensitivity checks
   are needed
 
-Do not add final clustering, dashboards, or predictive modeling before the two
-metric tables are stable and documented.
+Do not treat exploratory clusters as final thesis claims before the two metric
+tables, diagnostics, and sensitivity checks are stable and documented.

@@ -191,7 +191,9 @@ After both projected and embedding-space tables exist, run:
 ```bash
 python scripts/13_compare_metric_families.py --overwrite
 python scripts/14_summarize_metric_distributions.py --overwrite
+python scripts/15_cluster_metric_spaces.py --default-k 5 --overwrite
 ```
 
-These scripts are diagnostics only. They do not cluster subfields or make
-scientific claims.
+The comparison and distribution scripts are diagnostics. The clustering script
+builds exploratory metric-space typologies for inspection, not scientific
+claims by itself.

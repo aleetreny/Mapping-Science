@@ -364,6 +364,9 @@ def plot_category_panels(
     output_path: str | Path,
     dpi: int,
     max_legend_categories: int = 25,
+    density_method: str = "smooth_hist",
+    density_grid_size: int = 180,
+    density_sigma: float = 1.5,
 ) -> dict[str, Any]:
     coordinates = np.asarray(coordinates, dtype=float)
     xlim, ylim = coordinate_limits(coordinates)
@@ -426,6 +429,9 @@ def plot_category_panels(
             coordinates,
             xlim=xlim,
             ylim=ylim,
+            density_method=density_method,
+            density_grid_size=density_grid_size,
+            density_sigma=density_sigma,
         )
         axes[1].set_title("B. Density", fontsize=10)
         fig.colorbar(density_artist, ax=axes[1], fraction=0.046, pad=0.04)

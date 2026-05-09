@@ -21,18 +21,18 @@ python scripts/10_build_per_subfield_umap_maps.py --year-min 2010 --year-max 202
 Supporting field maps:
 
 ```bash
-python scripts/10b_build_per_category_umap_maps.py --level field --year-min 2010 --year-max 2025 --overwrite
+python scripts/10b_build_per_field_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
 ```
 
 Supporting domain maps:
 
 ```bash
-python scripts/10b_build_per_category_umap_maps.py --level domain --year-min 2010 --year-max 2025 --overwrite
+python scripts/10c_build_per_domain_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
 ```
 
 ## Inputs
 
-The grouped field/domain script reads:
+The field and domain scripts read:
 
 ```text
 data/processed/analysis_embedding_index.parquet
@@ -72,18 +72,25 @@ Domain maps color by field display name only when the legend is readable. If
 there are too many categories, the script uses a neutral scatter and records
 that no legend was included.
 
+Density panels use a smoothed 2D histogram by default. This keeps large field
+and domain maps continuous-looking with `viridis`, avoids slow full KDE, and
+avoids discrete hexbin artifacts or white holes inside sparse regions.
+
 ## Important Runtime Controls
 
 ```text
 --min-papers
 --max-papers-per-group
---group-id
---limit-groups
+--field-id / --domain-id
+--limit-fields / --limit-domains
 --random-state
 --n-neighbors
 --min-dist
 --metric
 --dpi
+--density-method
+--density-grid-size
+--density-sigma
 ```
 
 Field and especially domain groups may contain many papers. If UMAP fitting is

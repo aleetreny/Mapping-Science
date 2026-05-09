@@ -320,4 +320,5 @@ Metric diagnostics are written under:
 ```text
 outputs/analysis/metric_family_comparison/
 outputs/analysis/metric_distributions/
+outputs/analysis/metric_clustering/
 ```

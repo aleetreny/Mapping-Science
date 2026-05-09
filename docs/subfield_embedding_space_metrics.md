@@ -12,8 +12,9 @@ original embedding space -> high-dimensional semantic structure
 ```
 
 The table contains exactly 25 curated core embedding-space metrics plus
-diagnostics and controls. It does not run clustering, PCA over the final metric
-table, regression, classification, or visual interpretation.
+diagnostics and controls. The metric table stage itself does not run
+clustering, PCA over the final metric table, regression, classification, or
+visual interpretation.
 
 ## Inputs
 
@@ -214,8 +215,9 @@ After both projected and embedding-space tables exist, run:
 ```bash
 python scripts/13_compare_metric_families.py --overwrite
 python scripts/14_summarize_metric_distributions.py --overwrite
+python scripts/15_cluster_metric_spaces.py --default-k 5 --overwrite
 ```
 
-These scripts summarize cross-family correlations and simple metric
-distribution diagnostics. They are not clustering, regression, or final
+These scripts summarize cross-family correlations, metric distributions, and
+exploratory metric-space clusters. They are not regression or final
 interpretive analysis.

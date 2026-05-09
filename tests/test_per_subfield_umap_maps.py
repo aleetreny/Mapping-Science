@@ -223,7 +223,7 @@ def test_density_plot_helper_writes_png(tmp_path: Path) -> None:
     )
     plt.close("all")
 
-    assert method in {"kde", "hexbin"}
+    assert method in {"kde", "smooth_hist"}
     assert output_path.exists()
     assert output_path.stat().st_size > 0
 

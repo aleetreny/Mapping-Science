@@ -85,7 +85,7 @@ Validation writes `data/processed/embedding_index.parquet` and the DuckDB
 ## Active Pipeline
 
 Prepare the row-aligned analysis matrix, UMAP maps, projected morphology
-metrics, and embedding-space metrics with:
+metrics, embedding-space metrics, diagnostics, and exploratory clusters with:
 
 ```bash
 python scripts/07_validate_embeddings.py
@@ -93,13 +93,14 @@ python scripts/08_prepare_analysis_matrix.py --force
 
 python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025 --force
 python scripts/10_build_per_subfield_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
-python scripts/10b_build_per_category_umap_maps.py --level field --year-min 2010 --year-max 2025 --overwrite
-python scripts/10b_build_per_category_umap_maps.py --level domain --year-min 2010 --year-max 2025 --overwrite
+python scripts/10b_build_per_field_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
+python scripts/10c_build_per_domain_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
 
 python scripts/11_compute_subfield_morphology_metrics.py --year-min 2010 --year-max 2025 --overwrite
 python scripts/12_compute_subfield_embedding_space_metrics.py --year-min 2010 --year-max 2025 --overwrite
 python scripts/13_compare_metric_families.py --overwrite
 python scripts/14_summarize_metric_distributions.py --overwrite
+python scripts/15_cluster_metric_spaces.py --default-k 5 --overwrite
 ```
 
 The per-subfield UMAP stage fits one separate 2D UMAP model per OpenAlex
@@ -146,6 +147,8 @@ and
 Metric-family comparison and distribution diagnostics are documented in
 [docs/metric_family_comparison.md](docs/metric_family_comparison.md) and
 [docs/metric_distribution_diagnostics.md](docs/metric_distribution_diagnostics.md).
+Exploratory metric-space clustering is documented in
+[docs/metric_clustering.md](docs/metric_clustering.md).
 
 ## Repository Layout
 
@@ -185,12 +188,13 @@ python scripts/07_validate_embeddings.py
 python scripts/08_prepare_analysis_matrix.py --force
 python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025 --force
 python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --year-min 2010 --year-max 2025 --max-papers-per-subfield 2000 --overwrite
-python scripts/10b_build_per_category_umap_maps.py --level field --limit-groups 3 --year-min 2010 --year-max 2025 --max-papers-per-group 2000 --overwrite
-python scripts/10b_build_per_category_umap_maps.py --level domain --limit-groups 2 --year-min 2010 --year-max 2025 --max-papers-per-group 2000 --overwrite
+python scripts/10b_build_per_field_umap_maps.py --limit-fields 3 --year-min 2010 --year-max 2025 --max-papers-per-group 2000 --overwrite
+python scripts/10c_build_per_domain_umap_maps.py --limit-domains 2 --year-min 2010 --year-max 2025 --max-papers-per-group 2000 --overwrite
 python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
 python scripts/12_compute_subfield_embedding_space_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
 python scripts/13_compare_metric_families.py --overwrite
 python scripts/14_summarize_metric_distributions.py --overwrite
+python scripts/15_cluster_metric_spaces.py --default-k 5 --overwrite
 ```
 
 The full corpus download may take time. Test first with `--limit-subfields 5`,
@@ -240,6 +244,7 @@ outputs/metrics/subfield_embedding_space_metrics_dictionary.csv
 outputs/metrics/duplicate_subfield_names_report.csv
 outputs/analysis/metric_family_comparison/*
 outputs/analysis/metric_distributions/*
+outputs/analysis/metric_clustering/*
 ```
 
 Data files, secrets, and large artifacts are ignored by Git.

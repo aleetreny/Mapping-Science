@@ -1,20 +1,31 @@
 from __future__ import annotations
 
+import runpy
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
+from matplotlib.image import AxesImage
 
 from src.per_category_umap_maps import (
     MANIFEST_COLUMNS,
     category_manifest_frame,
     category_manifest_row,
     filter_category_input_window,
+    level_spec,
     list_groups,
     make_group_lookup,
     sample_group_rows,
     select_attempted_groups,
     validate_category_index_columns,
 )
+from src.per_category_umap_runner import parse_category_args
+from src.per_subfield_umap_maps import coordinate_limits, plot_density_panel
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def synthetic_index() -> pd.DataFrame:
@@ -137,3 +148,76 @@ def test_manifest_has_expected_columns_and_skip_status() -> None:
     assert manifest.columns.tolist() == MANIFEST_COLUMNS
     assert manifest.loc[0, "status"] == "skipped"
     assert manifest.loc[0, "n_available"] == 3
+
+
+def test_smooth_hist_density_helper_uses_image_not_hexbin() -> None:
+    rng = np.random.default_rng(123)
+    coordinates = np.vstack(
+        [
+            rng.normal(loc=(-2.0, 0.0), scale=0.5, size=(5000, 2)),
+            rng.normal(loc=(2.0, 0.5), scale=0.7, size=(5000, 2)),
+        ]
+    )
+    xlim, ylim = coordinate_limits(coordinates)
+    fig, ax = plt.subplots()
+
+    artist, method = plot_density_panel(
+        ax,
+        coordinates,
+        xlim=xlim,
+        ylim=ylim,
+        density_method="smooth_hist",
+        density_grid_size=128,
+        density_sigma=1.4,
+    )
+
+    assert method == "smooth_hist"
+    assert isinstance(artist, AxesImage)
+    assert artist in ax.images
+    assert len(ax.collections) == 0
+    assert artist.get_cmap().name == "viridis"
+    plt.close(fig)
+
+
+def test_field_and_domain_wrapper_args_set_fixed_level_and_aliases() -> None:
+    field_args = parse_category_args(
+        ["--field-id", "F1", "--limit-fields", "2"],
+        fixed_level="field",
+    )
+    domain_args = parse_category_args(
+        ["--domain-id", "D1", "--limit-domains", "1"],
+        fixed_level="domain",
+    )
+
+    assert field_args.level == "field"
+    assert field_args.group_id == "F1"
+    assert field_args.limit_groups == 2
+    assert field_args.density_method == "smooth_hist"
+    assert domain_args.level == "domain"
+    assert domain_args.group_id == "D1"
+    assert domain_args.limit_groups == 1
+
+
+def test_field_and_domain_wrapper_scripts_declare_expected_levels() -> None:
+    field_globals = runpy.run_path(
+        str(ROOT / "scripts" / "10b_build_per_field_umap_maps.py")
+    )
+    domain_globals = runpy.run_path(
+        str(ROOT / "scripts" / "10c_build_per_domain_umap_maps.py")
+    )
+
+    assert field_globals["FIXED_LEVEL"] == "field"
+    assert domain_globals["FIXED_LEVEL"] == "domain"
+
+
+def test_field_and_domain_output_paths_remain_stable() -> None:
+    assert level_spec("field")["output_dir"] == "outputs/maps/per_field_umap"
+    assert (
+        level_spec("field")["manifest_filename"]
+        == "per_field_umap_manifest.parquet"
+    )
+    assert level_spec("domain")["output_dir"] == "outputs/maps/per_domain_umap"
+    assert (
+        level_spec("domain")["summary_filename"]
+        == "per_domain_umap_summary.json"
+    )
