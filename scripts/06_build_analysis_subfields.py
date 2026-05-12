@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 from typing import Any
@@ -11,13 +12,27 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.analysis import build_analysis_subfields
+from src.analysis import build_analysis_subfields, build_versioned_analysis_subfields
+from src.extraction_versions import (
+    add_dataset_version_argument,
+    apply_dataset_version,
+    extraction_paths,
+    n_downloaded_works_column,
+    output_path_display,
+    versioned_table_name,
+)
 from src.storage import connect_duckdb, ensure_dirs, load_parquet, save_parquet, write_table
 
 
 def load_config() -> dict[str, Any]:
     with (ROOT / "config.yaml").open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Build analysis subfield table.")
+    add_dataset_version_argument(parser)
+    return parser.parse_args()
 
 
 def read_required_parquet(path: Path, message: str) -> pd.DataFrame:
@@ -55,29 +70,71 @@ def print_summary(analysis_subfields: pd.DataFrame) -> None:
 
 
 def main() -> None:
-    config = load_config()
+    args = parse_args()
+    config = apply_dataset_version(load_config(), args.dataset_version)
     ensure_dirs(config)
 
-    processed_dir = ROOT / config["storage"]["processed_dir"]
-    interim_dir = ROOT / config["storage"]["interim_dir"]
     duckdb_path = ROOT / config["storage"]["duckdb_path"]
+    paths = extraction_paths(ROOT, config, args.dataset_version)
 
     works_text = read_required_parquet(
-        processed_dir / "works_text.parquet",
-        "Missing data/processed/works_text.parquet. Run the corpus download first.",
+        paths.works_text,
+        f"Missing {output_path_display(paths.works_text, ROOT)}. "
+        "Run the corpus download first.",
     )
-    plan = read_plan(interim_dir)
-    analysis_subfields = build_analysis_subfields(works_text, plan)
+    if args.dataset_version:
+        sample_plan = read_required_parquet(
+            paths.sample_plan,
+            f"Missing {output_path_display(paths.sample_plan, ROOT)}. "
+            "Run scripts/03_build_sample_plan.py first.",
+        )
+        corpus_plan = read_required_parquet(
+            paths.corpus_plan,
+            f"Missing {output_path_display(paths.corpus_plan, ROOT)}. "
+            "Run scripts/02_build_corpus_plan.py first.",
+        )
+        analysis_subfields = build_versioned_analysis_subfields(
+            works_text,
+            sample_plan,
+            corpus_plan,
+            config,
+        )
+    else:
+        interim_dir = ROOT / config["storage"]["interim_dir"]
+        plan = read_plan(interim_dir)
+        analysis_subfields = build_analysis_subfields(works_text, plan)
 
-    save_parquet(analysis_subfields, processed_dir / "analysis_subfields.parquet")
+    save_parquet(analysis_subfields, paths.analysis_subfields)
 
     con = connect_duckdb(duckdb_path)
     try:
-        write_table(con, "analysis_subfields", analysis_subfields)
+        write_table(
+            con,
+            versioned_table_name("analysis_subfields", args.dataset_version),
+            analysis_subfields,
+        )
     finally:
         con.close()
 
-    print_summary(analysis_subfields)
+    print(f"Wrote {output_path_display(paths.analysis_subfields, ROOT)}")
+    if args.dataset_version:
+        downloaded_col = n_downloaded_works_column(config)
+        print(f"total subfields: {len(analysis_subfields)}")
+        print(
+            "eligible full-period 10,000: "
+            f"{int(analysis_subfields['eligible_10000_full_period'].sum())}"
+        )
+        print(
+            "eligible minimum 5,000: "
+            f"{int(analysis_subfields['eligible_min_5000_full_period'].sum())}"
+        )
+        print(
+            "eligible temporal exploration: "
+            f"{int(analysis_subfields['eligible_for_temporal_5year_exploration'].sum())}"
+        )
+        print(f"total downloaded works: {int(analysis_subfields[downloaded_col].sum())}")
+    else:
+        print_summary(analysis_subfields)
 
 
 if __name__ == "__main__":

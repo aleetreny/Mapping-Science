@@ -14,6 +14,14 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.openalex import OpenAlexClient, build_count_query_params, short_openalex_id
+from src.extraction_versions import (
+    add_dataset_version_argument,
+    analysis_years,
+    apply_dataset_version,
+    extraction_paths,
+    output_path_display,
+    versioned_table_name,
+)
 from src.storage import connect_duckdb, ensure_dirs, load_parquet, save_parquet, write_table
 
 
@@ -41,18 +49,13 @@ def load_config() -> dict[str, Any]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build OpenAlex count tables.")
+    add_dataset_version_argument(parser)
     parser.add_argument("--dry-run", action="store_true", help="Print planned queries.")
     return parser.parse_args()
 
 
 def year_range(config: dict[str, Any]) -> list[int]:
-    windows = config["windows"]
-    return list(
-        range(
-            int(windows["morphology_start_year"]),
-            int(windows["morphology_end_year"]) + 1,
-        )
-    )
+    return analysis_years(config)
 
 
 def print_dry_run(config: dict[str, Any]) -> None:
@@ -157,7 +160,7 @@ def build_level_counts(
 
 def main() -> None:
     args = parse_args()
-    config = load_config()
+    config = apply_dataset_version(load_config(), args.dataset_version)
     ensure_dirs(config)
 
     if args.dry_run:
@@ -166,6 +169,7 @@ def main() -> None:
 
     interim_dir = ROOT / config["storage"]["interim_dir"]
     duckdb_path = ROOT / config["storage"]["duckdb_path"]
+    paths = extraction_paths(ROOT, config, args.dataset_version)
     years = year_range(config)
     per_page = int(config["openalex"].get("per_page", 200))
 
@@ -243,19 +247,34 @@ def main() -> None:
         ]
     ]
 
-    save_parquet(subfield_counts, interim_dir / "subfield_year_counts.parquet")
-    save_parquet(field_counts, interim_dir / "field_year_counts.parquet")
-    save_parquet(domain_counts, interim_dir / "domain_year_counts.parquet")
+    save_parquet(subfield_counts, paths.subfield_year_counts)
+    save_parquet(field_counts, paths.field_year_counts)
+    save_parquet(domain_counts, paths.domain_year_counts)
 
     con = connect_duckdb(duckdb_path)
     try:
-        write_table(con, "subfield_year_counts", subfield_counts)
-        write_table(con, "field_year_counts", field_counts)
-        write_table(con, "domain_year_counts", domain_counts)
+        write_table(
+            con,
+            versioned_table_name("subfield_year_counts", args.dataset_version),
+            subfield_counts,
+        )
+        write_table(
+            con,
+            versioned_table_name("field_year_counts", args.dataset_version),
+            field_counts,
+        )
+        write_table(
+            con,
+            versioned_table_name("domain_year_counts", args.dataset_version),
+            domain_counts,
+        )
     finally:
         con.close()
 
-    print("Count tables written to Parquet and DuckDB.")
+    print("Count tables written to Parquet and DuckDB:")
+    print(f"- {output_path_display(paths.subfield_year_counts, ROOT)}")
+    print(f"- {output_path_display(paths.field_year_counts, ROOT)}")
+    print(f"- {output_path_display(paths.domain_year_counts, ROOT)}")
 
 
 if __name__ == "__main__":

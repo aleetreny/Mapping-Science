@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import os
 import time
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any, Iterable
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import requests
 from dotenv import load_dotenv
-from tenacity import Retrying, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -187,6 +187,41 @@ def build_count_query_params(
     return params
 
 
+class OpenAlexRateLimitError(requests.HTTPError):
+    """Raised after repeated OpenAlex 429 responses despite cooldown sleeps."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        response: Any | None = None,
+        retry_after_seconds: float | None = None,
+        consecutive_429: int | None = None,
+    ) -> None:
+        super().__init__(message, response=response)
+        self.retry_after_seconds = retry_after_seconds
+        self.consecutive_429 = consecutive_429
+
+
+def retry_after_seconds(response: Any, *, fallback_seconds: float) -> float:
+    raw_value = ""
+    headers = getattr(response, "headers", {}) or {}
+    for key, value in headers.items():
+        if str(key).lower() == "retry-after":
+            raw_value = str(value).strip()
+            break
+    if raw_value:
+        try:
+            return max(0.0, float(raw_value))
+        except ValueError:
+            try:
+                retry_at = parsedate_to_datetime(raw_value)
+                return max(0.0, retry_at.timestamp() - time.time())
+            except (TypeError, ValueError, OverflowError):
+                pass
+    return max(0.0, float(fallback_seconds))
+
+
 class OpenAlexClient:
     """Small OpenAlex client with retries, polite auth params, and pagination."""
 
@@ -198,6 +233,8 @@ class OpenAlexClient:
         timeout_seconds: int = 30,
         max_retries: int = 5,
         backoff_seconds: int = 2,
+        cooldown_after_429: float = 180,
+        max_consecutive_429: int = 10,
         max_requests_per_second: float = 5,
     ) -> None:
         self.base_url = base_url.rstrip("/")
@@ -206,6 +243,8 @@ class OpenAlexClient:
         self.timeout_seconds = timeout_seconds
         self.max_retries = max_retries
         self.backoff_seconds = backoff_seconds
+        self.cooldown_after_429 = float(cooldown_after_429)
+        self.max_consecutive_429 = int(max_consecutive_429)
         self.max_requests_per_second = max_requests_per_second
         self._last_request_at = 0.0
 
@@ -219,6 +258,8 @@ class OpenAlexClient:
             timeout_seconds=int(openalex_config.get("timeout_seconds", 30)),
             max_retries=int(openalex_config.get("max_retries", 5)),
             backoff_seconds=int(openalex_config.get("backoff_seconds", 2)),
+            cooldown_after_429=float(openalex_config.get("cooldown_after_429", 180)),
+            max_consecutive_429=int(openalex_config.get("max_consecutive_429", 10)),
             max_requests_per_second=float(
                 openalex_config.get("max_requests_per_second", 5)
             ),
@@ -245,20 +286,11 @@ class OpenAlexClient:
         endpoint_path = endpoint.strip("/")
         url = f"{self.base_url}/{endpoint_path}"
         request_params = self._add_auth_params(params or {})
+        consecutive_429 = 0
+        transient_attempts = 0
 
-        retryer = Retrying(
-            stop=stop_after_attempt(self.max_retries),
-            wait=wait_exponential(
-                multiplier=self.backoff_seconds,
-                min=self.backoff_seconds,
-                max=60,
-            ),
-            retry=retry_if_exception_type(requests.RequestException),
-            reraise=True,
-        )
-
-        for attempt in retryer:
-            with attempt:
+        while True:
+            try:
                 self._rate_limit()
                 response = requests.get(
                     url,
@@ -266,19 +298,55 @@ class OpenAlexClient:
                     timeout=self.timeout_seconds,
                     headers={"User-Agent": "tfm-openalex-subfield-pipeline/1.0"},
                 )
-                if response.status_code in {429, 500, 502, 503, 504}:
-                    raise requests.HTTPError(
-                        f"{response.status_code} for {safe_url_for_logging(response.url)}",
-                        response=response,
-                    )
-                if response.status_code >= 400:
-                    raise requests.HTTPError(
-                        f"{response.status_code} for {safe_url_for_logging(response.url)}",
-                        response=response,
-                    )
-                return response.json()
+            except requests.RequestException:
+                transient_attempts += 1
+                if transient_attempts >= self.max_retries:
+                    raise
+                time.sleep(self._transient_backoff_seconds(transient_attempts))
+                continue
 
-        raise RuntimeError("OpenAlex request failed without returning a response")
+            if response.status_code == 429:
+                consecutive_429 += 1
+                retry_after = retry_after_seconds(
+                    response,
+                    fallback_seconds=self.cooldown_after_429,
+                )
+                message = (
+                    f"429 rate limit for {safe_url_for_logging(response.url)}; "
+                    f"retry_after={retry_after:g}s; consecutive_429={consecutive_429}"
+                )
+                if consecutive_429 > self.max_consecutive_429:
+                    raise OpenAlexRateLimitError(
+                        message,
+                        response=response,
+                        retry_after_seconds=retry_after,
+                        consecutive_429=consecutive_429,
+                    )
+                time.sleep(retry_after)
+                continue
+
+            consecutive_429 = 0
+            if response.status_code in {500, 502, 503, 504}:
+                transient_attempts += 1
+                if transient_attempts >= self.max_retries:
+                    raise requests.HTTPError(
+                        f"{response.status_code} for {safe_url_for_logging(response.url)}",
+                        response=response,
+                    )
+                time.sleep(self._transient_backoff_seconds(transient_attempts))
+                continue
+            if response.status_code >= 400:
+                raise requests.HTTPError(
+                    f"{response.status_code} for {safe_url_for_logging(response.url)}",
+                    response=response,
+                )
+            return response.json()
+
+    def _transient_backoff_seconds(self, attempt: int) -> float:
+        return min(
+            60.0,
+            max(0.0, float(self.backoff_seconds)) * (2 ** max(0, attempt - 1)),
+        )
 
     def get_count(self, endpoint: str, filters: Iterable[str] | str) -> int:
         params = {

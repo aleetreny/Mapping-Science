@@ -1,30 +1,30 @@
 openalex:
-  base_url: "https://api.openalex.org"
-  email_env: "OPENALEX_EMAIL"
-  api_key_env: "OPENALEX_API_KEY"
+  base_url: https://api.openalex.org
+  email_env: OPENALEX_EMAIL
+  api_key_env: OPENALEX_API_KEY
   timeout_seconds: 30
-  max_retries: 5
-  backoff_seconds: 2
+  max_retries: 8
+  backoff_seconds: 10
   max_requests_per_second: 5
   per_page: 200
-
 windows:
   morphology_start_year: 2010
   morphology_end_year: 2025
-  exclude_years: [2026]
-
+  exclude_years:
+  - 2026
 filters:
-  unit: "subfield"
+  unit: subfield
   use_primary_topic_subfield_only: true
-  language: "en"
-  work_types: ["article", "preprint"]
+  language: en
+  work_types:
+  - article
+  - preprint
   require_abstract_for_text_corpus: true
   require_title_for_text_corpus: true
   min_title_tokens: 5
   min_abstract_tokens: 80
   exclude_retracted: true
   exclude_paratext: true
-
 sampling:
   target_sample_per_subfield: 3000
   max_sample_per_subfield: 3000
@@ -34,14 +34,35 @@ sampling:
   random_seed: 42
   use_openalex_sample_api: true
   oversample_factor: 1.75
-  max_backfill_rounds: 4
+  max_backfill_rounds: 1
   backfill_seed_step: 100000
   write_every_n_subfields: 5
   resume_existing_download: true
   save_download_manifest: true
-
+dataset_versions:
+  2000_2024_400py:
+    year_min: 2000
+    year_max: 2024
+    exclude_years:
+    - 2025
+    - 2026
+    sampling:
+      target_per_year_per_subfield: 400
+      target_sample_per_subfield: 10000
+      max_sample_per_subfield: 10000
+      min_valid_texts_per_subfield: 500
+      stratify_by_year: true
+      random_seed: 42
+      use_openalex_sample_api: true
+      oversample_factor: 1.75
+      max_backfill_rounds: 4
+      backfill_seed_step: 100000
+      write_every_n_subfields: 5
+      resume_existing_download: true
+      save_download_manifest: true
+      redistribute_unused_annual_capacity: false
 storage:
-  duckdb_path: "warehouse/tfm_openalex.duckdb"
-  raw_dir: "data/raw/openalex"
-  interim_dir: "data/interim"
-  processed_dir: "data/processed"
+  duckdb_path: warehouse/tfm_openalex.duckdb
+  raw_dir: data/raw/openalex
+  interim_dir: data/interim
+  processed_dir: data/processed

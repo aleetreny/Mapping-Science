@@ -9,6 +9,7 @@ def test_completed_cell_keys_from_manifest() -> None:
             {"subfield_id": "1100", "publication_year": 2010, "status": "completed_target_met"},
             {"subfield_id": "1100", "publication_year": 2011, "status": "completed_shortfall"},
             {"subfield_id": "1100", "publication_year": 2012, "status": "failed"},
+            {"subfield_id": "1100", "publication_year": 2013, "status": "rate_limited"},
         ]
     )
 
@@ -17,3 +18,4 @@ def test_completed_cell_keys_from_manifest() -> None:
     assert ("1100", 2010) in completed
     assert ("1100", 2011) in completed
     assert ("1100", 2012) not in completed
+    assert ("1100", 2013) not in completed

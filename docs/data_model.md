@@ -136,6 +136,23 @@ One row per processed subfield-year cell.
 - `skipped_no_available_works`
 - `failed`
 
+Versioned extraction `2000_2024_400py` writes the same logical tables with a
+suffix instead of replacing canonical files:
+
+```text
+data/interim/subfield_year_counts_2000_2024_400py.parquet
+data/interim/field_year_counts_2000_2024_400py.parquet
+data/interim/domain_year_counts_2000_2024_400py.parquet
+data/interim/corpus_plan_2000_2024_400py.parquet
+data/interim/sample_plan_2000_2024_400py.parquet
+data/interim/download_manifest_2000_2024_400py.parquet
+data/processed/works_text_2000_2024_400py.parquet
+data/processed/analysis_subfields_2000_2024_400py.parquet
+```
+
+See
+[openalex_extraction_2000_2024_400py.md](openalex_extraction_2000_2024_400py.md).
+
 ## `works_text`
 
 - `work_id`

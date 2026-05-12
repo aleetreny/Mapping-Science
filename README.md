@@ -45,6 +45,46 @@ subfield-year cells. Small cells are downloaded in full. The production
 downloader oversamples raw API results, backfills shortfalls with new seeds,
 writes a manifest, and can resume after interruption.
 
+## Extended OpenAlex Extraction: 2000-2024, 400/year/subfield
+
+A new versioned extraction target is available as `2000_2024_400py`. It is a
+clean annual-resolution OpenAlex text corpus for 2000-2024 inclusive, targeting
+400 valid title-plus-abstract papers per year per subfield. The full-period
+target is 10,000 papers per subfield and the period naturally supports later
+5-year temporal morphology checks.
+
+This version does not overwrite the old checkpoint files, does not activate
+canonical `works_text.parquet`, and does not include embeddings yet. Run the
+versioned extraction before starting a new Kaggle embedding job:
+
+```bash
+python scripts/01_build_counts.py --dataset-version 2000_2024_400py --dry-run
+python scripts/01_build_counts.py --dataset-version 2000_2024_400py
+python scripts/02_build_corpus_plan.py --dataset-version 2000_2024_400py
+python scripts/03_build_sample_plan.py --dataset-version 2000_2024_400py
+python scripts/04_download_sampled_corpus.py --dataset-version 2000_2024_400py --dry-run
+python scripts/04_download_sampled_corpus.py --dataset-version 2000_2024_400py --write-every-n-subfields 1
+python scripts/05_validate_database.py --dataset-version 2000_2024_400py
+python scripts/06_build_analysis_subfields.py --dataset-version 2000_2024_400py
+```
+
+Main versioned outputs include:
+
+```text
+data/interim/subfield_year_counts_2000_2024_400py.parquet
+data/interim/corpus_plan_2000_2024_400py.parquet
+data/interim/sample_plan_2000_2024_400py.parquet
+data/interim/download_manifest_2000_2024_400py.parquet
+data/processed/works_text_2000_2024_400py.parquet
+data/processed/analysis_subfields_2000_2024_400py.parquet
+outputs/validation/validation_report_2000_2024_400py.md
+```
+
+See
+[docs/openalex_extraction_2000_2024_400py.md](docs/openalex_extraction_2000_2024_400py.md)
+for the full runbook, preserved filters, 429 cooldown/resume guidance, output
+paths, and Drive handoff.
+
 ## Analysis Eligibility
 
 The full downloaded corpus remains available in

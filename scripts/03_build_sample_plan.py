@@ -19,6 +19,16 @@ from src.sampling import (
     sampling_method_for_cell,
     stable_sample_seed,
 )
+from src.extraction_versions import (
+    add_dataset_version_argument,
+    analysis_years,
+    apply_dataset_version,
+    build_no_redistribution_allocations,
+    extraction_paths,
+    output_path_display,
+    target_total_from_config,
+    versioned_table_name,
+)
 from src.storage import connect_duckdb, ensure_dirs, load_parquet, save_parquet, write_table
 
 
@@ -29,6 +39,7 @@ def load_config() -> dict[str, Any]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build OpenAlex sampled download plan.")
+    add_dataset_version_argument(parser)
     return parser.parse_args()
 
 
@@ -42,13 +53,7 @@ def read_required_parquet(interim_dir: Path, filename: str) -> pd.DataFrame:
 
 
 def years_from_config(config: dict[str, Any]) -> list[int]:
-    windows = config["windows"]
-    return list(
-        range(
-            int(windows["morphology_start_year"]),
-            int(windows["morphology_end_year"]) + 1,
-        )
-    )
+    return analysis_years(config)
 
 
 def build_sample_plan(
@@ -63,6 +68,7 @@ def build_sample_plan(
     random_seed = int(sampling["random_seed"])
     use_sample_api = bool(sampling.get("use_openalex_sample_api", True))
     oversample_factor = float(sampling.get("oversample_factor", 1.0))
+    redistribute_unused = bool(sampling.get("redistribute_unused_annual_capacity", True))
 
     eligible = corpus_plan[corpus_plan["eligible_for_text_corpus"]].copy()
     counts = subfield_year_counts.copy()
@@ -82,11 +88,17 @@ def build_sample_plan(
         available_by_year = {
             year: count_lookup.get((subfield_id, year), 0) for year in years
         }
-        allocations = allocate_yearly_sample_sizes(
-            available_by_year=available_by_year,
-            target_total=target_total,
-            target_per_year=target_per_year,
-        )
+        if redistribute_unused:
+            allocations = allocate_yearly_sample_sizes(
+                available_by_year=available_by_year,
+                target_total=target_total,
+                target_per_year=target_per_year,
+            )
+        else:
+            allocations = build_no_redistribution_allocations(
+                available_by_year,
+                target_per_year=target_per_year,
+            )
 
         for year in years:
             available = int(available_by_year.get(year, 0))
@@ -141,11 +153,11 @@ def build_sample_plan(
     return pd.DataFrame(rows, columns=columns)
 
 
-def print_summary(sample_plan: pd.DataFrame, per_page: int) -> None:
+def print_summary(sample_plan: pd.DataFrame, per_page: int, target_total: int) -> None:
     if sample_plan.empty:
         print("eligible subfields: 0")
         print("planned total works: 0")
-        print("subfields with planned_sample_size < 3000: 0")
+        print(f"subfields with planned_sample_size < {target_total}: 0")
         print("estimated API requests: 0")
         return
 
@@ -171,8 +183,8 @@ def print_summary(sample_plan: pd.DataFrame, per_page: int) -> None:
     print(f"eligible subfields: {sample_plan['subfield_id'].nunique()}")
     print(f"planned total works: {int(sample_plan['planned_sample_size'].sum())}")
     print(
-        "subfields with planned_sample_size < 3000: "
-        f"{int((planned_by_subfield < 3000).sum())}"
+        f"subfields with planned_sample_size < {target_total}: "
+        f"{int((planned_by_subfield < target_total).sum())}"
     )
     print(f"estimated API requests: {estimated_requests}")
     print("planned works by sampling method:")
@@ -196,29 +208,32 @@ def print_summary(sample_plan: pd.DataFrame, per_page: int) -> None:
 
 
 def main() -> None:
-    parse_args()
-    config = load_config()
+    args = parse_args()
+    config = apply_dataset_version(load_config(), args.dataset_version)
     ensure_dirs(config)
 
-    interim_dir = ROOT / config["storage"]["interim_dir"]
     duckdb_path = ROOT / config["storage"]["duckdb_path"]
     per_page = int(config["openalex"].get("per_page", 200))
+    paths = extraction_paths(ROOT, config, args.dataset_version)
 
-    corpus_plan = read_required_parquet(interim_dir, "corpus_plan.parquet")
-    subfield_year_counts = read_required_parquet(
-        interim_dir, "subfield_year_counts.parquet"
-    )
+    corpus_plan = load_parquet(paths.corpus_plan)
+    subfield_year_counts = load_parquet(paths.subfield_year_counts)
 
     sample_plan = build_sample_plan(corpus_plan, subfield_year_counts, config)
-    save_parquet(sample_plan, interim_dir / "sample_plan.parquet")
+    save_parquet(sample_plan, paths.sample_plan)
 
     con = connect_duckdb(duckdb_path)
     try:
-        write_table(con, "sample_plan", sample_plan)
+        write_table(
+            con,
+            versioned_table_name("sample_plan", args.dataset_version),
+            sample_plan,
+        )
     finally:
         con.close()
 
-    print_summary(sample_plan, per_page)
+    print(f"Wrote {output_path_display(paths.sample_plan, ROOT)}")
+    print_summary(sample_plan, per_page, target_total_from_config(config))
 
 
 if __name__ == "__main__":

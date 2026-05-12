@@ -19,9 +19,17 @@ from src.download_state import cell_key, completed_cell_keys_from_manifest
 from src.openalex import (
     DEFAULT_SELECT_FIELDS,
     OpenAlexClient,
+    OpenAlexRateLimitError,
     build_sampled_text_query_params,
     build_year_text_query_params,
     short_openalex_id,
+)
+from src.extraction_versions import (
+    add_dataset_version_argument,
+    apply_dataset_version,
+    extraction_paths,
+    output_path_display,
+    versioned_table_name,
 )
 from src.sampling import api_initial_sample_size, stable_backfill_seed
 from src.storage import connect_duckdb, ensure_dirs, load_parquet, save_parquet, write_table
@@ -60,6 +68,7 @@ def load_config() -> dict[str, Any]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Download OpenAlex sampled text corpus.")
+    add_dataset_version_argument(parser)
     parser.add_argument("--dry-run", action="store_true", help="Print planned downloads.")
     parser.add_argument("--resume", action="store_true", help="Resume existing outputs.")
     parser.add_argument("--force", action="store_true", help="Ignore existing outputs.")
@@ -80,7 +89,46 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Override configured max backfill rounds.",
     )
+    parser.add_argument(
+        "--cooldown-after-429",
+        type=float,
+        default=None,
+        help="Seconds to sleep after OpenAlex 429 when Retry-After is absent.",
+    )
+    parser.add_argument(
+        "--max-consecutive-429",
+        type=int,
+        default=None,
+        help="Maximum consecutive 429 cooldown cycles before marking a cell rate_limited.",
+    )
+    parser.add_argument(
+        "--write-every-n-subfields",
+        type=int,
+        default=None,
+        help="Override checkpoint frequency. Use 1 for large/resumable downloads.",
+    )
     return parser.parse_args()
+
+
+def apply_download_cli_overrides(config: dict[str, Any], args: argparse.Namespace) -> None:
+    if args.cooldown_after_429 is not None:
+        if args.cooldown_after_429 < 0:
+            raise ValueError("--cooldown-after-429 must be non-negative")
+        config.setdefault("openalex", {})["cooldown_after_429"] = float(
+            args.cooldown_after_429
+        )
+    if args.max_consecutive_429 is not None:
+        if args.max_consecutive_429 < 1:
+            raise ValueError("--max-consecutive-429 must be at least 1")
+        config.setdefault("openalex", {})["max_consecutive_429"] = int(
+            args.max_consecutive_429
+        )
+    if args.write_every_n_subfields is not None:
+        if args.write_every_n_subfields < 1:
+            raise ValueError("--write-every-n-subfields must be at least 1")
+        config.setdefault("sampling", {})["write_every_n_subfields"] = int(
+            args.write_every_n_subfields
+        )
 
 
 def selected_sample_plan(
@@ -184,6 +232,9 @@ def print_dry_run(sample_plan: pd.DataFrame, config: dict[str, Any], args: argpa
     print(f"initial raw API sample works: {int(sample_plan['api_initial_sample_size'].sum())}")
     print(f"estimated initial API requests: {estimate_initial_requests(sample_plan, per_page)}")
     print(f"oversample factor: {sampling.get('oversample_factor', 1.0)}")
+    print(f"cooldown after 429: {config.get('openalex', {}).get('cooldown_after_429', 180)}")
+    print(f"max consecutive 429: {config.get('openalex', {}).get('max_consecutive_429', 10)}")
+    print(f"write every n subfields: {sampling.get('write_every_n_subfields', 5)}")
     print(
         "max backfill rounds: "
         f"{args.max_backfill_rounds if args.max_backfill_rounds is not None else sampling.get('max_backfill_rounds', 0)}"
@@ -233,16 +284,14 @@ def empty_manifest_df() -> pd.DataFrame:
 
 
 def load_existing_outputs(
-    processed_dir: Path,
-    interim_dir: Path,
+    works_path: Path,
+    manifest_path: Path,
     resume_enabled: bool,
     force: bool,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     if force or not resume_enabled:
         return empty_works_df(), empty_manifest_df()
 
-    works_path = processed_dir / "works_text.parquet"
-    manifest_path = interim_dir / "download_manifest.parquet"
     works = load_parquet(works_path) if works_path.exists() else empty_works_df()
     works = ensure_works_text_columns(works)
     manifest = load_parquet(manifest_path) if manifest_path.exists() else empty_manifest_df()
@@ -297,6 +346,26 @@ def manifest_dict_from_df(manifest: pd.DataFrame) -> dict[tuple[str, int], dict[
     return records
 
 
+def pending_sample_plan_for_resume(
+    sample_plan: pd.DataFrame,
+    completed_keys: set[tuple[str, int]],
+    *,
+    resume_enabled: bool,
+) -> tuple[pd.DataFrame, int]:
+    if not resume_enabled or not completed_keys or sample_plan.empty:
+        return sample_plan.copy(), 0
+    pending = sample_plan.copy()
+    keys = [
+        cell_key(row.subfield_id, row.publication_year)
+        for row in pending[["subfield_id", "publication_year"]].itertuples(index=False)
+    ]
+    completed_mask = pd.Series(
+        [key in completed_keys for key in keys],
+        index=pending.index,
+    )
+    return pending.loc[~completed_mask].reset_index(drop=True), int(completed_mask.sum())
+
+
 def make_manifest_record(
     row: pd.Series,
     raw_returned: int,
@@ -349,16 +418,42 @@ def update_manifest_kept_counts(
             record["status"] = "completed_shortfall"
 
 
+def error_type_from_manifest_record(record: dict[str, Any]) -> str:
+    status = str(record.get("status") or "")
+    error_message = str(record.get("error_message") or "").lower()
+    if status == "rate_limited" or "429" in error_message or "rate limit" in error_message:
+        return "rate_limit_429"
+    if status == "failed" and "unknown sampling method" in error_message:
+        return "unknown_sampling_method"
+    if status == "failed" and error_message:
+        return error_message.split(":", 1)[0][:80]
+    if status == "failed":
+        return "failed_unknown"
+    return status or "unknown"
+
+
+def failed_cells_by_error_type(
+    manifest_records: dict[tuple[str, int], dict[str, Any]],
+) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for record in manifest_records.values():
+        if record.get("status") not in {"failed", "rate_limited"}:
+            continue
+        error_type = error_type_from_manifest_record(record)
+        counts[error_type] = counts.get(error_type, 0) + 1
+    return dict(sorted(counts.items()))
+
+
 def write_outputs(
     base_works: pd.DataFrame,
     new_records: list[dict[str, Any]],
     manifest_records: dict[tuple[str, int], dict[str, Any]],
     config: dict[str, Any],
+    dataset_version: str | None,
 ) -> pd.DataFrame:
-    processed_dir = ROOT / config["storage"]["processed_dir"]
-    interim_dir = ROOT / config["storage"]["interim_dir"]
     duckdb_path = ROOT / config["storage"]["duckdb_path"]
     max_per_subfield = int(config["sampling"]["max_sample_per_subfield"])
+    paths = extraction_paths(ROOT, config, dataset_version)
 
     works = current_works_dataframe(base_works, new_records)
     works = works.drop_duplicates("work_id", keep="first").reset_index(drop=True)
@@ -369,13 +464,17 @@ def write_outputs(
         list(manifest_records.values()), columns=MANIFEST_COLUMNS
     ).sort_values(["subfield_id", "publication_year"])
 
-    save_parquet(works, processed_dir / "works_text.parquet")
-    save_parquet(manifest, interim_dir / "download_manifest.parquet")
+    save_parquet(works, paths.works_text)
+    save_parquet(manifest, paths.download_manifest)
 
     con = connect_duckdb(duckdb_path)
     try:
-        write_table(con, "works_text", works)
-        write_table(con, "download_manifest", manifest)
+        write_table(con, versioned_table_name("works_text", dataset_version), works)
+        write_table(
+            con,
+            versioned_table_name("download_manifest", dataset_version),
+            manifest,
+        )
     finally:
         con.close()
 
@@ -625,6 +724,19 @@ def process_sample_plan_row(
                 status="failed",
                 error_message=f"Unknown sampling method: {row['sampling_method']}",
             )
+    except OpenAlexRateLimitError as exc:
+        return make_manifest_record(
+            row,
+            raw_returned=raw_returned,
+            valid_after_local_filter=valid_after_local_filter,
+            kept_works=cell_counts.get(key, 0),
+            duplicate_or_already_seen=duplicate_or_already_seen,
+            discarded_local_validation=discarded_local_validation,
+            backfill_rounds_used=backfill_rounds_used,
+            seeds_used=seeds_used,
+            status="rate_limited",
+            error_message=str(exc),
+        )
     except Exception as exc:
         return make_manifest_record(
             row,
@@ -656,40 +768,35 @@ def process_sample_plan_row(
 
 def main() -> None:
     args = parse_args()
-    config = load_config()
+    config = apply_dataset_version(load_config(), args.dataset_version)
+    apply_download_cli_overrides(config, args)
     ensure_dirs(config)
 
-    interim_dir = ROOT / config["storage"]["interim_dir"]
-    processed_dir = ROOT / config["storage"]["processed_dir"]
-    sample_plan_path = interim_dir / "sample_plan.parquet"
+    paths = extraction_paths(ROOT, config, args.dataset_version)
+    sample_plan_path = paths.sample_plan
     if not sample_plan_path.exists():
         raise FileNotFoundError(
-            "Missing data/interim/sample_plan.parquet. Run scripts/03_build_sample_plan.py first."
+            f"Missing {output_path_display(sample_plan_path, ROOT)}. "
+            "Run scripts/03_build_sample_plan.py first."
         )
 
-    sample_plan = ensure_sample_plan_columns(load_parquet(sample_plan_path), config)
-    sample_plan = selected_sample_plan(
-        sample_plan, args.limit_subfields, args.only_subfield
+    selected_plan = ensure_sample_plan_columns(load_parquet(sample_plan_path), config)
+    selected_plan = selected_sample_plan(
+        selected_plan, args.limit_subfields, args.only_subfield
     )
 
     if args.dry_run:
-        print_dry_run(sample_plan, config, args)
+        print_dry_run(selected_plan, config, args)
         return
 
     sampling = config["sampling"]
     resume_enabled = bool(sampling.get("resume_existing_download", True)) or args.resume
     if args.force:
         resume_enabled = False
-    max_backfill_rounds = (
-        int(args.max_backfill_rounds)
-        if args.max_backfill_rounds is not None
-        else int(sampling.get("max_backfill_rounds", 0))
-    )
-    write_every_n_subfields = int(sampling.get("write_every_n_subfields", 5))
 
     base_works, existing_manifest = load_existing_outputs(
-        processed_dir=processed_dir,
-        interim_dir=interim_dir,
+        works_path=paths.works_text,
+        manifest_path=paths.download_manifest,
         resume_enabled=resume_enabled,
         force=args.force,
     )
@@ -698,20 +805,42 @@ def main() -> None:
         int(sampling["max_sample_per_subfield"]),
     )
     manifest_records = manifest_dict_from_df(existing_manifest)
-    completed_keys = completed_cell_keys_from_manifest(existing_manifest) if resume_enabled else set()
+    completed_keys = (
+        completed_cell_keys_from_manifest(existing_manifest) if resume_enabled else set()
+    )
+    sample_plan, skipped_completed_cells = pending_sample_plan_for_resume(
+        selected_plan,
+        completed_keys,
+        resume_enabled=resume_enabled,
+    )
+
+    if skipped_completed_cells:
+        print(
+            f"Resume: skipping {skipped_completed_cells} completed cells; "
+            f"retrying {len(sample_plan)} pending/failed cells."
+        )
+
+    max_backfill_rounds = (
+        int(args.max_backfill_rounds)
+        if args.max_backfill_rounds is not None
+        else int(sampling.get("max_backfill_rounds", 0))
+    )
+    write_every_n_subfields = int(sampling.get("write_every_n_subfields", 5))
+
     cell_counts, subfield_counts = count_maps(base_works)
     seen_work_ids = set(base_works["work_id"].astype(str).tolist()) if not base_works.empty else set()
     new_records: list[dict[str, Any]] = []
 
     client = OpenAlexClient.from_config(config)
     subfield_ids = sample_plan["subfield_id"].drop_duplicates().tolist()
+    progress_desc = "Downloading subfields"
+    if resume_enabled:
+        progress_desc = f"{progress_desc} (resume; {skipped_completed_cells} cells skipped)"
 
-    for index, subfield_id in enumerate(tqdm(subfield_ids, desc="Downloading subfields"), start=1):
+    for index, subfield_id in enumerate(tqdm(subfield_ids, desc=progress_desc), start=1):
         subfield_rows = sample_plan[sample_plan["subfield_id"] == subfield_id]
         for _, row in subfield_rows.iterrows():
             key = cell_key(row["subfield_id"], row["publication_year"])
-            if resume_enabled and key in completed_keys:
-                continue
             record = process_sample_plan_row(
                 client=client,
                 row=row,
@@ -725,20 +854,41 @@ def main() -> None:
             manifest_records[key] = record
 
         if write_every_n_subfields > 0 and index % write_every_n_subfields == 0:
-            base_works = write_outputs(base_works, new_records, manifest_records, config)
+            base_works = write_outputs(
+                base_works,
+                new_records,
+                manifest_records,
+                config,
+                args.dataset_version,
+            )
             new_records = []
             cell_counts, subfield_counts = count_maps(base_works)
             seen_work_ids = set(base_works["work_id"].astype(str).tolist())
 
-    final_works = write_outputs(base_works, new_records, manifest_records, config)
+    final_works = write_outputs(
+        base_works,
+        new_records,
+        manifest_records,
+        config,
+        args.dataset_version,
+    )
     summary = {
-        "selected_subfields": int(sample_plan["subfield_id"].nunique()),
-        "planned_works": int(sample_plan["planned_sample_size"].sum()),
+        "selected_subfields": int(selected_plan["subfield_id"].nunique()),
+        "remaining_subfields_processed": int(len(subfield_ids)),
+        "skipped_completed_cells_on_resume": int(skipped_completed_cells),
+        "planned_works": int(selected_plan["planned_sample_size"].sum()),
+        "remaining_planned_works": int(sample_plan["planned_sample_size"].sum())
+        if not sample_plan.empty
+        else 0,
         "downloaded_works": len(final_works),
         "resume": resume_enabled,
         "force": args.force,
         "limit_subfields": args.limit_subfields,
         "only_subfield": args.only_subfield,
+        "cooldown_after_429": float(config.get("openalex", {}).get("cooldown_after_429", 180)),
+        "max_consecutive_429": int(config.get("openalex", {}).get("max_consecutive_429", 10)),
+        "write_every_n_subfields": int(write_every_n_subfields),
+        "failed_cells_by_error_type": failed_cells_by_error_type(manifest_records),
     }
     print(json.dumps(summary, indent=2))
 

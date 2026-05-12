@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import math
 import sys
@@ -14,12 +15,29 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from src.extraction_versions import (
+    add_dataset_version_argument,
+    apply_dataset_version,
+    extraction_filter_summary,
+    extraction_paths,
+    output_path_display,
+    safe_json_loads,
+    target_per_year_from_config,
+    versioned_table_name,
+    year_min_max,
+)
 from src.storage import connect_duckdb, ensure_dirs, load_parquet
 
 
 def load_config() -> dict[str, Any]:
     with (ROOT / "config.yaml").open("r", encoding="utf-8") as handle:
         return yaml.safe_load(handle)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Validate OpenAlex extraction outputs.")
+    add_dataset_version_argument(parser)
+    return parser.parse_args()
 
 
 def read_table_or_empty(con: duckdb.DuckDBPyConnection | None, table: str) -> pd.DataFrame:
@@ -32,9 +50,7 @@ def read_table_or_empty(con: duckdb.DuckDBPyConnection | None, table: str) -> pd
 
 
 def read_parquet_or_empty(path: Path) -> pd.DataFrame:
-    if path.exists():
-        return load_parquet(path)
-    return pd.DataFrame()
+    return load_parquet(path) if path.exists() else pd.DataFrame()
 
 
 def describe_counts(counts: pd.Series) -> dict[str, Any]:
@@ -50,23 +66,23 @@ def describe_counts(counts: pd.Series) -> dict[str, Any]:
 def missing_text_count(df: pd.DataFrame, column: str) -> int:
     if column not in df:
         return len(df)
-    return int(df[column].isna().sum() + (df[column] == "").sum())
+    values = df[column]
+    return int(values.isna().sum() + (values.astype(str).str.strip() == "").sum())
 
 
-def describe_numeric_column(df: pd.DataFrame, column: str) -> dict[str, Any]:
-    if column not in df or df.empty:
-        return {}
-    values = pd.to_numeric(df[column], errors="coerce").dropna()
-    return describe_counts(values)
+def below_token_threshold_count(df: pd.DataFrame, column: str, threshold: int) -> int:
+    if column not in df:
+        return 0
+    values = pd.to_numeric(df[column], errors="coerce")
+    return int((values < int(threshold)).sum())
 
 
-def bytes_to_mb(value: int) -> float:
-    return round(value / (1024 * 1024), 2)
-
-
-def load_pipeline_tables(config: dict[str, Any]) -> dict[str, pd.DataFrame]:
+def load_pipeline_tables(
+    config: dict[str, Any],
+    dataset_version: str | None,
+) -> dict[str, pd.DataFrame]:
+    paths = extraction_paths(ROOT, config, dataset_version)
     interim_dir = ROOT / config["storage"]["interim_dir"]
-    processed_dir = ROOT / config["storage"]["processed_dir"]
     duckdb_path = ROOT / config["storage"]["duckdb_path"]
 
     con = connect_duckdb(duckdb_path) if duckdb_path.exists() else None
@@ -75,11 +91,21 @@ def load_pipeline_tables(config: dict[str, Any]) -> dict[str, pd.DataFrame]:
             "domains": read_table_or_empty(con, "domains"),
             "fields": read_table_or_empty(con, "fields"),
             "subfields": read_table_or_empty(con, "subfields"),
-            "corpus_plan": read_table_or_empty(con, "corpus_plan"),
-            "sample_plan": read_table_or_empty(con, "sample_plan"),
-            "download_manifest": read_table_or_empty(con, "download_manifest"),
-            "works_text": read_table_or_empty(con, "works_text"),
-            "analysis_subfields": read_table_or_empty(con, "analysis_subfields"),
+            "corpus_plan": read_table_or_empty(
+                con, versioned_table_name("corpus_plan", dataset_version)
+            ),
+            "sample_plan": read_table_or_empty(
+                con, versioned_table_name("sample_plan", dataset_version)
+            ),
+            "download_manifest": read_table_or_empty(
+                con, versioned_table_name("download_manifest", dataset_version)
+            ),
+            "works_text": read_table_or_empty(
+                con, versioned_table_name("works_text", dataset_version)
+            ),
+            "analysis_subfields": read_table_or_empty(
+                con, versioned_table_name("analysis_subfields", dataset_version)
+            ),
         }
     finally:
         if con is not None:
@@ -89,11 +115,11 @@ def load_pipeline_tables(config: dict[str, Any]) -> dict[str, pd.DataFrame]:
         "domains": interim_dir / "domains.parquet",
         "fields": interim_dir / "fields.parquet",
         "subfields": interim_dir / "subfields.parquet",
-        "corpus_plan": interim_dir / "corpus_plan.parquet",
-        "sample_plan": interim_dir / "sample_plan.parquet",
-        "download_manifest": interim_dir / "download_manifest.parquet",
-        "works_text": processed_dir / "works_text.parquet",
-        "analysis_subfields": processed_dir / "analysis_subfields.parquet",
+        "corpus_plan": paths.corpus_plan,
+        "sample_plan": paths.sample_plan,
+        "download_manifest": paths.download_manifest,
+        "works_text": paths.works_text,
+        "analysis_subfields": paths.analysis_subfields,
     }
     for name, path in fallback_paths.items():
         if tables[name].empty:
@@ -101,345 +127,412 @@ def load_pipeline_tables(config: dict[str, Any]) -> dict[str, pd.DataFrame]:
     return tables
 
 
-def bucket_counts(works_per_subfield: pd.Series) -> dict[str, int]:
-    return {
-        "subfields_with_3000_valid_works": int((works_per_subfield >= 3000).sum())
-        if not works_per_subfield.empty
-        else 0,
-        "subfields_with_2500_2999_valid_works": int(
-            ((works_per_subfield >= 2500) & (works_per_subfield < 3000)).sum()
+def downloaded_by_cell(works_text: pd.DataFrame) -> pd.DataFrame:
+    columns = ["subfield_id", "publication_year", "downloaded_works"]
+    if works_text.empty or not {"subfield_id", "publication_year"}.issubset(works_text.columns):
+        return pd.DataFrame(columns=columns)
+    works = works_text.copy()
+    works["subfield_id"] = works["subfield_id"].astype(str)
+    works["publication_year"] = pd.to_numeric(
+        works["publication_year"], errors="coerce"
+    ).astype("Int64")
+    return (
+        works.dropna(subset=["publication_year"])
+        .groupby(["subfield_id", "publication_year"])
+        .size()
+        .reset_index(name="downloaded_works")
+    )
+
+
+def build_subfield_year_coverage(
+    sample_plan: pd.DataFrame,
+    works_text: pd.DataFrame,
+) -> pd.DataFrame:
+    downloaded = downloaded_by_cell(works_text)
+    if sample_plan.empty:
+        return downloaded.assign(
+            planned_sample_size=0,
+            available_valid_works=0,
+            shortfall=0,
         )
-        if not works_per_subfield.empty
-        else 0,
-        "subfields_with_500_2499_valid_works": int(
-            ((works_per_subfield >= 500) & (works_per_subfield < 2500)).sum()
+
+    planned_cols = [
+        "subfield_id",
+        "subfield_display_name",
+        "field_id",
+        "field_display_name",
+        "domain_id",
+        "domain_display_name",
+        "publication_year",
+        "available_valid_works",
+        "planned_sample_size",
+        "sampling_method",
+    ]
+    planned = sample_plan.copy()
+    planned["subfield_id"] = planned["subfield_id"].astype(str)
+    planned["publication_year"] = pd.to_numeric(
+        planned["publication_year"], errors="coerce"
+    ).astype("Int64")
+    for column in planned_cols:
+        if column not in planned.columns:
+            planned[column] = pd.NA
+    coverage = planned[planned_cols].merge(
+        downloaded,
+        on=["subfield_id", "publication_year"],
+        how="left",
+    )
+    coverage["downloaded_works"] = coverage["downloaded_works"].fillna(0).astype("int64")
+    coverage["planned_sample_size"] = (
+        pd.to_numeric(coverage["planned_sample_size"], errors="coerce")
+        .fillna(0)
+        .astype("int64")
+    )
+    coverage["available_valid_works"] = (
+        pd.to_numeric(coverage["available_valid_works"], errors="coerce")
+        .fillna(0)
+        .astype("int64")
+    )
+    coverage["shortfall"] = (
+        coverage["planned_sample_size"] - coverage["downloaded_works"]
+    ).clip(lower=0)
+    return coverage.sort_values(["subfield_id", "publication_year"]).reset_index(drop=True)
+
+
+def build_subfield_coverage_summary(coverage: pd.DataFrame, *, target_per_year: int) -> pd.DataFrame:
+    if coverage.empty:
+        return pd.DataFrame()
+    summary = (
+        coverage.groupby(
+            [
+                "subfield_id",
+                "subfield_display_name",
+                "field_id",
+                "field_display_name",
+                "domain_id",
+                "domain_display_name",
+            ],
+            dropna=False,
         )
-        if not works_per_subfield.empty
+        .agg(
+            planned_works=("planned_sample_size", "sum"),
+            downloaded_works=("downloaded_works", "sum"),
+            shortfall=("shortfall", "sum"),
+            n_years_planned=("planned_sample_size", lambda values: int((values > 0).sum())),
+            n_years_reaching_target=(
+                "downloaded_works",
+                lambda values: int((values >= int(target_per_year)).sum()),
+            ),
+            n_years_below_target=(
+                "downloaded_works",
+                lambda values: int((values < int(target_per_year)).sum()),
+            ),
+        )
+        .reset_index()
+    )
+    return summary
+
+
+def build_year_coverage_summary(coverage: pd.DataFrame, *, target_per_year: int) -> pd.DataFrame:
+    if coverage.empty:
+        return pd.DataFrame()
+    return (
+        coverage.groupby("publication_year")
+        .agg(
+            planned_works=("planned_sample_size", "sum"),
+            downloaded_works=("downloaded_works", "sum"),
+            shortfall=("shortfall", "sum"),
+            planned_cells=("planned_sample_size", lambda values: int((values > 0).sum())),
+            cells_reaching_target=(
+                "downloaded_works",
+                lambda values: int((values >= int(target_per_year)).sum()),
+            ),
+            cells_below_target=(
+                "downloaded_works",
+                lambda values: int((values < int(target_per_year)).sum()),
+            ),
+        )
+        .reset_index()
+        .sort_values("publication_year")
+    )
+
+
+def validate_works_text(
+    works_text: pd.DataFrame,
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    filters = config["filters"]
+    year_min, year_max = year_min_max(config)
+    allowed_types = set(filters["work_types"])
+    language = filters["language"]
+    years = (
+        pd.to_numeric(works_text["publication_year"], errors="coerce")
+        if "publication_year" in works_text
+        else pd.Series(dtype=float)
+    )
+    topics_valid = (
+        works_text["topics_json"].apply(safe_json_loads)
+        if "topics_json" in works_text
+        else pd.Series([False] * len(works_text))
+    )
+    summary = {
+        "year_min_expected": year_min,
+        "year_max_expected": year_max,
+        "observed_year_min": int(years.min()) if not years.dropna().empty else None,
+        "observed_year_max": int(years.max()) if not years.dropna().empty else None,
+        "rows_outside_expected_year_window": int(
+            (~years.between(year_min, year_max, inclusive="both")).sum()
+        )
+        if len(years)
         else 0,
-        "subfields_below_500_valid_works": int((works_per_subfield < 500).sum())
-        if not works_per_subfield.empty
-        else 0,
+        "rows_in_2025_or_2026": int(years.isin([2025, 2026]).sum()) if len(years) else 0,
+        "duplicate_work_ids": int(works_text["work_id"].duplicated().sum())
+        if "work_id" in works_text
+        else len(works_text),
+        "missing_work_id": missing_text_count(works_text, "work_id"),
+        "missing_subfield_id": missing_text_count(works_text, "subfield_id"),
+        "missing_field_id": missing_text_count(works_text, "field_id"),
+        "missing_domain_id": missing_text_count(works_text, "domain_id"),
+        "missing_primary_topic_id": missing_text_count(works_text, "primary_topic_id"),
+        "missing_primary_topic_display_name": missing_text_count(
+            works_text, "primary_topic_display_name"
+        ),
+        "missing_topics_json": missing_text_count(works_text, "topics_json"),
+        "unparsable_topics_json": int((~topics_valid).sum()) if len(topics_valid) else 0,
+        "missing_title": missing_text_count(works_text, "title"),
+        "missing_abstract": missing_text_count(works_text, "abstract"),
+        "short_title_rows": below_token_threshold_count(
+            works_text, "title_token_count", int(filters["min_title_tokens"])
+        ),
+        "short_abstract_rows": below_token_threshold_count(
+            works_text, "abstract_token_count", int(filters["min_abstract_tokens"])
+        ),
+        "non_english_rows": int((works_text["language"] != language).sum())
+        if "language" in works_text
+        else len(works_text),
+        "disallowed_type_rows": int((~works_text["type"].isin(allowed_types)).sum())
+        if "type" in works_text
+        else len(works_text),
     }
+    return summary
 
 
-def analysis_eligibility_counts(analysis_subfields: pd.DataFrame) -> dict[str, int]:
-    required = {
-        "n_valid_works",
-        "main_analysis_eligible_2500",
-        "robustness_eligible_500",
-    }
-    if analysis_subfields.empty or not required.issubset(analysis_subfields.columns):
-        return {}
-
-    n_valid_works = pd.to_numeric(
-        analysis_subfields["n_valid_works"], errors="coerce"
-    ).fillna(0)
-    main = analysis_subfields["main_analysis_eligible_2500"].fillna(False).astype(bool)
-    robust = analysis_subfields["robustness_eligible_500"].fillna(False).astype(bool)
-
-    return {
-        "main_analysis_subfields_2500": int(main.sum()),
-        "robustness_subfields_500": int(robust.sum()),
-        "main_analysis_works": int(n_valid_works[main].sum()),
-        "excluded_from_main_analysis_subfields": int((~main).sum()),
-        "excluded_from_main_analysis_works": int(n_valid_works[~main].sum()),
-        "excluded_from_robustness_subfields": int((~robust).sum()),
-        "excluded_from_robustness_works": int(n_valid_works[~robust].sum()),
-    }
+def validation_failed(checks: dict[str, Any]) -> bool:
+    critical_keys = [
+        "rows_outside_expected_year_window",
+        "rows_in_2025_or_2026",
+        "duplicate_work_ids",
+        "missing_work_id",
+        "missing_subfield_id",
+        "missing_field_id",
+        "missing_domain_id",
+        "missing_primary_topic_id",
+        "missing_topics_json",
+        "unparsable_topics_json",
+        "missing_title",
+        "missing_abstract",
+        "short_title_rows",
+        "short_abstract_rows",
+        "non_english_rows",
+        "disallowed_type_rows",
+    ]
+    return any(int(checks.get(key) or 0) > 0 for key in critical_keys)
 
 
-def main() -> None:
-    config = load_config()
-    ensure_dirs(config)
+def make_json_safe(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {str(key): make_json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [make_json_safe(item) for item in value]
+    if isinstance(value, float) and math.isnan(value):
+        return None
+    return value
 
-    interim_dir = ROOT / config["storage"]["interim_dir"]
-    tables = load_pipeline_tables(config)
-    domains = tables["domains"]
-    fields = tables["fields"]
-    subfields = tables["subfields"]
-    corpus_plan = tables["corpus_plan"]
+
+def build_validation_summary(
+    tables: dict[str, pd.DataFrame],
+    config: dict[str, Any],
+    dataset_version: str | None,
+) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    works_text = tables["works_text"]
     sample_plan = tables["sample_plan"]
     manifest = tables["download_manifest"]
-    works_text = tables["works_text"]
-    analysis_subfields = tables["analysis_subfields"]
-
-    n_works = len(works_text)
-    n_eligible = (
-        int(corpus_plan["eligible_for_text_corpus"].sum())
-        if "eligible_for_text_corpus" in corpus_plan
-        else 0
+    coverage = build_subfield_year_coverage(sample_plan, works_text)
+    target_per_year = target_per_year_from_config(config)
+    subfield_summary = build_subfield_coverage_summary(
+        coverage,
+        target_per_year=target_per_year,
     )
-    total_planned_works = (
+    year_summary = build_year_coverage_summary(
+        coverage,
+        target_per_year=target_per_year,
+    )
+    checks = validate_works_text(works_text, config)
+    planned_total = (
         int(sample_plan["planned_sample_size"].sum())
         if "planned_sample_size" in sample_plan
         else 0
     )
-    downloaded_ratio = (
-        n_works / total_planned_works if total_planned_works > 0 else None
-    )
-
-    planned_by_method = (
-        sample_plan.groupby("sampling_method")["planned_sample_size"].sum().astype(int)
-        if {"sampling_method", "planned_sample_size"}.issubset(sample_plan.columns)
-        else pd.Series(dtype=int)
-    )
-
+    downloaded_total = int(len(works_text))
+    shortfall_total = int(coverage["shortfall"].sum()) if "shortfall" in coverage else 0
     works_per_subfield = (
-        works_text.groupby("subfield_id").size() if not works_text.empty else pd.Series(dtype=int)
-    )
-    works_per_field = (
-        works_text.groupby("field_id").size() if not works_text.empty else pd.Series(dtype=int)
+        works_text.groupby("subfield_id").size()
+        if "subfield_id" in works_text and not works_text.empty
+        else pd.Series(dtype=int)
     )
     works_per_year = (
         works_text.groupby("publication_year").size()
-        if not works_text.empty
+        if "publication_year" in works_text and not works_text.empty
         else pd.Series(dtype=int)
     )
-
-    full_planned_by_subfield = (
-        sample_plan.groupby("subfield_id")["planned_sample_size"].sum().astype(int)
-        if {"subfield_id", "planned_sample_size"}.issubset(sample_plan.columns)
-        else pd.Series(dtype=int)
-    )
-    manifest_planned_by_subfield = (
-        manifest.groupby("subfield_id")["planned_sample_size"].sum().astype(int)
-        if {"subfield_id", "planned_sample_size"}.issubset(manifest.columns)
-        else pd.Series(dtype=int)
-    )
-    assessed_planned_by_subfield = (
-        manifest_planned_by_subfield
-        if not manifest_planned_by_subfield.empty
-        else full_planned_by_subfield
-    )
-    manifest_planned_works = int(manifest_planned_by_subfield.sum()) if not manifest_planned_by_subfield.empty else 0
-    manifest_downloaded_ratio = (
-        n_works / manifest_planned_works if manifest_planned_works > 0 else None
-    )
-    planned_vs_kept = pd.DataFrame(
-        {
-            "planned_works": assessed_planned_by_subfield,
-            "kept_works": works_per_subfield,
-        }
-    ).fillna(0)
-    if not planned_vs_kept.empty:
-        planned_vs_kept["planned_works"] = planned_vs_kept["planned_works"].astype(int)
-        planned_vs_kept["kept_works"] = planned_vs_kept["kept_works"].astype(int)
-        planned_vs_kept["shortfall"] = (
-            planned_vs_kept["planned_works"] - planned_vs_kept["kept_works"]
-        ).clip(lower=0)
-
-    if not works_text.empty and not sample_plan.empty:
-        method_lookup = sample_plan[
-            ["subfield_id", "publication_year", "sampling_method"]
-        ].drop_duplicates()
-        works_with_method = works_text.merge(
-            method_lookup, on=["subfield_id", "publication_year"], how="left"
-        )
-        kept_by_method = works_with_method.groupby("sampling_method").size().astype(int)
-    else:
-        kept_by_method = pd.Series(dtype=int)
-
     manifest_status_counts = (
         manifest["status"].value_counts(dropna=False).astype(int)
         if "status" in manifest
         else pd.Series(dtype=int)
     )
-    retention_rate = None
-    if {"raw_returned_works", "valid_after_local_filter"}.issubset(manifest.columns):
-        raw_total = int(manifest["raw_returned_works"].sum())
-        valid_total = int(manifest["valid_after_local_filter"].sum())
-        retention_rate = valid_total / raw_total if raw_total > 0 else None
-
-    duplicate_work_ids = (
-        int(works_text["work_id"].duplicated().sum()) if "work_id" in works_text else 0
-    )
-    missing_titles = missing_text_count(works_text, "title")
-    missing_abstracts = missing_text_count(works_text, "abstract")
-    missing_primary_topic_id = missing_text_count(works_text, "primary_topic_id")
-    missing_topics_json = missing_text_count(works_text, "topics_json")
-    language_distribution = (
-        works_text["language"].value_counts(dropna=False).to_dict()
-        if "language" in works_text
-        else {}
-    )
-    type_distribution = (
-        works_text["type"].value_counts(dropna=False).to_dict()
-        if "type" in works_text
-        else {}
-    )
-
-    worst_shortfalls = []
-    planned_vs_kept_records = {}
-    if not planned_vs_kept.empty:
-        worst_shortfalls = (
-            planned_vs_kept.sort_values("shortfall", ascending=False)
-            .head(20)
-            .reset_index()
-            .rename(columns={"index": "subfield_id"})
-            .to_dict(orient="records")
-        )
-        planned_vs_kept_records = {
-            str(index): {
-                "planned_works": int(row["planned_works"]),
-                "kept_works": int(row["kept_works"]),
-                "shortfall": int(row["shortfall"]),
-            }
-            for index, row in planned_vs_kept.iterrows()
-        }
-
-    embedding_float32_mb = bytes_to_mb(n_works * 768 * 4)
-    embedding_float16_mb = bytes_to_mb(n_works * 768 * 2)
-    buckets = bucket_counts(works_per_subfield)
-    eligibility_counts = analysis_eligibility_counts(analysis_subfields)
-
     summary = {
-        "n_domains": len(domains),
-        "n_fields": len(fields),
-        "n_subfields": len(subfields),
-        "total_eligible_subfields": n_eligible,
-        "total_planned_works": total_planned_works,
-        "manifest_planned_works": manifest_planned_works,
-        "total_downloaded_valid_works": n_works,
-        "downloaded_valid_works_over_planned_works": downloaded_ratio,
-        "downloaded_valid_works_over_manifest_planned_works": manifest_downloaded_ratio,
-        **buckets,
-        **eligibility_counts,
-        "planned_vs_kept_per_subfield": planned_vs_kept_records,
-        "worst_shortfalls": worst_shortfalls,
-        "planned_works_by_sampling_method": {
-            str(k): int(v) for k, v in planned_by_method.to_dict().items()
+        "dataset_version": dataset_version,
+        "filters": extraction_filter_summary(config),
+        "sampling": {
+            "target_per_year_per_subfield": target_per_year,
+            "target_sample_per_subfield": int(
+                config["sampling"]["target_sample_per_subfield"]
+            ),
+            "max_sample_per_subfield": int(
+                config["sampling"]["max_sample_per_subfield"]
+            ),
+            "oversample_factor": float(config["sampling"].get("oversample_factor", 1.0)),
+            "max_backfill_rounds": int(config["sampling"].get("max_backfill_rounds", 0)),
         },
-        "kept_works_by_sampling_method": {
-            str(k): int(v) for k, v in kept_by_method.to_dict().items()
-        },
+        "n_rows": downloaded_total,
+        "n_subfields": int(works_text["subfield_id"].nunique())
+        if "subfield_id" in works_text
+        else 0,
+        "total_planned_works": planned_total,
+        "total_downloaded_works": downloaded_total,
+        "total_shortfall": shortfall_total,
+        "subfield_year_cells_below_target": int(
+            (coverage["downloaded_works"] < target_per_year).sum()
+        )
+        if "downloaded_works" in coverage
+        else 0,
         "manifest_status_counts": {
-            str(k): int(v) for k, v in manifest_status_counts.to_dict().items()
+            str(key): int(value) for key, value in manifest_status_counts.to_dict().items()
         },
-        "average_local_validation_retention_rate": retention_rate,
-        "duplicate_work_ids": duplicate_work_ids,
-        "missing_titles": missing_titles,
-        "missing_abstracts": missing_abstracts,
-        "missing_primary_topic_id": missing_primary_topic_id,
-        "missing_topics_json": missing_topics_json,
-        "title_token_count_distribution": describe_numeric_column(
-            works_text, "title_token_count"
-        ),
-        "abstract_token_count_distribution": describe_numeric_column(
-            works_text, "abstract_token_count"
-        ),
-        "text_token_count_distribution": describe_numeric_column(
-            works_text, "text_token_count"
-        ),
         "works_per_subfield_distribution": describe_counts(works_per_subfield),
-        "works_per_field_distribution": describe_counts(works_per_field),
-        "works_per_year": {str(k): int(v) for k, v in works_per_year.to_dict().items()},
-        "language_distribution": {str(k): int(v) for k, v in language_distribution.items()},
-        "type_distribution": {str(k): int(v) for k, v in type_distribution.items()},
-        "estimated_embedding_size_mb_float32_768d": embedding_float32_mb,
-        "estimated_embedding_size_mb_float16_768d": embedding_float16_mb,
+        "works_per_year": {str(key): int(value) for key, value in works_per_year.to_dict().items()},
+        "checks": checks,
+        "validation_failed": validation_failed(checks),
     }
+    return summary, coverage, subfield_summary, year_summary
 
-    analysis_report_lines = []
-    if eligibility_counts:
-        analysis_report_lines = [
-            "",
-            "## Analysis Eligibility",
-            "",
-            f"- Main analysis subfields >=2,500: {eligibility_counts['main_analysis_subfields_2500']}",
-            f"- Robustness subfields >=500: {eligibility_counts['robustness_subfields_500']}",
-            f"- Main analysis works: {eligibility_counts['main_analysis_works']}",
-            f"- Excluded from main analysis subfields: {eligibility_counts['excluded_from_main_analysis_subfields']}",
-            f"- Excluded from main analysis works: {eligibility_counts['excluded_from_main_analysis_works']}",
-            f"- Excluded from robustness subfields: {eligibility_counts['excluded_from_robustness_subfields']}",
-            f"- Excluded from robustness works: {eligibility_counts['excluded_from_robustness_works']}",
-        ]
 
-    report_lines = [
-        "# Validation Report",
+def validation_report_markdown(
+    summary: dict[str, Any],
+    paths_display: dict[str, str],
+) -> str:
+    checks = summary["checks"]
+    lines = [
+        "# OpenAlex Extraction Validation",
         "",
-        f"- Domains: {summary['n_domains']}",
-        f"- Fields: {summary['n_fields']}",
+        f"- Dataset version: {summary.get('dataset_version') or 'canonical'}",
+        f"- Rows: {summary['n_rows']}",
         f"- Subfields: {summary['n_subfields']}",
-        f"- Eligible subfields: {n_eligible}",
-        f"- Planned works: {total_planned_works}",
-        f"- Manifest planned works: {manifest_planned_works}",
-        f"- Downloaded valid works: {n_works}",
-        f"- Downloaded / planned: {downloaded_ratio:.3f}" if downloaded_ratio is not None else "- Downloaded / planned: n/a",
-        f"- Downloaded / manifest planned: {manifest_downloaded_ratio:.3f}" if manifest_downloaded_ratio is not None else "- Downloaded / manifest planned: n/a",
-        f"- Subfields with 3,000 valid works: {buckets['subfields_with_3000_valid_works']}",
-        f"- Subfields with 2,500-2,999 valid works: {buckets['subfields_with_2500_2999_valid_works']}",
-        f"- Subfields with 500-2,499 valid works: {buckets['subfields_with_500_2499_valid_works']}",
-        f"- Subfields below 500 valid works: {buckets['subfields_below_500_valid_works']}",
-        f"- Average local validation retention rate: {retention_rate:.3f}" if retention_rate is not None else "- Average local validation retention rate: n/a",
-        f"- Duplicate work IDs: {duplicate_work_ids}",
-        f"- Missing titles: {missing_titles}",
-        f"- Missing abstracts: {missing_abstracts}",
-        f"- Missing primary_topic_id: {missing_primary_topic_id}",
-        f"- Missing topics_json: {missing_topics_json}",
-        *analysis_report_lines,
+        f"- Planned works: {summary['total_planned_works']}",
+        f"- Downloaded works: {summary['total_downloaded_works']}",
+        f"- Total shortfall: {summary['total_shortfall']}",
+        f"- Validation failed: {summary['validation_failed']}",
         "",
-        "## Planned Works By Sampling Method",
+        "## Year Checks",
         "",
-        json.dumps(summary["planned_works_by_sampling_method"], indent=2),
+        f"- Expected year min: {checks['year_min_expected']}",
+        f"- Expected year max: {checks['year_max_expected']}",
+        f"- Observed year min: {checks['observed_year_min']}",
+        f"- Observed year max: {checks['observed_year_max']}",
+        f"- Rows outside expected window: {checks['rows_outside_expected_year_window']}",
+        f"- Rows in 2025 or 2026: {checks['rows_in_2025_or_2026']}",
         "",
-        "## Kept Works By Sampling Method",
+        "## Corpus Checks",
         "",
-        json.dumps(summary["kept_works_by_sampling_method"], indent=2),
+        f"- Duplicate work IDs: {checks['duplicate_work_ids']}",
+        f"- Missing subfield IDs: {checks['missing_subfield_id']}",
+        f"- Missing field IDs: {checks['missing_field_id']}",
+        f"- Missing domain IDs: {checks['missing_domain_id']}",
+        f"- Missing primary topic IDs: {checks['missing_primary_topic_id']}",
+        f"- Missing topics_json: {checks['missing_topics_json']}",
+        f"- Unparsable topics_json: {checks['unparsable_topics_json']}",
+        f"- Missing titles: {checks['missing_title']}",
+        f"- Missing abstracts: {checks['missing_abstract']}",
+        f"- Short titles: {checks['short_title_rows']}",
+        f"- Short abstracts: {checks['short_abstract_rows']}",
+        f"- Non-English rows: {checks['non_english_rows']}",
+        f"- Disallowed type rows: {checks['disallowed_type_rows']}",
         "",
-        "## Manifest Status Counts",
+        "## Diagnostic Files",
         "",
-        json.dumps(summary["manifest_status_counts"], indent=2),
-        "",
-        "## Worst Shortfalls",
-        "",
-        json.dumps(worst_shortfalls, indent=2),
-        "",
-        "## Works Per Subfield Distribution",
-        "",
-        json.dumps(summary["works_per_subfield_distribution"], indent=2),
-        "",
-        "## Works Per Field Distribution",
-        "",
-        json.dumps(summary["works_per_field_distribution"], indent=2),
-        "",
-        "## Token Count Distributions",
-        "",
-        "title_token_count:",
-        json.dumps(summary["title_token_count_distribution"], indent=2),
-        "",
-        "abstract_token_count:",
-        json.dumps(summary["abstract_token_count_distribution"], indent=2),
-        "",
-        "text_token_count:",
-        json.dumps(summary["text_token_count_distribution"], indent=2),
-        "",
-        "## Works Per Year",
-        "",
-        json.dumps(summary["works_per_year"], indent=2),
-        "",
-        "## Language Distribution",
-        "",
-        json.dumps(summary["language_distribution"], indent=2),
-        "",
-        "## Type Distribution",
-        "",
-        json.dumps(summary["type_distribution"], indent=2),
-        "",
-        "## Later Embedding Size Estimate",
-        "",
-        f"- 768d float32: {embedding_float32_mb} MB",
-        f"- 768d float16: {embedding_float16_mb} MB",
+        f"- Subfield-year coverage: {paths_display['subfield_year_download_coverage']}",
+        f"- Subfield coverage summary: {paths_display['subfield_coverage_summary']}",
+        f"- Year coverage summary: {paths_display['year_coverage_summary']}",
     ]
+    return "\n".join(lines) + "\n"
 
-    report_path = interim_dir / "validation_report.md"
-    summary_path = interim_dir / "validation_summary.json"
-    report_path.write_text("\n".join(report_lines) + "\n", encoding="utf-8")
-    summary_path.write_text(
-        json.dumps(summary, indent=2, allow_nan=False), encoding="utf-8"
+
+def write_validation_outputs(
+    *,
+    summary: dict[str, Any],
+    coverage: pd.DataFrame,
+    subfield_summary: pd.DataFrame,
+    year_summary: pd.DataFrame,
+    config: dict[str, Any],
+    dataset_version: str | None,
+) -> None:
+    paths = extraction_paths(ROOT, config, dataset_version)
+    paths.validation_report.parent.mkdir(parents=True, exist_ok=True)
+    paths.validation_summary.parent.mkdir(parents=True, exist_ok=True)
+    paths.diagnostics_dir.mkdir(parents=True, exist_ok=True)
+    coverage.to_csv(paths.subfield_year_download_coverage, index=False)
+    subfield_summary.to_csv(paths.subfield_coverage_summary, index=False)
+    year_summary.to_csv(paths.year_coverage_summary, index=False)
+
+    paths_display = {
+        "subfield_year_download_coverage": output_path_display(
+            paths.subfield_year_download_coverage, ROOT
+        ),
+        "subfield_coverage_summary": output_path_display(
+            paths.subfield_coverage_summary, ROOT
+        ),
+        "year_coverage_summary": output_path_display(paths.year_coverage_summary, ROOT),
+    }
+    report = validation_report_markdown(summary, paths_display)
+    paths.validation_report.write_text(report, encoding="utf-8")
+    paths.extraction_summary.write_text(report, encoding="utf-8")
+    paths.validation_summary.write_text(
+        json.dumps(make_json_safe(summary), indent=2, allow_nan=False),
+        encoding="utf-8",
     )
+    print(f"Wrote {output_path_display(paths.validation_report, ROOT)}")
+    print(f"Wrote {output_path_display(paths.validation_summary, ROOT)}")
+    print(f"Wrote {output_path_display(paths.diagnostics_dir, ROOT)}")
 
-    print(f"Wrote {report_path.relative_to(ROOT)}")
-    print(f"Wrote {summary_path.relative_to(ROOT)}")
+
+def main() -> None:
+    args = parse_args()
+    config = apply_dataset_version(load_config(), args.dataset_version)
+    ensure_dirs(config)
+
+    tables = load_pipeline_tables(config, args.dataset_version)
+    summary, coverage, subfield_summary, year_summary = build_validation_summary(
+        tables,
+        config,
+        args.dataset_version,
+    )
+    write_validation_outputs(
+        summary=summary,
+        coverage=coverage,
+        subfield_summary=subfield_summary,
+        year_summary=year_summary,
+        config=config,
+        dataset_version=args.dataset_version,
+    )
 
 
 if __name__ == "__main__":
