@@ -11,6 +11,7 @@ import matplotlib
 import numpy as np
 import pandas as pd
 
+from src.embeddings import MAIN_ANALYSIS_FLAG, normalize_eligibility_flags
 from src.subfield_labels import add_subfield_label_columns
 from src.umap_maps import UMAP_OUTPUT_COLUMNS
 
@@ -24,7 +25,6 @@ REQUIRED_INDEX_COLUMNS = {
     "subfield_id",
     "subfield_display_name",
     "publication_year",
-    "main_analysis_eligible_2500",
 }
 
 MANIFEST_COLUMNS = [
@@ -99,6 +99,13 @@ def validate_index_columns(index: pd.DataFrame) -> None:
             f"{formatted}. publication_year is required so per-subfield maps "
             "use the morphology input window instead of silently using all years."
         )
+    try:
+        normalize_eligibility_flags(index, require_robustness=False)
+    except ValueError as exc:
+        raise ValueError(
+            "analysis_embedding_index.parquet eligibility flags could not be resolved: "
+            f"{exc}"
+        ) from exc
 
 
 def stable_sort_work_rows(rows: pd.DataFrame) -> pd.DataFrame:
@@ -114,7 +121,8 @@ def stable_sort_work_rows(rows: pd.DataFrame) -> pd.DataFrame:
 
 def main_analysis_subfields(index: pd.DataFrame) -> pd.DataFrame:
     validate_index_columns(index)
-    main_mask = index["main_analysis_eligible_2500"].fillna(False).astype(bool)
+    index = normalize_eligibility_flags(index, require_robustness=False)
+    main_mask = index[MAIN_ANALYSIS_FLAG].fillna(False).astype(bool)
     columns = [
         "subfield_id",
         "subfield_display_name",
@@ -143,8 +151,9 @@ def filter_input_window(
     validate_index_columns(index)
     validate_year_window(year_min, year_max)
 
+    index = normalize_eligibility_flags(index, require_robustness=False)
     years = pd.to_numeric(index["publication_year"], errors="coerce")
-    main_mask = index["main_analysis_eligible_2500"].fillna(False).astype(bool)
+    main_mask = index[MAIN_ANALYSIS_FLAG].fillna(False).astype(bool)
     window_mask = years.between(year_min, year_max, inclusive="both")
     filtered = index.loc[main_mask & window_mask].copy()
     filtered["publication_year"] = years.loc[filtered.index].astype("int64")

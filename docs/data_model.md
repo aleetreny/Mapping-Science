@@ -208,6 +208,19 @@ One row per planned subfield. This table is an analysis eligibility layer; it do
 - `below_2500_valid_works`
 - `below_500_valid_works`
 
+For versioned extraction `2000_2024_400py`, `analysis_subfields` instead uses
+annual/full-period coverage flags:
+
+- `eligible_10000_full_period`
+- `eligible_min_5000_full_period`
+- `eligible_for_temporal_5year_exploration`
+
+Embedding validation normalizes those to canonical downstream flags:
+
+- `main_analysis_eligible = eligible_for_temporal_5year_exploration`
+- `robustness_eligible = eligible_min_5000_full_period`
+- `strict_full_period_eligible = eligible_10000_full_period`
+
 ## `embedding_index`
 
 One row per embedded work. This table is a lightweight pointer from `work_id` to a SPECTER2 shard and row position. It does not store embedding vectors.
@@ -230,8 +243,16 @@ One row per embedded work. This table is a lightweight pointer from `work_id` to
 - `primary_topic_id`
 - `primary_topic_display_name`
 - `publication_year`
+- `main_analysis_eligible`
+- `robustness_eligible`
+- `strict_full_period_eligible`
 - `main_analysis_eligible_2500`
 - `robustness_eligible_500`
+
+`main_analysis_eligible`, `robustness_eligible`, and
+`strict_full_period_eligible` are the canonical columns going forward. The
+`*_2500` and `*_500` columns are backward-compatible aliases for older scripts
+and notebooks.
 
 The SPECTER2 shard files live in `embeddings/specter2_v1/`, which is ignored by Git. See [embedding_data_model.md](embedding_data_model.md) for the Drive path, download commands, validation checks, and examples for loading one shard with NumPy.
 
@@ -249,7 +270,7 @@ It includes all `embedding_index` columns plus:
 
 `analysis_row_id` is zero-based and points to the corresponding row in the main-analysis matrix.
 
-Rows are filtered to `main_analysis_eligible_2500 == true` and sorted by:
+Rows are filtered to `main_analysis_eligible == true` and sorted by:
 
 ```text
 subfield_id, publication_year, work_id

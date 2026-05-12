@@ -6,18 +6,26 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 
-from src.embeddings import EMBEDDING_DIM, EMBEDDING_DTYPE
+from src.embeddings import (
+    EMBEDDING_DIM,
+    EMBEDDING_DTYPE,
+    MAIN_ANALYSIS_FLAG,
+    normalize_eligibility_flags,
+)
 
 
 ANALYSIS_SORT_COLUMNS = ["subfield_id", "publication_year", "work_id"]
 
 
-def prepare_analysis_embedding_index(embedding_index: pd.DataFrame) -> pd.DataFrame:
+def prepare_analysis_embedding_index(
+    embedding_index: pd.DataFrame,
+    *,
+    allow_empty: bool = False,
+) -> pd.DataFrame:
     required = {
         "work_id",
         "subfield_id",
         "publication_year",
-        "main_analysis_eligible_2500",
         "embedding_shard_file",
         "embedding_row_in_shard",
     }
@@ -25,8 +33,26 @@ def prepare_analysis_embedding_index(embedding_index: pd.DataFrame) -> pd.DataFr
     if missing:
         raise ValueError(f"embedding_index missing columns: {', '.join(sorted(missing))}")
 
-    main = embedding_index["main_analysis_eligible_2500"].fillna(False).astype(bool)
-    analysis_index = embedding_index.loc[main].copy()
+    try:
+        normalized_index = normalize_eligibility_flags(
+            embedding_index,
+            require_robustness=False,
+        )
+    except ValueError as exc:
+        raise ValueError(
+            "Eligibility flags could not be resolved for the analysis matrix. "
+            f"{exc}"
+        ) from exc
+
+    main = normalized_index[MAIN_ANALYSIS_FLAG].fillna(False).astype(bool)
+    analysis_index = normalized_index.loc[main].copy()
+    if analysis_index.empty and not allow_empty:
+        raise ValueError(
+            "No rows selected for the main-analysis embedding matrix. Eligibility "
+            "flags could not be resolved or selected zero rows; check "
+            "main_analysis_eligible and its compatible source columns."
+        )
+
     duplicate_work_ids = int(analysis_index["work_id"].astype(str).duplicated().sum())
     if duplicate_work_ids:
         raise ValueError(
@@ -115,8 +141,20 @@ def validate_analysis_matrix(
     if duplicate_work_ids:
         errors.append(f"Found {duplicate_work_ids} duplicate work_id rows")
 
-    if not analysis_index["main_analysis_eligible_2500"].fillna(False).astype(bool).all():
-        errors.append("Analysis index contains rows outside main_analysis_eligible_2500")
+    try:
+        normalized_index = normalize_eligibility_flags(
+            analysis_index,
+            require_robustness=False,
+        )
+    except ValueError as exc:
+        errors.append(f"Analysis index eligibility flags could not be resolved: {exc}")
+        normalized_index = analysis_index
+
+    if (
+        MAIN_ANALYSIS_FLAG in normalized_index
+        and not normalized_index[MAIN_ANALYSIS_FLAG].fillna(False).astype(bool).all()
+    ):
+        errors.append("Analysis index contains rows outside main_analysis_eligible")
 
     expected_row_ids = list(range(len(analysis_index)))
     if analysis_index["analysis_row_id"].tolist() != expected_row_ids:

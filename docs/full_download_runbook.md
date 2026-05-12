@@ -135,7 +135,7 @@ python scripts/08_prepare_analysis_matrix.py
 python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
 ```
 
-The matrix uses only rows where `main_analysis_eligible_2500 == true`. The first map uses a balanced sample per subfield for visual inspection.
+The matrix uses only rows where `main_analysis_eligible == true`. The first map uses a balanced sample per subfield for visual inspection.
 
 ## Resume After Interruption
 

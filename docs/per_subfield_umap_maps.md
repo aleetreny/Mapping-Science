@@ -44,7 +44,7 @@ field_id
 field_display_name
 domain_id
 domain_display_name
-main_analysis_eligible_2500
+main_analysis_eligible
 publication_year
 analysis_row_id
 work_id

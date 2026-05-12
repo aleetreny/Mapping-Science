@@ -83,6 +83,10 @@ def report_lines(summary: dict[str, Any]) -> list[str]:
         f"- Analysis flag missing rows: {summary['analysis_flag_missing_rows']}",
         f"- Main-analysis embedded rows: {summary['main_analysis_embedded_rows']}",
         f"- Robustness embedded rows: {summary['robustness_embedded_rows']}",
+        (
+            "- Strict full-period embedded rows: "
+            f"{summary['strict_full_period_embedded_rows']}"
+        ),
         f"- DuckDB table written: {summary['duckdb_table_written']}",
         "",
         "## Errors",
@@ -152,6 +156,7 @@ def main() -> None:
         "analysis_subfields_with_flags": 0,
         "main_analysis_embedded_rows": 0,
         "robustness_embedded_rows": 0,
+        "strict_full_period_embedded_rows": 0,
         "total_index_rows": 0,
     }
     duckdb_table_written = False

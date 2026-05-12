@@ -11,6 +11,7 @@ from scipy.sparse.csgraph import connected_components
 from sklearn.decomposition import PCA
 from sklearn.neighbors import NearestNeighbors
 
+from src.embeddings import normalize_eligibility_flags
 from src.subfield_labels import add_subfield_label_columns
 
 
@@ -31,7 +32,6 @@ REQUIRED_INDEX_COLUMNS = {
     "domain_id",
     "domain_display_name",
     "publication_year",
-    "main_analysis_eligible_2500",
 }
 
 CORE_EMBEDDING_METRIC_COLUMNS = [
@@ -118,6 +118,13 @@ def validate_embedding_index_columns(index: pd.DataFrame) -> None:
             "analysis_embedding_index.parquet is missing required columns: "
             f"{', '.join(sorted(missing))}"
         )
+    try:
+        normalize_eligibility_flags(index, require_robustness=False)
+    except ValueError as exc:
+        raise ValueError(
+            "analysis_embedding_index.parquet eligibility flags could not be resolved: "
+            f"{exc}"
+        ) from exc
 
 
 def stable_int_seed(random_state: int, key: object) -> int:

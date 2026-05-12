@@ -10,6 +10,7 @@ from src.analysis_matrix import (
     validate_analysis_matrix,
     write_analysis_matrix,
 )
+from src.embeddings import MAIN_ANALYSIS_FLAG
 
 
 def embedding_index_fixture() -> pd.DataFrame:
@@ -54,6 +55,7 @@ def test_prepare_analysis_index_filters_main_and_orders_deterministically() -> N
 
     assert index["work_id"].tolist() == ["w2", "w1", "w3"]
     assert index["analysis_row_id"].tolist() == [0, 1, 2]
+    assert index[MAIN_ANALYSIS_FLAG].all()
     assert index["main_analysis_eligible_2500"].all()
 
 
@@ -63,6 +65,24 @@ def test_prepare_analysis_index_rejects_duplicate_work_ids() -> None:
 
     with pytest.raises(ValueError, match="duplicate work_id"):
         prepare_analysis_embedding_index(embedding_index)
+
+
+def test_prepare_analysis_index_rejects_zero_selected_rows() -> None:
+    embedding_index = embedding_index_fixture()
+    embedding_index["main_analysis_eligible_2500"] = False
+
+    with pytest.raises(ValueError, match="selected zero rows"):
+        prepare_analysis_embedding_index(embedding_index)
+
+
+def test_prepare_analysis_index_allows_zero_rows_only_for_debug() -> None:
+    embedding_index = embedding_index_fixture()
+    embedding_index["main_analysis_eligible_2500"] = False
+
+    index = prepare_analysis_embedding_index(embedding_index, allow_empty=True)
+
+    assert index.empty
+    assert "analysis_row_id" in index.columns
 
 
 def test_write_analysis_matrix_matches_index_rows(tmp_path: Path) -> None:

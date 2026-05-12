@@ -2,9 +2,14 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from src.embeddings import (
+    MAIN_ANALYSIS_FLAG,
+    ROBUSTNESS_FLAG,
+    STRICT_FULL_PERIOD_FLAG,
     build_embedding_index,
+    normalize_eligibility_flags,
     parse_shard_id,
     read_embedding_metadata_index,
     validate_embedding_relationships,
@@ -48,6 +53,17 @@ def analysis_subfields_for() -> pd.DataFrame:
             "subfield_id": ["s1", "s2"],
             "main_analysis_eligible_2500": [True, False],
             "robustness_eligible_500": [True, True],
+        }
+    )
+
+
+def new_style_analysis_subfields_for() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "subfield_id": ["s1", "s2"],
+            "eligible_10000_full_period": [False, True],
+            "eligible_min_5000_full_period": [True, True],
+            "eligible_for_temporal_5year_exploration": [True, False],
         }
     )
 
@@ -188,6 +204,50 @@ def test_eligibility_flags_join_to_embedding_index(tmp_path: Path) -> None:
     )
 
     by_work_id = index.set_index("work_id")
+    assert bool(by_work_id.loc["w1", MAIN_ANALYSIS_FLAG]) is True
+    assert bool(by_work_id.loc["w2", MAIN_ANALYSIS_FLAG]) is False
+    assert bool(by_work_id.loc["w2", ROBUSTNESS_FLAG]) is True
     assert bool(by_work_id.loc["w1", "main_analysis_eligible_2500"]) is True
     assert bool(by_work_id.loc["w2", "main_analysis_eligible_2500"]) is False
     assert bool(by_work_id.loc["w2", "robustness_eligible_500"]) is True
+
+
+def test_new_style_eligibility_flags_are_normalized_to_canonical_names(
+    tmp_path: Path,
+) -> None:
+    write_shard(
+        tmp_path,
+        0,
+        np.zeros((2, 768), dtype=np.float16),
+        pd.DataFrame(
+            {
+                "work_id": ["w1", "w2"],
+                "subfield_id": ["s1", "s2"],
+                "publication_year": [2018, 2019],
+            }
+        ),
+    )
+    metadata_index = read_embedding_metadata_index(tmp_path)
+    works_text = works_text_for(["w1", "w2"], ["s1", "s2"])
+
+    index = build_embedding_index(
+        metadata_index=metadata_index,
+        works_text=works_text,
+        analysis_subfields=new_style_analysis_subfields_for(),
+    )
+
+    by_work_id = index.set_index("work_id")
+    assert bool(by_work_id.loc["w1", MAIN_ANALYSIS_FLAG]) is True
+    assert bool(by_work_id.loc["w1", ROBUSTNESS_FLAG]) is True
+    assert bool(by_work_id.loc["w1", STRICT_FULL_PERIOD_FLAG]) is False
+    assert bool(by_work_id.loc["w2", MAIN_ANALYSIS_FLAG]) is False
+    assert bool(by_work_id.loc["w2", ROBUSTNESS_FLAG]) is True
+    assert bool(by_work_id.loc["w2", STRICT_FULL_PERIOD_FLAG]) is True
+    assert bool(by_work_id.loc["w1", "main_analysis_eligible_2500"]) is True
+    assert bool(by_work_id.loc["w2", "main_analysis_eligible_2500"]) is False
+    assert bool(by_work_id.loc["w2", "robustness_eligible_500"]) is True
+
+
+def test_missing_eligibility_columns_fail_clearly() -> None:
+    with pytest.raises(ValueError, match="Could not resolve eligibility flags"):
+        normalize_eligibility_flags(pd.DataFrame({"subfield_id": ["s1"]}))

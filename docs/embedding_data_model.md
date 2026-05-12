@@ -16,6 +16,12 @@ Local folder:
 embeddings/specter2_v1/
 ```
 
+Current `2000_2024_400py` embedding artifact folder:
+
+```text
+embeddings/specter2_v1_2000_2024_400py/
+```
+
 Download with:
 
 ```powershell
@@ -44,7 +50,7 @@ LOCAL_EMBEDDINGS_DIR=embeddings/specter2_v1
 
 ## Shard Format
 
-The SPECTER2 artifact set contains 37 shards:
+The legacy SPECTER2 artifact set contains 37 shards:
 
 - `shard_0000_embeddings.npy`
 - `shard_0000_metadata.parquet`
@@ -53,6 +59,16 @@ The SPECTER2 artifact set contains 37 shards:
 - `shard_0036_embeddings.npy`
 - `shard_0036_metadata.parquet`
 - `shard_0036_summary.json`
+
+The `2000_2024_400py` artifact set contains 119 shards:
+
+- `shard_0000_embeddings.npy`
+- `shard_0000_metadata.parquet`
+- `shard_0000_summary.json`
+- ...
+- `shard_0118_embeddings.npy`
+- `shard_0118_metadata.parquet`
+- `shard_0118_summary.json`
 
 Embeddings were generated with:
 
@@ -101,6 +117,23 @@ The index links each `work_id` to its shard and zero-based row position:
 
 It also carries subfield, field, domain, primary-topic, publication-year, and analysis eligibility flags. It does not contain embedding vectors.
 
+Canonical eligibility columns written to `embedding_index.parquet` are:
+
+- `main_analysis_eligible`
+- `robustness_eligible`
+- `strict_full_period_eligible`
+
+For `2000_2024_400py`, these are mapped from `analysis_subfields` as:
+
+- `main_analysis_eligible = eligible_for_temporal_5year_exploration`
+- `robustness_eligible = eligible_min_5000_full_period`
+- `strict_full_period_eligible = eligible_10000_full_period`
+
+Legacy aliases are still written for compatibility:
+
+- `main_analysis_eligible_2500`
+- `robustness_eligible_500`
+
 ## Selecting Analysis Rows
 
 Main morphology analysis should use:
@@ -109,8 +142,8 @@ Main morphology analysis should use:
 import pandas as pd
 
 index = pd.read_parquet("data/processed/embedding_index.parquet")
-main = index[index["main_analysis_eligible_2500"]]
-robustness = index[index["robustness_eligible_500"]]
+main = index[index["main_analysis_eligible"]]
+robustness = index[index["robustness_eligible"]]
 ```
 
 The full `works_text.parquet` and full embedding shard set remain available.
@@ -187,8 +220,9 @@ joined = metadata.merge(
             "work_id",
             "embedding_shard_id",
             "embedding_row_in_shard",
-            "main_analysis_eligible_2500",
-            "robustness_eligible_500",
+            "main_analysis_eligible",
+            "robustness_eligible",
+            "strict_full_period_eligible",
         ]
     ],
     on="work_id",

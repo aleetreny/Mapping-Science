@@ -8,6 +8,7 @@ import matplotlib
 import numpy as np
 import pandas as pd
 
+from src.embeddings import MAIN_ANALYSIS_FLAG, normalize_eligibility_flags
 from src.per_subfield_umap_maps import (
     coordinate_limits,
     plot_density_panel,
@@ -56,7 +57,6 @@ REQUIRED_INDEX_COLUMNS = {
     "domain_id",
     "domain_display_name",
     "publication_year",
-    "main_analysis_eligible_2500",
 }
 
 MANIFEST_COLUMNS = [
@@ -125,6 +125,13 @@ def validate_category_index_columns(index: pd.DataFrame) -> None:
             "analysis_embedding_index.parquet is missing required columns: "
             f"{', '.join(sorted(missing))}"
         )
+    try:
+        normalize_eligibility_flags(index, require_robustness=False)
+    except ValueError as exc:
+        raise ValueError(
+            "analysis_embedding_index.parquet eligibility flags could not be resolved: "
+            f"{exc}"
+        ) from exc
 
 
 def filter_category_input_window(
@@ -136,8 +143,9 @@ def filter_category_input_window(
     validate_category_index_columns(index)
     validate_year_window(year_min, year_max)
 
+    index = normalize_eligibility_flags(index, require_robustness=False)
     years = pd.to_numeric(index["publication_year"], errors="coerce")
-    main_mask = index["main_analysis_eligible_2500"].fillna(False).astype(bool)
+    main_mask = index[MAIN_ANALYSIS_FLAG].fillna(False).astype(bool)
     window_mask = years.between(year_min, year_max, inclusive="both")
     filtered = index.loc[main_mask & window_mask].copy()
     filtered["publication_year"] = years.loc[filtered.index].astype("int64")

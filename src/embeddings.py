@@ -15,6 +15,32 @@ EMBEDDING_DTYPE = "float16"
 
 REQUIRED_METADATA_COLUMNS = ["work_id", "subfield_id", "publication_year"]
 
+MAIN_ANALYSIS_FLAG = "main_analysis_eligible"
+ROBUSTNESS_FLAG = "robustness_eligible"
+STRICT_FULL_PERIOD_FLAG = "strict_full_period_eligible"
+LEGACY_MAIN_ANALYSIS_FLAG = "main_analysis_eligible_2500"
+LEGACY_ROBUSTNESS_FLAG = "robustness_eligible_500"
+
+NEW_ELIGIBILITY_FLAG_MAP = {
+    MAIN_ANALYSIS_FLAG: "eligible_for_temporal_5year_exploration",
+    ROBUSTNESS_FLAG: "eligible_min_5000_full_period",
+    STRICT_FULL_PERIOD_FLAG: "eligible_10000_full_period",
+}
+LEGACY_ELIGIBILITY_FLAG_MAP = {
+    MAIN_ANALYSIS_FLAG: LEGACY_MAIN_ANALYSIS_FLAG,
+    ROBUSTNESS_FLAG: LEGACY_ROBUSTNESS_FLAG,
+}
+CANONICAL_ELIGIBILITY_COLUMNS = [
+    MAIN_ANALYSIS_FLAG,
+    ROBUSTNESS_FLAG,
+    STRICT_FULL_PERIOD_FLAG,
+]
+LEGACY_ELIGIBILITY_COLUMNS = [
+    LEGACY_MAIN_ANALYSIS_FLAG,
+    LEGACY_ROBUSTNESS_FLAG,
+]
+INDEX_ELIGIBILITY_COLUMNS = CANONICAL_ELIGIBILITY_COLUMNS + LEGACY_ELIGIBILITY_COLUMNS
+
 WORKS_INDEX_COLUMNS = [
     "work_id",
     "subfield_id",
@@ -47,9 +73,132 @@ INDEX_COLUMNS = [
     "primary_topic_id",
     "primary_topic_display_name",
     "publication_year",
-    "main_analysis_eligible_2500",
-    "robustness_eligible_500",
+    *INDEX_ELIGIBILITY_COLUMNS,
 ]
+
+
+def _format_column_list(columns: list[str]) -> str:
+    return ", ".join(columns)
+
+
+def _missing_columns(frame: pd.DataFrame, columns: list[str]) -> list[str]:
+    return [column for column in columns if column not in frame.columns]
+
+
+def _as_nullable_bool(series: pd.Series, column: str) -> pd.Series:
+    try:
+        return series.astype("boolean")
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"Eligibility flag column {column!r} cannot be converted to boolean"
+        ) from exc
+
+
+def normalize_eligibility_flags(
+    frame: pd.DataFrame,
+    *,
+    require_robustness: bool = True,
+) -> pd.DataFrame:
+    """Add canonical eligibility flags and legacy aliases to a dataframe.
+
+    New 2000_2024_400py analysis_subfields files use annual-coverage flag names.
+    Legacy files use threshold-specific aliases. Downstream code should read the
+    canonical names and keep the aliases only for compatibility.
+    """
+
+    result = frame.copy()
+    new_source_columns = list(NEW_ELIGIBILITY_FLAG_MAP.values())
+    new_required = (
+        new_source_columns
+        if require_robustness
+        else [NEW_ELIGIBILITY_FLAG_MAP[MAIN_ANALYSIS_FLAG]]
+    )
+    canonical_required = (
+        [MAIN_ANALYSIS_FLAG, ROBUSTNESS_FLAG]
+        if require_robustness
+        else [MAIN_ANALYSIS_FLAG]
+    )
+    legacy_source_columns = list(LEGACY_ELIGIBILITY_FLAG_MAP.values())
+    legacy_required = (
+        legacy_source_columns
+        if require_robustness
+        else [LEGACY_MAIN_ANALYSIS_FLAG]
+    )
+
+    if not _missing_columns(result, new_required):
+        for canonical, source in NEW_ELIGIBILITY_FLAG_MAP.items():
+            if source in result.columns:
+                result[canonical] = _as_nullable_bool(result[source], source)
+            else:
+                result[canonical] = pd.Series(
+                    pd.NA,
+                    index=result.index,
+                    dtype="boolean",
+                )
+    elif not _missing_columns(result, canonical_required):
+        for column in canonical_required:
+            result[column] = _as_nullable_bool(result[column], column)
+        if ROBUSTNESS_FLAG not in result.columns:
+            result[ROBUSTNESS_FLAG] = pd.Series(
+                pd.NA,
+                index=result.index,
+                dtype="boolean",
+            )
+        if STRICT_FULL_PERIOD_FLAG in result.columns:
+            result[STRICT_FULL_PERIOD_FLAG] = _as_nullable_bool(
+                result[STRICT_FULL_PERIOD_FLAG],
+                STRICT_FULL_PERIOD_FLAG,
+            )
+        else:
+            result[STRICT_FULL_PERIOD_FLAG] = pd.Series(
+                pd.NA,
+                index=result.index,
+                dtype="boolean",
+            )
+    elif not _missing_columns(result, legacy_required):
+        for canonical, source in LEGACY_ELIGIBILITY_FLAG_MAP.items():
+            if source in result.columns:
+                result[canonical] = _as_nullable_bool(result[source], source)
+            else:
+                result[canonical] = pd.Series(
+                    pd.NA,
+                    index=result.index,
+                    dtype="boolean",
+                )
+        result[STRICT_FULL_PERIOD_FLAG] = pd.Series(
+            pd.NA,
+            index=result.index,
+            dtype="boolean",
+        )
+    else:
+        missing_new = _missing_columns(result, new_required)
+        missing_canonical = _missing_columns(result, canonical_required)
+        missing_legacy = _missing_columns(result, legacy_required)
+        raise ValueError(
+            "Could not resolve eligibility flags. Expected either new "
+            f"2000_2024_400py columns ({_format_column_list(new_required)}), "
+            f"canonical columns ({_format_column_list(canonical_required)}), "
+            f"or legacy columns ({_format_column_list(legacy_required)}). "
+            f"Missing new: {_format_column_list(missing_new)}; "
+            f"missing canonical: {_format_column_list(missing_canonical)}; "
+            f"missing legacy: {_format_column_list(missing_legacy)}."
+        )
+
+    result[MAIN_ANALYSIS_FLAG] = _as_nullable_bool(
+        result[MAIN_ANALYSIS_FLAG],
+        MAIN_ANALYSIS_FLAG,
+    )
+    result[ROBUSTNESS_FLAG] = _as_nullable_bool(
+        result[ROBUSTNESS_FLAG],
+        ROBUSTNESS_FLAG,
+    )
+    result[STRICT_FULL_PERIOD_FLAG] = _as_nullable_bool(
+        result[STRICT_FULL_PERIOD_FLAG],
+        STRICT_FULL_PERIOD_FLAG,
+    )
+    result[LEGACY_MAIN_ANALYSIS_FLAG] = result[MAIN_ANALYSIS_FLAG]
+    result[LEGACY_ROBUSTNESS_FLAG] = result[ROBUSTNESS_FLAG]
+    return result
 
 
 def parse_shard_id(path: str | Path) -> int:
@@ -283,19 +432,13 @@ def build_embedding_index(
 
     index = index.merge(works_lookup, on="work_id", how="left", validate="many_to_one")
 
-    flags = analysis_subfields.copy()
-    for column in [
-        "subfield_id",
-        "main_analysis_eligible_2500",
-        "robustness_eligible_500",
-    ]:
-        if column not in flags.columns:
-            flags[column] = pd.NA
+    if "subfield_id" not in analysis_subfields.columns:
+        raise ValueError("analysis_subfields missing columns: subfield_id")
+    flags = normalize_eligibility_flags(analysis_subfields)
     flags = flags[
         [
             "subfield_id",
-            "main_analysis_eligible_2500",
-            "robustness_eligible_500",
+            *INDEX_ELIGIBILITY_COLUMNS,
         ]
     ].drop_duplicates("subfield_id")
     flags["subfield_id"] = flags["subfield_id"].astype("string")
@@ -349,16 +492,15 @@ def validate_embedding_relationships(
                 "inconsistent with works_text"
             )
 
+    normalized_embedding_index: pd.DataFrame | None = None
     missing_flag_rows = 0
-    if {
-        "main_analysis_eligible_2500",
-        "robustness_eligible_500",
-    }.issubset(embedding_index.columns):
+    try:
+        normalized_embedding_index = normalize_eligibility_flags(embedding_index)
         missing_flag_rows = int(
-            embedding_index[
+            normalized_embedding_index[
                 [
-                    "main_analysis_eligible_2500",
-                    "robustness_eligible_500",
+                    MAIN_ANALYSIS_FLAG,
+                    ROBUSTNESS_FLAG,
                 ]
             ]
             .isna()
@@ -369,36 +511,53 @@ def validate_embedding_relationships(
             errors.append(
                 f"{missing_flag_rows} embedding_index rows could not join analysis flags"
             )
-    else:
-        errors.append("embedding_index is missing analysis eligibility flag columns")
+    except ValueError as exc:
+        errors.append(f"embedding_index eligibility flags could not be resolved: {exc}")
 
     analysis_subfields_with_flags = 0
-    if {
-        "subfield_id",
-        "main_analysis_eligible_2500",
-        "robustness_eligible_500",
-    }.issubset(analysis_subfields.columns):
-        analysis_subfields_with_flags = int(
-            analysis_subfields[
-                [
-                    "subfield_id",
-                    "main_analysis_eligible_2500",
-                    "robustness_eligible_500",
+    try:
+        normalized_analysis_subfields = normalize_eligibility_flags(analysis_subfields)
+        if "subfield_id" not in normalized_analysis_subfields.columns:
+            errors.append("analysis_subfields is missing subfield_id")
+        else:
+            analysis_subfields_with_flags = int(
+                normalized_analysis_subfields[
+                    [
+                        "subfield_id",
+                        MAIN_ANALYSIS_FLAG,
+                        ROBUSTNESS_FLAG,
+                    ]
                 ]
-            ]
-            .dropna()
-            .drop_duplicates("subfield_id")
-            .shape[0]
+                .dropna()
+                .drop_duplicates("subfield_id")
+                .shape[0]
+            )
+    except ValueError as exc:
+        errors.append(f"analysis_subfields eligibility flags could not be resolved: {exc}")
+
+    if normalized_embedding_index is not None:
+        main_rows = int(
+            normalized_embedding_index[MAIN_ANALYSIS_FLAG]
+            .fillna(False)
+            .astype(bool)
+            .sum()
+        )
+        robustness_rows = int(
+            normalized_embedding_index[ROBUSTNESS_FLAG]
+            .fillna(False)
+            .astype(bool)
+            .sum()
+        )
+        strict_full_period_rows = int(
+            normalized_embedding_index[STRICT_FULL_PERIOD_FLAG]
+            .fillna(False)
+            .astype(bool)
+            .sum()
         )
     else:
-        errors.append("analysis_subfields is missing eligibility flag columns")
-
-    main_rows = int(
-        embedding_index["main_analysis_eligible_2500"].fillna(False).astype(bool).sum()
-    )
-    robustness_rows = int(
-        embedding_index["robustness_eligible_500"].fillna(False).astype(bool).sum()
-    )
+        main_rows = 0
+        robustness_rows = 0
+        strict_full_period_rows = 0
 
     return {
         "errors": errors,
@@ -410,5 +569,6 @@ def validate_embedding_relationships(
         "analysis_subfields_with_flags": analysis_subfields_with_flags,
         "main_analysis_embedded_rows": main_rows,
         "robustness_embedded_rows": robustness_rows,
+        "strict_full_period_embedded_rows": strict_full_period_rows,
         "total_index_rows": int(len(embedding_index)),
     }

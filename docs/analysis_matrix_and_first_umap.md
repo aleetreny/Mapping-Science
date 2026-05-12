@@ -24,8 +24,19 @@ embeddings/specter2_v1/shard_*_embeddings.npy
 It filters to:
 
 ```text
-main_analysis_eligible_2500 == true
+main_analysis_eligible == true
 ```
+
+For `2000_2024_400py`, validation maps the versioned
+`analysis_subfields` flags to canonical matrix flags as:
+
+- `main_analysis_eligible = eligible_for_temporal_5year_exploration`
+- `robustness_eligible = eligible_min_5000_full_period`
+- `strict_full_period_eligible = eligible_10000_full_period`
+
+The legacy aliases `main_analysis_eligible_2500` and
+`robustness_eligible_500` remain in the index for compatibility, but new
+analysis code should use the canonical names.
 
 and writes:
 

@@ -22,7 +22,12 @@ from src.analysis_matrix import (
     validate_analysis_matrix,
     write_analysis_matrix,
 )
-from src.embeddings import EMBEDDING_DIM, EMBEDDING_DTYPE
+from src.embeddings import (
+    EMBEDDING_DIM,
+    EMBEDDING_DTYPE,
+    MAIN_ANALYSIS_FLAG,
+    normalize_eligibility_flags,
+)
 from src.storage import connect_duckdb, ensure_dirs, load_parquet, save_parquet, write_table
 
 
@@ -45,6 +50,11 @@ def parse_args() -> argparse.Namespace:
         "--force",
         action="store_true",
         help="Overwrite existing analysis matrix outputs.",
+    )
+    parser.add_argument(
+        "--allow-empty-debug",
+        action="store_true",
+        help="Debug/testing override: allow writing a zero-row analysis matrix.",
     )
     return parser.parse_args()
 
@@ -91,7 +101,11 @@ def main() -> None:
 
     embedding_index = load_parquet(embedding_index_path)
     analysis_subfields = load_parquet(analysis_subfields_path)
-    analysis_index = prepare_analysis_embedding_index(embedding_index)
+    analysis_index = prepare_analysis_embedding_index(
+        embedding_index,
+        allow_empty=args.allow_empty_debug,
+    )
+    normalized_analysis_subfields = normalize_eligibility_flags(analysis_subfields)
 
     save_parquet(analysis_index, analysis_index_path)
     save_parquet(analysis_index[["analysis_row_id", "work_id"]], work_ids_path)
@@ -129,13 +143,13 @@ def main() -> None:
         "embedding_dim": EMBEDDING_DIM,
         "embedding_dtype": EMBEDDING_DTYPE,
         "n_main_analysis_subfields": int(
-            analysis_subfields["main_analysis_eligible_2500"]
+            normalized_analysis_subfields[MAIN_ANALYSIS_FLAG]
             .fillna(False)
             .astype(bool)
             .sum()
-        )
-        if "main_analysis_eligible_2500" in analysis_subfields
-        else None,
+        ),
+        "main_analysis_flag": MAIN_ANALYSIS_FLAG,
+        "allow_empty_debug": bool(args.allow_empty_debug),
         "duplicate_work_ids": int(analysis_index["work_id"].duplicated().sum()),
         "duckdb_table": "analysis_embedding_index",
     }
