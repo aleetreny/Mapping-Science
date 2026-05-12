@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,9 +42,20 @@ def parse_args() -> argparse.Namespace:
         help="Parquet index aligned row-for-row with the main embedding matrix.",
     )
     parser.add_argument(
+        "--embedding-dir",
+        default=os.getenv("LOCAL_EMBEDDINGS_DIR", "embeddings/specter2_v1"),
+        help=(
+            "Local folder containing SPECTER2 embedding artifacts. Used to derive "
+            "--embeddings-path when that argument is not provided."
+        ),
+    )
+    parser.add_argument(
         "--embeddings-path",
-        default="embeddings/specter2_v1/analysis/main_embeddings.float16.npy",
-        help="Main SPECTER2 embedding matrix. Loaded with np.load(..., mmap_mode='r').",
+        default=None,
+        help=(
+            "Main SPECTER2 embedding matrix. Defaults to "
+            "<embedding-dir>/analysis/main_embeddings.float16.npy."
+        ),
     )
     parser.add_argument(
         "--output-dir",
@@ -68,6 +80,15 @@ def parse_args() -> argparse.Namespace:
 def resolve_path(path: str | Path) -> Path:
     path = Path(path)
     return path if path.is_absolute() else ROOT / path
+
+
+def default_embeddings_path(embedding_dir: str | Path) -> Path:
+    return Path(embedding_dir) / "analysis" / "main_embeddings.float16.npy"
+
+
+def resolve_embeddings_path(args: argparse.Namespace) -> Path:
+    path = args.embeddings_path or default_embeddings_path(args.embedding_dir)
+    return resolve_path(path)
 
 
 def display_path(path: str | Path) -> str:
@@ -148,7 +169,13 @@ def load_matrix(embeddings_path: Path) -> np.ndarray:
     return matrix
 
 
-def validate_matrix_alignment(index: pd.DataFrame, matrix: np.ndarray) -> None:
+def validate_matrix_alignment(
+    index: pd.DataFrame,
+    matrix: np.ndarray,
+    *,
+    index_path: Path,
+    embeddings_path: Path,
+) -> None:
     row_ids = pd.to_numeric(index["analysis_row_id"], errors="raise")
     if row_ids.empty:
         raise ValueError("analysis index is empty")
@@ -156,8 +183,13 @@ def validate_matrix_alignment(index: pd.DataFrame, matrix: np.ndarray) -> None:
     max_row = int(row_ids.max())
     if min_row < 0 or max_row >= matrix.shape[0]:
         raise ValueError(
-            "analysis_row_id values are not aligned with the embedding matrix: "
-            f"row id range {min_row}-{max_row}, matrix rows {matrix.shape[0]}"
+            "analysis_embedding_index and embedding matrix appear to belong to "
+            "different embedding versions. "
+            f"index_path={display_path(index_path)}; "
+            f"embeddings_path={display_path(embeddings_path)}; "
+            f"analysis_row_id range {min_row}-{max_row}; "
+            f"matrix rows {matrix.shape[0]}. Use a matching --embedding-dir or "
+            "--embeddings-path."
         )
 
 
@@ -172,7 +204,7 @@ def main() -> None:
         raise ValueError("n_neighbors must be at least 2")
 
     index_path = resolve_path(args.index_path)
-    embeddings_path = resolve_path(args.embeddings_path)
+    embeddings_path = resolve_embeddings_path(args)
     output_dir = resolve_path(args.output_dir)
     coordinates_dir, figures_dir, manifest_path, summary_path = ensure_run_outputs(
         output_dir,
@@ -208,7 +240,12 @@ def main() -> None:
 
     print(f"Memory-mapping embeddings: {display_path(embeddings_path)}")
     matrix = load_matrix(embeddings_path)
-    validate_matrix_alignment(analysis_index, matrix)
+    validate_matrix_alignment(
+        analysis_index,
+        matrix,
+        index_path=index_path,
+        embeddings_path=embeddings_path,
+    )
 
     import umap
 
@@ -375,6 +412,7 @@ def main() -> None:
         "created_at": datetime.now(timezone.utc).isoformat(),
         "input_paths": {
             "index_path": display_path(index_path),
+            "embedding_dir": display_path(resolve_path(args.embedding_dir)),
             "embeddings_path": display_path(embeddings_path),
         },
         "output_paths": {

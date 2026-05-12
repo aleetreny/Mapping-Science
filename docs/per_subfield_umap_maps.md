@@ -7,7 +7,7 @@ paper clustering, PCA, dashboards, or predictive models.
 
 ## Purpose
 
-The active analysis period is:
+The legacy/default analysis period is:
 
 ```text
 Analysis period: 2010-2025
@@ -21,19 +21,31 @@ By default, per-subfield maps use works with:
 2010 <= publication_year <= 2025
 ```
 
+For `2000_2024_400py`, pass `--year-min 2000 --year-max 2024` so the map
+window matches the versioned corpus.
+
 ## Inputs
 
 The script reads the main-analysis embedding index and the SPECTER2 matrix:
 
 ```text
 data/processed/analysis_embedding_index.parquet
-embeddings/specter2_v1/analysis/main_embeddings.float16.npy
+<embedding-dir>/analysis/main_embeddings.float16.npy
 ```
 
 The `.npy` matrix is loaded with `np.load(..., mmap_mode="r")`, and each
 subfield subset is converted to `float32` only immediately before fitting UMAP.
 The script expects `analysis_embedding_index.parquet` to contain
 `publication_year`; if it is missing, the run fails clearly.
+
+`--embedding-dir` defaults to `LOCAL_EMBEDDINGS_DIR` from `.env` or the
+environment. For `2000_2024_400py`, use:
+
+```powershell
+$env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
+```
+
+or pass `--embedding-dir embeddings/specter2_v1_2000_2024_400py`.
 
 The index columns used for grouping are:
 
@@ -100,26 +112,46 @@ random_state
 
 Small test run:
 
-```bash
-python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --year-min 2010 --year-max 2025 --max-papers-per-subfield 2000 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\10_build_per_subfield_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --limit-subfields 3 `
+  --year-min 2000 `
+  --year-max 2024 `
+  --max-papers-per-subfield 2000 `
+  --overwrite
 ```
 
 Single subfield:
 
-```bash
-python scripts/10_build_per_subfield_umap_maps.py --subfield-id 1100 --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\10_build_per_subfield_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --subfield-id 1100 `
+  --year-min 2000 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 Full run:
 
-```bash
-python scripts/10_build_per_subfield_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\10_build_per_subfield_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2000 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 Debugging a narrower input year window is possible:
 
-```bash
-python scripts/10_build_per_subfield_umap_maps.py --year-min 2012 --year-max 2020 --limit-subfields 3 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\10_build_per_subfield_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2012 `
+  --year-max 2020 `
+  --limit-subfields 3 `
+  --overwrite
 ```
 
 ## Runtime And RAM
@@ -143,9 +175,17 @@ papers. The cap is a runtime control, not a conceptual exclusion from the active
 
 Fields and domains can also be mapped for inspection with:
 
-```bash
-python scripts/10b_build_per_field_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
-python scripts/10c_build_per_domain_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\10b_build_per_field_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2000 `
+  --year-max 2024 `
+  --overwrite
+.\.venv\Scripts\python.exe scripts\10c_build_per_domain_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2000 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 These outputs are backup/inspection maps. They do not change the main unit of

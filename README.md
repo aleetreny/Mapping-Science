@@ -111,6 +111,14 @@ powershell -ExecutionPolicy Bypass -File .\scripts\download_embeddings_from_driv
 python scripts/07_validate_embeddings.py
 ```
 
+For the current `2000_2024_400py` embedding artifacts, point the downstream
+matrix stages at the versioned directory:
+
+```powershell
+$env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
+.\.venv\Scripts\python.exe scripts\07_validate_embeddings.py --expected-shards 119
+```
+
 Or with Bash:
 
 ```bash
@@ -127,20 +135,21 @@ Validation writes `data/processed/embedding_index.parquet` and the DuckDB
 Prepare the row-aligned analysis matrix, UMAP maps, projected morphology
 metrics, embedding-space metrics, diagnostics, and exploratory clusters with:
 
-```bash
-python scripts/07_validate_embeddings.py
-python scripts/08_prepare_analysis_matrix.py --force
+```powershell
+$env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
+.\.venv\Scripts\python.exe scripts\07_validate_embeddings.py --expected-shards 119
+.\.venv\Scripts\python.exe scripts\08_prepare_analysis_matrix.py --force
 
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025 --force
-python scripts/10_build_per_subfield_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
-python scripts/10b_build_per_field_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
-python scripts/10c_build_per_domain_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
+.\.venv\Scripts\python.exe scripts\09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2000 --year-max 2024 --force
+.\.venv\Scripts\python.exe scripts\10_build_per_subfield_umap_maps.py --year-min 2000 --year-max 2024 --overwrite
+.\.venv\Scripts\python.exe scripts\10b_build_per_field_umap_maps.py --year-min 2000 --year-max 2024 --overwrite
+.\.venv\Scripts\python.exe scripts\10c_build_per_domain_umap_maps.py --year-min 2000 --year-max 2024 --overwrite
 
-python scripts/11_compute_subfield_morphology_metrics.py --year-min 2010 --year-max 2025 --overwrite
-python scripts/12_compute_subfield_embedding_space_metrics.py --year-min 2010 --year-max 2025 --overwrite
-python scripts/13_compare_metric_families.py --overwrite
-python scripts/14_summarize_metric_distributions.py --overwrite
-python scripts/15_cluster_metric_spaces.py --default-k 5 --overwrite
+.\.venv\Scripts\python.exe scripts\11_compute_subfield_morphology_metrics.py --year-min 2000 --year-max 2024 --overwrite
+.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py --year-min 2010 --year-max 2024 --overwrite
+.\.venv\Scripts\python.exe scripts\13_compare_metric_families.py --overwrite
+.\.venv\Scripts\python.exe scripts\14_summarize_metric_distributions.py --overwrite
+.\.venv\Scripts\python.exe scripts\15_cluster_metric_spaces.py --default-k 5 --overwrite
 ```
 
 The per-subfield UMAP stage fits one separate 2D UMAP model per OpenAlex
@@ -214,7 +223,7 @@ empty.
 
 ## Full Run
 
-```bash
+```powershell
 python scripts/00_fetch_taxonomy.py
 python scripts/01_build_counts.py --dry-run
 python scripts/01_build_counts.py
@@ -224,14 +233,15 @@ python scripts/04_download_sampled_corpus.py --dry-run
 python scripts/04_download_sampled_corpus.py --limit-subfields 5
 python scripts/06_build_analysis_subfields.py
 python scripts/05_validate_database.py
-python scripts/07_validate_embeddings.py
-python scripts/08_prepare_analysis_matrix.py --force
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025 --force
-python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --year-min 2010 --year-max 2025 --max-papers-per-subfield 2000 --overwrite
-python scripts/10b_build_per_field_umap_maps.py --limit-fields 3 --year-min 2010 --year-max 2025 --max-papers-per-group 2000 --overwrite
-python scripts/10c_build_per_domain_umap_maps.py --limit-domains 2 --year-min 2010 --year-max 2025 --max-papers-per-group 2000 --overwrite
-python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
-python scripts/12_compute_subfield_embedding_space_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
+$env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
+.\.venv\Scripts\python.exe scripts\07_validate_embeddings.py --expected-shards 119
+.\.venv\Scripts\python.exe scripts\08_prepare_analysis_matrix.py --force
+.\.venv\Scripts\python.exe scripts\09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2000 --year-max 2024 --force
+.\.venv\Scripts\python.exe scripts\10_build_per_subfield_umap_maps.py --limit-subfields 3 --year-min 2000 --year-max 2024 --max-papers-per-subfield 2000 --overwrite
+.\.venv\Scripts\python.exe scripts\10b_build_per_field_umap_maps.py --limit-fields 3 --year-min 2000 --year-max 2024 --max-papers-per-group 2000 --overwrite
+.\.venv\Scripts\python.exe scripts\10c_build_per_domain_umap_maps.py --limit-domains 2 --year-min 2000 --year-max 2024 --max-papers-per-group 2000 --overwrite
+.\.venv\Scripts\python.exe scripts\11_compute_subfield_morphology_metrics.py --limit-subfields 3 --year-min 2000 --year-max 2024 --overwrite
+.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2024 --overwrite
 python scripts/13_compare_metric_families.py --overwrite
 python scripts/14_summarize_metric_distributions.py --overwrite
 python scripts/15_cluster_metric_spaces.py --default-k 5 --overwrite

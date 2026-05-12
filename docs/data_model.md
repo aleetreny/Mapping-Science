@@ -254,14 +254,19 @@ One row per embedded work. This table is a lightweight pointer from `work_id` to
 `*_2500` and `*_500` columns are backward-compatible aliases for older scripts
 and notebooks.
 
-The SPECTER2 shard files live in `embeddings/specter2_v1/`, which is ignored by Git. See [embedding_data_model.md](embedding_data_model.md) for the Drive path, download commands, validation checks, and examples for loading one shard with NumPy.
+The SPECTER2 shard files live under the configured embedding directory, such as
+`embeddings/specter2_v1/` for the legacy artifact set or
+`embeddings/specter2_v1_2000_2024_400py/` for the current versioned artifact
+set. See [embedding_data_model.md](embedding_data_model.md) for the Drive path,
+download commands, validation checks, and examples for loading one shard with
+NumPy.
 
 ## `analysis_embedding_index`
 
 One row per main-analysis embedded work. This table has the same row order as:
 
 ```text
-embeddings/specter2_v1/analysis/main_embeddings.float16.npy
+<embedding-dir>/analysis/main_embeddings.float16.npy
 ```
 
 It includes all `embedding_index` columns plus:

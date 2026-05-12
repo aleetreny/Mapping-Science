@@ -20,7 +20,7 @@ visual interpretation.
 
 ```text
 data/processed/analysis_embedding_index.parquet
-embeddings/specter2_v1/analysis/main_embeddings.float16.npy
+<embedding-dir>/analysis/main_embeddings.float16.npy
 ```
 
 The matrix is loaded with:
@@ -33,6 +33,15 @@ For each subfield, the script filters rows to the selected year window,
 extracts `analysis_row_id`, reads only those rows from the memory-mapped matrix,
 converts the subfield slice to `float32`, and L2-normalizes rows before
 cosine-based metrics.
+
+`--embedding-dir` defaults to `LOCAL_EMBEDDINGS_DIR` from `.env` or the
+environment. For `2000_2024_400py`, either set:
+
+```powershell
+$env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
+```
+
+or pass `--embedding-dir embeddings/specter2_v1_2000_2024_400py`.
 
 The default active window is:
 
@@ -176,26 +185,45 @@ max_papers_per_subfield
 
 Smoke test:
 
-```bash
-python scripts/12_compute_subfield_embedding_space_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --limit-subfields 3 `
+  --year-min 2010 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 Single subfield:
 
-```bash
-python scripts/12_compute_subfield_embedding_space_metrics.py --subfield-id 1100 --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --subfield-id 1100 `
+  --year-min 2010 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 Full run:
 
-```bash
-python scripts/12_compute_subfield_embedding_space_metrics.py --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2010 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 Optional deterministic cap:
 
-```bash
-python scripts/12_compute_subfield_embedding_space_metrics.py --year-min 2010 --year-max 2025 --max-papers-per-subfield 10000 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2010 `
+  --year-max 2024 `
+  --max-papers-per-subfield 10000 `
+  --overwrite
 ```
 
 ## Interpretation Caveats

@@ -105,6 +105,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\download_embeddings_from_driv
 python scripts/07_validate_embeddings.py
 ```
 
+For the `2000_2024_400py` embedding artifacts:
+
+```powershell
+$env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
+.\.venv\Scripts\python.exe scripts\07_validate_embeddings.py --expected-shards 119
+```
+
 Bash:
 
 ```bash
@@ -124,18 +131,39 @@ The local folder is:
 embeddings/specter2_v1/
 ```
 
-The validator checks the 37 embedding shards, 37 metadata shards, 37 summary files, float16 dtype, 768 dimensions, row-count consistency, work ID coverage against `works_text`, and eligibility joins against `analysis_subfields`. It writes `data/processed/embedding_index.parquet`, the DuckDB `embedding_index` table, and validation files inside `embeddings/specter2_v1/`.
+The validator checks the expected embedding shards, metadata shards, summary
+files, float16 dtype, 768 dimensions, row-count consistency, work ID coverage
+against `works_text`, and eligibility joins against `analysis_subfields`. The
+legacy artifact set uses 37 shards; `2000_2024_400py` uses 119 shards. It
+writes `data/processed/embedding_index.parquet`, the DuckDB `embedding_index`
+table, and validation files inside the configured embedding directory.
 
 ## Prepare Analysis Matrix And First Map
 
 After embedding validation succeeds, prepare the main-analysis matrix and first sampled UMAP map:
 
-```bash
-python scripts/08_prepare_analysis_matrix.py
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
+```powershell
+$env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
+.\.venv\Scripts\python.exe scripts\08_prepare_analysis_matrix.py --force
+.\.venv\Scripts\python.exe scripts\09_build_first_umap_maps.py `
+  --sample-per-subfield 500 `
+  --year-min 2000 `
+  --year-max 2024 `
+  --force
 ```
 
 The matrix uses only rows where `main_analysis_eligible == true`. The first map uses a balanced sample per subfield for visual inspection.
+
+Downstream matrix consumers also accept explicit embedding directories:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\10_build_per_subfield_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2000 `
+  --year-max 2024 `
+  --limit-subfields 3 `
+  --overwrite
+```
 
 ## Resume After Interruption
 

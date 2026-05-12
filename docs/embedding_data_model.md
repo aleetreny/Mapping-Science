@@ -42,10 +42,17 @@ python scripts/07_validate_embeddings.py
 
 The defaults can be overridden in `.env`:
 
-```bash
+```text
 RCLONE_REMOTE=gdrive
 DRIVE_EMBEDDINGS_PATH=TFM/openalex_subfields/embeddings/specter2_v1
 LOCAL_EMBEDDINGS_DIR=embeddings/specter2_v1
+```
+
+For `2000_2024_400py`, set the embedding directory before validation and
+downstream matrix consumers:
+
+```powershell
+$env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
 ```
 
 ## Shard Format
@@ -156,17 +163,18 @@ incomplete/current.
 
 Build the row-aligned main-analysis matrix with:
 
-```bash
-python scripts/08_prepare_analysis_matrix.py
+```powershell
+.\.venv\Scripts\python.exe scripts\08_prepare_analysis_matrix.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py
 ```
 
 Outputs:
 
 ```text
 data/processed/analysis_embedding_index.parquet
-embeddings/specter2_v1/analysis/main_embeddings.float16.npy
-embeddings/specter2_v1/analysis/main_work_ids.parquet
-embeddings/specter2_v1/analysis/main_matrix_summary.json
+<embedding-dir>/analysis/main_embeddings.float16.npy
+<embedding-dir>/analysis/main_work_ids.parquet
+<embedding-dir>/analysis/main_matrix_summary.json
 ```
 
 `analysis_embedding_index.parquet` adds `analysis_row_id`, which points to rows in `main_embeddings.float16.npy`.
@@ -175,8 +183,12 @@ embeddings/specter2_v1/analysis/main_matrix_summary.json
 
 Build the first balanced-sample visual inspection map with:
 
-```bash
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025
+```powershell
+.\.venv\Scripts\python.exe scripts\09_build_first_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --sample-per-subfield 500 `
+  --year-min 2000 `
+  --year-max 2024
 ```
 
 Outputs:
@@ -193,8 +205,12 @@ See [analysis_matrix_and_first_umap.md](analysis_matrix_and_first_umap.md) for d
 
 Compute direct high-dimensional structure metrics from the row-aligned matrix:
 
-```bash
-python scripts/12_compute_subfield_embedding_space_metrics.py --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2010 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 This stage memory-maps `main_embeddings.float16.npy`, reads only each

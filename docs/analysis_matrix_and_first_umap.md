@@ -8,9 +8,10 @@ predictive models.
 
 Run:
 
-```bash
-python scripts/07_validate_embeddings.py
-python scripts/08_prepare_analysis_matrix.py --force
+```powershell
+$env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
+.\.venv\Scripts\python.exe scripts\07_validate_embeddings.py --expected-shards 119
+.\.venv\Scripts\python.exe scripts\08_prepare_analysis_matrix.py --force
 ```
 
 The matrix script reads:
@@ -18,7 +19,13 @@ The matrix script reads:
 ```text
 data/processed/embedding_index.parquet
 data/processed/analysis_subfields.parquet
-embeddings/specter2_v1/shard_*_embeddings.npy
+<embedding-dir>/shard_*_embeddings.npy
+```
+
+When using `2000_2024_400py`, the embedding directory is:
+
+```text
+embeddings/specter2_v1_2000_2024_400py/
 ```
 
 It filters to:
@@ -42,9 +49,9 @@ and writes:
 
 ```text
 data/processed/analysis_embedding_index.parquet
-embeddings/specter2_v1/analysis/main_embeddings.float16.npy
-embeddings/specter2_v1/analysis/main_work_ids.parquet
-embeddings/specter2_v1/analysis/main_matrix_summary.json
+<embedding-dir>/analysis/main_embeddings.float16.npy
+<embedding-dir>/analysis/main_work_ids.parquet
+<embedding-dir>/analysis/main_matrix_summary.json
 ```
 
 The row order is deterministic:
@@ -61,8 +68,14 @@ adds `analysis_row_id`, a zero-based row pointer into
 
 Run:
 
-```bash
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025 --color-by domain --force
+```powershell
+.\.venv\Scripts\python.exe scripts\09_build_first_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --sample-per-subfield 500 `
+  --year-min 2000 `
+  --year-max 2024 `
+  --color-by domain `
+  --force
 ```
 
 The first UMAP is a global visual inspection map. It uses a balanced sample
@@ -89,8 +102,13 @@ The parquet output includes:
 
 Use a smaller sample for quick checks:
 
-```bash
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 100 --year-min 2010 --year-max 2025 --force
+```powershell
+.\.venv\Scripts\python.exe scripts\09_build_first_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --sample-per-subfield 100 `
+  --year-min 2000 `
+  --year-max 2024 `
+  --force
 ```
 
 The PNG can be colored by `domain`, `field`, or `subfield` with `--color-by`.
@@ -100,13 +118,19 @@ Large legends are skipped automatically.
 
 After the main matrix exists, build one separate map per OpenAlex subfield:
 
-```bash
-python scripts/10_build_per_subfield_umap_maps.py --limit-subfields 3 --year-min 2010 --year-max 2025 --max-papers-per-subfield 2000 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\10_build_per_subfield_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --limit-subfields 3 `
+  --year-min 2000 `
+  --year-max 2024 `
+  --max-papers-per-subfield 2000 `
+  --overwrite
 ```
 
-The per-subfield stage defaults to the active analysis period
-`2010 <= publication_year <= 2025`, uses the SPECTER2 matrix directly with no
-PCA, and writes scatter plus density PNGs under:
+The per-subfield stage uses the requested publication-year window, uses the
+SPECTER2 matrix directly with no PCA, and writes scatter plus density PNGs
+under:
 
 ```text
 outputs/maps/per_subfield_umap/
@@ -120,9 +144,17 @@ manifest schema, and runtime notes.
 Subfields remain the main analysis unit. Field and domain maps are optional
 supporting inspection outputs:
 
-```bash
-python scripts/10b_build_per_field_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
-python scripts/10c_build_per_domain_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\10b_build_per_field_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2000 `
+  --year-max 2024 `
+  --overwrite
+.\.venv\Scripts\python.exe scripts\10c_build_per_domain_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2000 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 See [higher_level_umap_maps.md](higher_level_umap_maps.md).
@@ -131,14 +163,23 @@ See [higher_level_umap_maps.md](higher_level_umap_maps.md).
 
 Projected UMAP morphology metrics:
 
-```bash
-python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\11_compute_subfield_morphology_metrics.py `
+  --limit-subfields 3 `
+  --year-min 2000 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 Embedding-space structure metrics:
 
-```bash
-python scripts/12_compute_subfield_embedding_space_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --limit-subfields 3 `
+  --year-min 2010 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 The projected morphology stage reads completed per-subfield coordinate

@@ -8,26 +8,44 @@ communicate context.
 
 Global balanced sample:
 
-```bash
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 500 --year-min 2010 --year-max 2025 --color-by domain --force
+```powershell
+$env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
+.\.venv\Scripts\python.exe scripts\09_build_first_umap_maps.py `
+  --sample-per-subfield 500 `
+  --year-min 2000 `
+  --year-max 2024 `
+  --color-by domain `
+  --force
 ```
 
 Main unit, one map per subfield:
 
-```bash
-python scripts/10_build_per_subfield_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\10_build_per_subfield_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2000 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 Supporting field maps:
 
-```bash
-python scripts/10b_build_per_field_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\10b_build_per_field_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2000 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 Supporting domain maps:
 
-```bash
-python scripts/10c_build_per_domain_umap_maps.py --year-min 2010 --year-max 2025 --overwrite
+```powershell
+.\.venv\Scripts\python.exe scripts\10c_build_per_domain_umap_maps.py `
+  --embedding-dir embeddings/specter2_v1_2000_2024_400py `
+  --year-min 2000 `
+  --year-max 2024 `
+  --overwrite
 ```
 
 ## Inputs
@@ -36,11 +54,12 @@ The field and domain scripts read:
 
 ```text
 data/processed/analysis_embedding_index.parquet
-embeddings/specter2_v1/analysis/main_embeddings.float16.npy
+<embedding-dir>/analysis/main_embeddings.float16.npy
 ```
 
-It memory-maps the embedding matrix with `np.load(..., mmap_mode="r")`, filters
-to the active year window, and fits one separate UMAP per field or domain.
+`--embedding-dir` defaults to `LOCAL_EMBEDDINGS_DIR`. The scripts memory-map
+the embedding matrix with `np.load(..., mmap_mode="r")`, filter to the active
+year window, and fit one separate UMAP per field or domain.
 
 ## Outputs
 

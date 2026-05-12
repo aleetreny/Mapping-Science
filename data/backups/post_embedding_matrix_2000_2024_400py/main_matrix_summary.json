@@ -1,0 +1,15 @@
+{
+  "created_at": "2026-05-12T21:33:52.893097+00:00",
+  "embedding_dir": "embeddings\\specter2_v1_2000_2024_400py",
+  "analysis_index_path": "data\\processed\\analysis_embedding_index.parquet",
+  "matrix_path": "embeddings\\specter2_v1_2000_2024_400py\\analysis\\main_embeddings.float16.npy",
+  "work_ids_path": "embeddings\\specter2_v1_2000_2024_400py\\analysis\\main_work_ids.parquet",
+  "n_rows": 2344927,
+  "embedding_dim": 768,
+  "embedding_dtype": "float16",
+  "n_main_analysis_subfields": 241,
+  "main_analysis_flag": "main_analysis_eligible",
+  "allow_empty_debug": false,
+  "duplicate_work_ids": 0,
+  "duckdb_table": "analysis_embedding_index"
+}

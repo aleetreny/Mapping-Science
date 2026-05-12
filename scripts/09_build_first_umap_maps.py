@@ -137,6 +137,36 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(ROOT)).replace("\\", "/")
+    except ValueError:
+        return str(path)
+
+
+def validate_matrix_alignment(
+    index: pd.DataFrame,
+    matrix: np.ndarray,
+    *,
+    index_path: Path,
+    matrix_path: Path,
+) -> None:
+    row_ids = pd.to_numeric(index["analysis_row_id"], errors="raise")
+    if row_ids.empty:
+        raise ValueError("analysis index is empty")
+    min_row = int(row_ids.min())
+    max_row = int(row_ids.max())
+    if min_row < 0 or max_row >= matrix.shape[0]:
+        raise ValueError(
+            "analysis_embedding_index and embedding matrix appear to belong to "
+            "different embedding versions. "
+            f"index_path={display_path(index_path)}; "
+            f"embeddings_path={display_path(matrix_path)}; "
+            f"analysis_row_id range {min_row}-{max_row}; "
+            f"matrix rows {matrix.shape[0]}. Use a matching --embedding-dir."
+        )
+
+
 def main() -> None:
     args = parse_args()
     validate_year_window(args.year_min, args.year_max)
@@ -162,13 +192,24 @@ def main() -> None:
         )
     if not matrix_path.exists():
         raise FileNotFoundError(
-            "Missing embeddings/specter2_v1/analysis/main_embeddings.float16.npy. "
+            f"Missing embedding matrix: {display_path(matrix_path)}. "
             "Run scripts/08_prepare_analysis_matrix.py first."
         )
 
     analysis_index = load_parquet(analysis_index_path)
     if "publication_year" not in analysis_index.columns:
         raise ValueError("analysis_embedding_index.parquet must contain publication_year")
+    matrix = np.load(matrix_path, mmap_mode="r")
+    try:
+        validate_matrix_alignment(
+            analysis_index,
+            matrix,
+            index_path=analysis_index_path,
+            matrix_path=matrix_path,
+        )
+    finally:
+        del matrix
+
     years = pd.to_numeric(analysis_index["publication_year"], errors="coerce")
     analysis_index = analysis_index.loc[
         years.between(args.year_min, args.year_max, inclusive="both")

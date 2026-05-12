@@ -181,7 +181,14 @@ def test_smooth_hist_density_helper_uses_image_not_hexbin() -> None:
 
 def test_field_and_domain_wrapper_args_set_fixed_level_and_aliases() -> None:
     field_args = parse_category_args(
-        ["--field-id", "F1", "--limit-fields", "2"],
+        [
+            "--field-id",
+            "F1",
+            "--limit-fields",
+            "2",
+            "--embedding-dir",
+            "embeddings/specter2_v1_2000_2024_400py",
+        ],
         fixed_level="field",
     )
     domain_args = parse_category_args(
@@ -192,6 +199,8 @@ def test_field_and_domain_wrapper_args_set_fixed_level_and_aliases() -> None:
     assert field_args.level == "field"
     assert field_args.group_id == "F1"
     assert field_args.limit_groups == 2
+    assert field_args.embedding_dir == "embeddings/specter2_v1_2000_2024_400py"
+    assert field_args.embeddings_path is None
     assert field_args.density_method == "smooth_hist"
     assert domain_args.level == "domain"
     assert domain_args.group_id == "D1"

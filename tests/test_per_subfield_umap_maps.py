@@ -234,8 +234,10 @@ def test_cli_runs_on_tiny_synthetic_embedding_matrix(tmp_path: Path) -> None:
     matrix = rng.normal(size=(len(index), 6)).astype(np.float16)
 
     index_path = tmp_path / "index.parquet"
-    embeddings_path = tmp_path / "embeddings.npy"
+    embedding_dir = tmp_path / "embeddings"
+    embeddings_path = embedding_dir / "analysis" / "main_embeddings.float16.npy"
     output_dir = tmp_path / "per_subfield_umap"
+    embeddings_path.parent.mkdir(parents=True)
     index.to_parquet(index_path, index=False)
     np.save(embeddings_path, matrix)
 
@@ -245,8 +247,8 @@ def test_cli_runs_on_tiny_synthetic_embedding_matrix(tmp_path: Path) -> None:
             str(ROOT / "scripts" / "10_build_per_subfield_umap_maps.py"),
             "--index-path",
             str(index_path),
-            "--embeddings-path",
-            str(embeddings_path),
+            "--embedding-dir",
+            str(embedding_dir),
             "--output-dir",
             str(output_dir),
             "--subfield-id",
@@ -277,3 +279,44 @@ def test_cli_runs_on_tiny_synthetic_embedding_matrix(tmp_path: Path) -> None:
     assert summary["n_completed"] == 1
     assert len(list((output_dir / "coordinates").glob("*.parquet"))) == 1
     assert len(list((output_dir / "figures").glob("*.png"))) == 1
+
+
+def test_cli_fails_clearly_when_index_and_matrix_versions_differ(
+    tmp_path: Path,
+) -> None:
+    index = synthetic_index()
+    index_path = tmp_path / "index.parquet"
+    embedding_dir = tmp_path / "embeddings"
+    embeddings_path = embedding_dir / "analysis" / "main_embeddings.float16.npy"
+    output_dir = tmp_path / "per_subfield_umap"
+    embeddings_path.parent.mkdir(parents=True)
+    index.to_parquet(index_path, index=False)
+    np.save(embeddings_path, np.zeros((1, 6), dtype=np.float16))
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "10_build_per_subfield_umap_maps.py"),
+            "--index-path",
+            str(index_path),
+            "--embedding-dir",
+            str(embedding_dir),
+            "--output-dir",
+            str(output_dir),
+            "--limit-subfields",
+            "1",
+            "--min-papers",
+            "1",
+            "--overwrite",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+
+    output = result.stdout + result.stderr
+    assert result.returncode != 0
+    assert "different embedding versions" in output
+    assert str(index_path) in output
+    assert str(embeddings_path) in output
