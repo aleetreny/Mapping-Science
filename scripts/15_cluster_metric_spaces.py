@@ -19,6 +19,8 @@ from src.metric_clustering import (
     build_metric_space,
     compare_cluster_partitions,
     comparison_summary_markdown,
+    metric_space_umap_coordinates,
+    metric_space_umap_output_frame,
     plot_agreement_heatmap,
     plot_cluster_profile_heatmap,
     plot_dendrogram,
@@ -103,6 +105,7 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 def write_space_outputs(
     *,
     output_dir: Path,
+    output_root: Path,
     space_data,
     result,
     config: ClusteringConfig,
@@ -120,6 +123,12 @@ def write_space_outputs(
     dendrogram_path = output_dir / "dendrogram.png"
     pca_scatter_path = output_dir / "pca_scatter_clusters.png"
     metric_umap_path = output_dir / "metric_space_umap_clusters.png"
+    metric_umap_coordinates_csv = (
+        output_root / f"{space_data.name}_metric_umap_coordinates.csv"
+    )
+    metric_umap_coordinates_parquet = (
+        output_root / f"{space_data.name}_metric_umap_coordinates.parquet"
+    )
     profile_heatmap_path = output_dir / "cluster_profile_heatmap.png"
     summary_md_path = output_dir / "summary.md"
     summary_json_path = output_dir / "summary.json"
@@ -149,13 +158,26 @@ def write_space_outputs(
         cluster_column=result.main_cluster_column,
         title=f"PCA Scores: {space_data.name}",
     )
-    umap_warning = plot_metric_space_umap(
+    metric_umap_coordinates, coordinate_warning = metric_space_umap_coordinates(
+        space_data.feature_matrix,
+        random_state=config.random_state,
+    )
+    metric_umap_frame = metric_space_umap_output_frame(
+        result.assignments,
+        metric_umap_coordinates,
+        cluster_column=result.main_cluster_column,
+    )
+    metric_umap_frame.to_csv(metric_umap_coordinates_csv, index=False)
+    metric_umap_frame.to_parquet(metric_umap_coordinates_parquet, index=False)
+    plot_warning = plot_metric_space_umap(
         space_data.feature_matrix,
         result.assignments,
         metric_umap_path,
         cluster_column=result.main_cluster_column,
         random_state=config.random_state,
+        coordinates=metric_umap_coordinates,
     )
+    umap_warning = coordinate_warning or plot_warning
     if umap_warning:
         space_data.warnings.append(umap_warning)
     plot_cluster_profile_heatmap(
@@ -290,6 +312,7 @@ def main() -> None:
         result = run_metric_space_clustering(space_data, config=config)
         warning = write_space_outputs(
             output_dir=output_root / space,
+            output_root=output_root,
             space_data=space_data,
             result=result,
             config=config,

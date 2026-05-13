@@ -9,6 +9,8 @@ from src.cluster_interpretation import (
     build_metric_profile_long,
     cluster_composition,
     main_cluster_column,
+    metric_umap_coordinate_frame,
+    plot_combined_metric_space_umap,
     readable_representatives,
     require_existing_paths,
     top_metric_differences,
@@ -19,6 +21,7 @@ def synthetic_interpretation_inputs() -> tuple[
     dict[str, pd.DataFrame],
     dict[str, pd.DataFrame],
     dict[str, str],
+    dict[str, pd.DataFrame],
     pd.DataFrame,
     pd.DataFrame,
 ]:
@@ -47,6 +50,23 @@ def synthetic_interpretation_inputs() -> tuple[
         "umap_only": "cluster_ward_k2",
         "combined": "cluster_ward_k2",
     }
+    metric_umap_coordinates = {
+        "embedding_only": metadata.assign(
+            metric_umap_x=[10.0, 11.0, 12.0, 13.0],
+            metric_umap_y=[20.0, 21.0, 22.0, 23.0],
+            cluster_ward_k2=[1, 1, 2, 2],
+        ),
+        "umap_only": metadata.assign(
+            metric_umap_x=[-10.0, -11.0, -12.0, -13.0],
+            metric_umap_y=[-20.0, -21.0, -22.0, -23.0],
+            cluster_ward_k2=[1, 2, 1, 2],
+        ),
+        "combined": metadata.assign(
+            metric_umap_x=[0.1, 0.2, 0.3, 0.4],
+            metric_umap_y=[1.1, 1.2, 1.3, 1.4],
+            cluster_ward_k2=[1, 1, 2, 2],
+        ),
+    }
     umap_metrics = metadata.assign(
         n_points=[400, 380, 390, 410],
         radial_tail_index=[10.0, 9.0, 1.0, 1.5],
@@ -60,7 +80,14 @@ def synthetic_interpretation_inputs() -> tuple[
         embedding_distance_to_centroid_mean=[0.1, 0.2, 0.9, 1.0],
         embedding_pca_first_component_share=[0.8, 0.7, 0.3, 0.2],
     )
-    return assignments_by_space, pca_scores_by_space, cluster_columns, umap_metrics, embedding_metrics
+    return (
+        assignments_by_space,
+        pca_scores_by_space,
+        cluster_columns,
+        metric_umap_coordinates,
+        umap_metrics,
+        embedding_metrics,
+    )
 
 
 def test_main_cluster_column_prefers_summary_column() -> None:
@@ -76,7 +103,14 @@ def test_main_cluster_column_prefers_summary_column() -> None:
 
 
 def test_master_table_joins_clusters_and_coordinates() -> None:
-    assignments, pca_scores, cluster_columns, umap_metrics, embedding_metrics = synthetic_interpretation_inputs()
+    (
+        assignments,
+        pca_scores,
+        cluster_columns,
+        metric_umap_coordinates,
+        umap_metrics,
+        embedding_metrics,
+    ) = synthetic_interpretation_inputs()
 
     master = build_master_table(
         assignments_by_space=assignments,
@@ -84,18 +118,29 @@ def test_master_table_joins_clusters_and_coordinates() -> None:
         cluster_columns_by_space=cluster_columns,
         umap_metrics=umap_metrics,
         embedding_metrics=embedding_metrics,
+        metric_umap_coordinates_by_space=metric_umap_coordinates,
     )
 
     assert len(master) == 4
     assert master.set_index("subfield_id").loc["S2", "cluster_combined"] == 1
     assert master.set_index("subfield_id").loc["S3", "cluster_umap_only"] == 1
     assert master.set_index("subfield_id").loc["S4", "embedding_only_pca2"] == 0.1
+    assert master.set_index("subfield_id").loc["S4", "embedding_umap_y"] == 23.0
+    assert master.set_index("subfield_id").loc["S3", "projected_umap_x"] == -12.0
+    assert master.set_index("subfield_id").loc["S2", "combined_umap_y"] == 1.2
     assert master.set_index("subfield_id").loc["S1", "n_available"] == 450
-    assert {"combined_umap_x", "combined_umap_y"}.issubset(master.columns)
+    assert {
+        "embedding_umap_x",
+        "embedding_umap_y",
+        "projected_umap_x",
+        "projected_umap_y",
+        "combined_umap_x",
+        "combined_umap_y",
+    }.issubset(master.columns)
 
 
 def test_domain_and_field_composition_shares_sum_correctly() -> None:
-    assignments, pca_scores, cluster_columns, umap_metrics, embedding_metrics = synthetic_interpretation_inputs()
+    assignments, pca_scores, cluster_columns, _, umap_metrics, embedding_metrics = synthetic_interpretation_inputs()
     master = build_master_table(
         assignments_by_space=assignments,
         pca_scores_by_space=pca_scores,
@@ -117,7 +162,7 @@ def test_domain_and_field_composition_shares_sum_correctly() -> None:
 
 
 def test_top_high_low_metric_profiles_are_produced() -> None:
-    assignments, pca_scores, cluster_columns, umap_metrics, embedding_metrics = synthetic_interpretation_inputs()
+    assignments, pca_scores, cluster_columns, _, umap_metrics, embedding_metrics = synthetic_interpretation_inputs()
     master = build_master_table(
         assignments_by_space=assignments,
         pca_scores_by_space=pca_scores,
@@ -147,7 +192,7 @@ def test_missing_files_fail_with_clear_message(tmp_path) -> None:
 
 
 def test_representative_table_handles_expected_columns() -> None:
-    assignments, pca_scores, cluster_columns, umap_metrics, embedding_metrics = synthetic_interpretation_inputs()
+    assignments, pca_scores, cluster_columns, _, umap_metrics, embedding_metrics = synthetic_interpretation_inputs()
     master = build_master_table(
         assignments_by_space=assignments,
         pca_scores_by_space=pca_scores,
@@ -170,3 +215,54 @@ def test_representative_table_handles_expected_columns() -> None:
     assert readable["representative_rank"].tolist() == [1, 1]
     assert readable.loc[0, "subfield_display_name"] == "Alpha"
     assert readable.loc[1, "domain_display_name"] == "Domain 2"
+
+
+def test_metric_umap_coordinate_frame_renames_by_space() -> None:
+    coords = pd.DataFrame(
+        {
+            "subfield_id": ["S1"],
+            "metric_umap_x": [1.5],
+            "metric_umap_y": [-2.5],
+        }
+    )
+
+    projected = metric_umap_coordinate_frame(coords, space="umap_only")
+
+    assert projected.columns.tolist() == [
+        "subfield_id",
+        "projected_umap_x",
+        "projected_umap_y",
+    ]
+    assert projected.loc[0, "projected_umap_y"] == -2.5
+
+
+def test_combined_metric_space_umap_plot_writes_file(tmp_path) -> None:
+    (
+        assignments,
+        pca_scores,
+        cluster_columns,
+        metric_umap_coordinates,
+        umap_metrics,
+        embedding_metrics,
+    ) = synthetic_interpretation_inputs()
+    master = build_master_table(
+        assignments_by_space=assignments,
+        pca_scores_by_space=pca_scores,
+        cluster_columns_by_space=cluster_columns,
+        umap_metrics=umap_metrics,
+        embedding_metrics=embedding_metrics,
+        metric_umap_coordinates_by_space=metric_umap_coordinates,
+    )
+    representatives = pd.DataFrame(
+        {
+            "cluster_id": [1, 1, 2, 2],
+            "representative_rank": [1, 2, 1, 2],
+            "subfield_id": ["S1", "S2", "S3", "S4"],
+        }
+    )
+    output_path = tmp_path / "combined_metric_space_umap_clusters.png"
+
+    plot_combined_metric_space_umap(master, representatives, output_path)
+
+    assert output_path.exists()
+    assert output_path.stat().st_size > 0

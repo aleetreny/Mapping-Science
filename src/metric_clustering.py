@@ -760,16 +760,11 @@ def plot_pca_scatter(
     plt.close(fig)
 
 
-def plot_metric_space_umap(
+def metric_space_umap_coordinates(
     features: pd.DataFrame,
-    assignments: pd.DataFrame,
-    output_path: str | Path,
     *,
-    cluster_column: str,
     random_state: int,
-) -> str:
-    output_path = Path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+) -> tuple[np.ndarray, str]:
     try:
         import umap
 
@@ -784,8 +779,66 @@ def plot_metric_space_umap(
         coords = reducer.fit_transform(features.to_numpy())
         warning = ""
     except Exception as exc:
-        coords = np.zeros((len(features), 2), dtype=float)
+        coords = np.full((len(features), 2), np.nan, dtype=float)
         warning = f"metric-space UMAP skipped: {exc}"
+    return coords, warning
+
+
+def metric_space_umap_output_frame(
+    assignments: pd.DataFrame,
+    coordinates: np.ndarray,
+    *,
+    cluster_column: str,
+) -> pd.DataFrame:
+    required = {"subfield_id", "subfield_display_name", cluster_column}
+    missing = required - set(assignments.columns)
+    if missing:
+        raise ValueError(
+            "assignment table missing columns for metric-space UMAP output: "
+            f"{', '.join(sorted(missing))}"
+        )
+    coords = np.asarray(coordinates, dtype=float)
+    if coords.shape != (len(assignments), 2):
+        raise ValueError(
+            "metric-space UMAP coordinates must have shape "
+            f"({len(assignments)}, 2), got {coords.shape}"
+        )
+    frame = assignments[["subfield_id", "subfield_display_name", cluster_column]].copy()
+    frame["metric_umap_x"] = coords[:, 0]
+    frame["metric_umap_y"] = coords[:, 1]
+    frame["cluster_label"] = frame[cluster_column]
+    columns = [
+        "subfield_id",
+        "subfield_display_name",
+        "metric_umap_x",
+        "metric_umap_y",
+        cluster_column,
+        "cluster_label",
+    ]
+    return frame[columns]
+
+
+def plot_metric_space_umap(
+    features: pd.DataFrame,
+    assignments: pd.DataFrame,
+    output_path: str | Path,
+    *,
+    cluster_column: str,
+    random_state: int,
+    coordinates: np.ndarray | None = None,
+) -> str:
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    if coordinates is None:
+        coords, warning = metric_space_umap_coordinates(
+            features,
+            random_state=random_state,
+        )
+    else:
+        coords = np.asarray(coordinates, dtype=float)
+        warning = ""
+        if coords.shape != (len(features), 2) or not np.isfinite(coords).all():
+            warning = "metric-space UMAP coordinates unavailable"
 
     fig, ax = plt.subplots(figsize=(8, 6), dpi=160)
     if warning:

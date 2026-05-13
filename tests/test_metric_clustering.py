@@ -9,6 +9,7 @@ from src.metric_clustering import (
     cluster_representatives,
     compare_cluster_partitions,
     fit_pca_scores,
+    metric_space_umap_output_frame,
     metric_block,
     preprocess_metric_block,
     run_metric_space_clustering,
@@ -176,6 +177,34 @@ def test_cluster_representatives_return_rows_per_cluster() -> None:
 
     assert reps["cluster_id"].tolist() == [1, 2]
     assert reps["rank"].tolist() == [1, 1]
+
+
+def test_metric_space_umap_output_frame_includes_coordinates_and_cluster() -> None:
+    assignments = pd.DataFrame(
+        {
+            "subfield_id": ["S1", "S2"],
+            "subfield_display_name": ["A", "B"],
+            "cluster_ward_k2": [1, 2],
+        }
+    )
+    coords = np.array([[0.1, 0.2], [1.1, 1.2]])
+
+    frame = metric_space_umap_output_frame(
+        assignments,
+        coords,
+        cluster_column="cluster_ward_k2",
+    )
+
+    assert frame.columns.tolist() == [
+        "subfield_id",
+        "subfield_display_name",
+        "metric_umap_x",
+        "metric_umap_y",
+        "cluster_ward_k2",
+        "cluster_label",
+    ]
+    assert frame.loc[1, "metric_umap_y"] == 1.2
+    assert frame.loc[0, "cluster_label"] == 1
 
 
 def test_partition_comparison_computes_ari_nmi_and_contingencies() -> None:

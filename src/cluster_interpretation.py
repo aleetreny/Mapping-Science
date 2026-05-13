@@ -19,9 +19,16 @@ from src.morphology_metrics import (
 
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 
 SUPPORTED_SPACES = ("embedding_only", "umap_only", "combined")
+
+METRIC_UMAP_PREFIX_BY_SPACE = {
+    "embedding_only": "embedding",
+    "umap_only": "projected",
+    "combined": "combined",
+}
 
 METADATA_COLUMNS = [
     "subfield_id",
@@ -212,6 +219,43 @@ def pca_coordinate_frame(pca_scores: pd.DataFrame, *, space: str) -> pd.DataFram
     return result
 
 
+def metric_umap_coordinate_frame(coordinates: pd.DataFrame, *, space: str) -> pd.DataFrame:
+    if space not in METRIC_UMAP_PREFIX_BY_SPACE:
+        raise ValueError(f"unsupported metric-space UMAP coordinate space: {space}")
+    prefix = METRIC_UMAP_PREFIX_BY_SPACE[space]
+    frame = normalize_subfield_id(coordinates)
+    x_candidates = [
+        "metric_umap_x",
+        f"{prefix}_umap_x",
+        f"{space}_umap_x",
+        "umap_x",
+        "x",
+        "UMAP1",
+        "umap_1",
+    ]
+    y_candidates = [
+        "metric_umap_y",
+        f"{prefix}_umap_y",
+        f"{space}_umap_y",
+        "umap_y",
+        "y",
+        "UMAP2",
+        "umap_2",
+    ]
+    x_column = next((column for column in x_candidates if column in frame.columns), None)
+    y_column = next((column for column in y_candidates if column in frame.columns), None)
+    if x_column is None or y_column is None:
+        raise ValueError(
+            f"{space} metric-space UMAP coordinates must include x and y columns"
+        )
+    return frame[["subfield_id", x_column, y_column]].rename(
+        columns={
+            x_column: f"{prefix}_umap_x",
+            y_column: f"{prefix}_umap_y",
+        }
+    )
+
+
 def _selected_columns(frame: pd.DataFrame, columns: list[str]) -> list[str]:
     return [column for column in columns if column in frame.columns]
 
@@ -226,6 +270,7 @@ def build_master_table(
     main_space: str = "combined",
     selected_metric_columns: list[str] | None = None,
     combined_umap_coordinates: pd.DataFrame | None = None,
+    metric_umap_coordinates_by_space: dict[str, pd.DataFrame] | None = None,
 ) -> pd.DataFrame:
     if main_space not in assignments_by_space:
         raise ValueError(f"missing assignments for main space: {main_space}")
@@ -255,22 +300,28 @@ def build_master_table(
             how="left",
         )
 
+    metric_umap_coordinates_by_space = dict(metric_umap_coordinates_by_space or {})
     if combined_umap_coordinates is not None:
-        coords = normalize_subfield_id(combined_umap_coordinates)
-        x_candidates = ["combined_umap_x", "umap_x", "x", "UMAP1", "umap_1"]
-        y_candidates = ["combined_umap_y", "umap_y", "y", "UMAP2", "umap_2"]
-        x_column = next((column for column in x_candidates if column in coords.columns), None)
-        y_column = next((column for column in y_candidates if column in coords.columns), None)
-        if x_column and y_column:
-            coords = coords[["subfield_id", x_column, y_column]].rename(
-                columns={x_column: "combined_umap_x", y_column: "combined_umap_y"}
-            )
-            master = master.merge(coords, on="subfield_id", how="left")
+        metric_umap_coordinates_by_space.setdefault("combined", combined_umap_coordinates)
 
-    if "combined_umap_x" not in master.columns:
-        master["combined_umap_x"] = np.nan
-    if "combined_umap_y" not in master.columns:
-        master["combined_umap_y"] = np.nan
+    for space, coordinates in metric_umap_coordinates_by_space.items():
+        if space not in METRIC_UMAP_PREFIX_BY_SPACE:
+            continue
+        master = master.merge(
+            metric_umap_coordinate_frame(coordinates, space=space).drop_duplicates(
+                "subfield_id"
+            ),
+            on="subfield_id",
+            how="left",
+        )
+
+    for prefix in METRIC_UMAP_PREFIX_BY_SPACE.values():
+        x_column = f"{prefix}_umap_x"
+        y_column = f"{prefix}_umap_y"
+        if x_column not in master.columns:
+            master[x_column] = np.nan
+        if y_column not in master.columns:
+            master[y_column] = np.nan
 
     embedding = normalize_subfield_id(embedding_metrics)
     embedding_join_columns = _selected_columns(
@@ -311,12 +362,16 @@ def build_master_table(
         "cluster_combined",
         "combined_pca1",
         "combined_pca2",
-        "combined_umap_x",
-        "combined_umap_y",
         "embedding_only_pca1",
         "embedding_only_pca2",
+        "embedding_umap_x",
+        "embedding_umap_y",
         "umap_only_pca1",
         "umap_only_pca2",
+        "projected_umap_x",
+        "projected_umap_y",
+        "combined_umap_x",
+        "combined_umap_y",
         "n_available",
         "n_used",
         "n_points",
@@ -615,6 +670,16 @@ def cluster_interpretation_markdown(
         "",
         EXPLORATORY_WORDING,
         "",
+        "## Reading The Figures",
+        "",
+        "The PCA diagnostic is conservative and linear, so it can hide "
+        "nonlinear separation between exploratory morphology profiles. The "
+        "metric-space UMAP figure is used only as an exploratory visualization "
+        "of neighborhood structure in the clustering feature space. Cluster "
+        "interpretation should rely mainly on the standardized metric profiles "
+        "and representative subfields, with the scatter plots treated as visual "
+        "diagnostics.",
+        "",
     ]
     for row in size_summary.itertuples(index=False):
         cluster_id = int(row.cluster_id)
@@ -838,6 +903,211 @@ def _short_label(value: Any, *, max_chars: int = 30) -> str:
     return text[: max_chars - 3] + "..."
 
 
+def _representative_label_frame(
+    plot_frame: pd.DataFrame,
+    representatives: pd.DataFrame,
+    *,
+    labels_per_cluster: int,
+) -> pd.DataFrame:
+    if representatives.empty:
+        return pd.DataFrame(columns=plot_frame.columns)
+    reps = representatives.copy()
+    reps["representative_rank"] = pd.to_numeric(
+        reps["representative_rank"],
+        errors="coerce",
+    )
+    reps = reps.dropna(subset=["representative_rank"])
+    reps = reps.sort_values(["cluster_id", "representative_rank"])
+    reps = reps.groupby("cluster_id", as_index=False).head(labels_per_cluster)
+    return plot_frame.merge(
+        reps[["cluster_id", "subfield_id", "representative_rank"]],
+        left_on=["cluster_combined", "subfield_id"],
+        right_on=["cluster_id", "subfield_id"],
+        how="inner",
+    ).sort_values(["cluster_combined", "representative_rank"])
+
+
+def _spaced_label_rows(
+    label_frame: pd.DataFrame,
+    *,
+    x_column: str,
+    y_column: str,
+    min_distance: float = 0.075,
+) -> list[Any]:
+    if label_frame.empty:
+        return []
+    x_values = pd.to_numeric(label_frame[x_column], errors="coerce")
+    y_values = pd.to_numeric(label_frame[y_column], errors="coerce")
+    x_range = max(float(x_values.max() - x_values.min()), 1e-9)
+    y_range = max(float(y_values.max() - y_values.min()), 1e-9)
+    occupied: list[tuple[float, float]] = []
+    accepted = []
+    accepted_by_cluster: dict[Any, int] = {}
+    for row in label_frame.itertuples(index=False):
+        x = float(getattr(row, x_column))
+        y = float(getattr(row, y_column))
+        point = (
+            (x - float(x_values.min())) / x_range,
+            (y - float(y_values.min())) / y_range,
+        )
+        cluster_id = getattr(row, "cluster_combined")
+        cluster_count = accepted_by_cluster.get(cluster_id, 0)
+        too_close = any(
+            np.hypot(point[0] - used[0], point[1] - used[1]) < min_distance
+            for used in occupied
+        )
+        if too_close and cluster_count > 0:
+            continue
+        accepted.append(row)
+        occupied.append(point)
+        accepted_by_cluster[cluster_id] = cluster_count + 1
+    return accepted
+
+
+def plot_combined_metric_space_umap(
+    master: pd.DataFrame,
+    representatives: pd.DataFrame,
+    output_path: str | Path,
+    *,
+    labels_per_cluster: int = 2,
+) -> None:
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    required = {
+        "combined_umap_x",
+        "combined_umap_y",
+        "cluster_combined",
+        "domain_display_name",
+    }
+    if not required.issubset(master.columns):
+        _plot_empty(output_path, "Combined metric-space UMAP coordinates unavailable")
+        return
+    plot_frame = master.dropna(
+        subset=["combined_umap_x", "combined_umap_y", "cluster_combined"]
+    ).copy()
+    if plot_frame.empty:
+        _plot_empty(output_path, "Combined metric-space UMAP coordinates unavailable")
+        return
+
+    clusters = sorted(plot_frame["cluster_combined"].dropna().unique(), key=_cluster_sort_key)
+    domains = sorted(plot_frame["domain_display_name"].dropna().unique())
+    colors = plt.get_cmap("tab10").colors
+    markers = ["o", "s", "^", "D", "P", "X", "v", "<", ">"]
+    color_by_cluster = {
+        cluster_id: colors[idx % len(colors)]
+        for idx, cluster_id in enumerate(clusters)
+    }
+    marker_by_domain = {
+        domain: markers[idx % len(markers)]
+        for idx, domain in enumerate(domains)
+    }
+
+    fig, ax = plt.subplots(figsize=(10.5, 7.0), dpi=170)
+    for cluster_id in clusters:
+        cluster_group = plot_frame.loc[plot_frame["cluster_combined"] == cluster_id]
+        for domain in domains:
+            group = cluster_group.loc[cluster_group["domain_display_name"] == domain]
+            if group.empty:
+                continue
+            ax.scatter(
+                group["combined_umap_x"],
+                group["combined_umap_y"],
+                s=42,
+                alpha=0.84,
+                color=color_by_cluster[cluster_id],
+                marker=marker_by_domain[domain],
+                edgecolors="white",
+                linewidths=0.45,
+            )
+
+    label_frame = _representative_label_frame(
+        plot_frame,
+        representatives,
+        labels_per_cluster=labels_per_cluster,
+    )
+    offsets = [(8, 6), (8, -10), (-8, 8), (-8, -12), (10, 0)]
+    for idx, row in enumerate(
+        _spaced_label_rows(
+            label_frame,
+            x_column="combined_umap_x",
+            y_column="combined_umap_y",
+        )
+    ):
+        offset = offsets[idx % len(offsets)]
+        ax.annotate(
+            _short_label(row.subfield_display_name, max_chars=34),
+            (row.combined_umap_x, row.combined_umap_y),
+            xytext=offset,
+            textcoords="offset points",
+            fontsize=7.4,
+            ha="left" if offset[0] >= 0 else "right",
+            va="bottom" if offset[1] >= 0 else "top",
+            bbox={
+                "boxstyle": "round,pad=0.18",
+                "facecolor": "white",
+                "edgecolor": "#dddddd",
+                "alpha": 0.86,
+                "linewidth": 0.4,
+            },
+            arrowprops={
+                "arrowstyle": "-",
+                "color": "#888888",
+                "linewidth": 0.45,
+                "shrinkA": 0,
+                "shrinkB": 3,
+            },
+        )
+
+    cluster_handles = [
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor=color_by_cluster[cluster_id],
+            markeredgecolor="white",
+            markersize=7,
+            label=f"C{cluster_id}",
+        )
+        for cluster_id in clusters
+    ]
+    domain_handles = [
+        Line2D(
+            [0],
+            [0],
+            marker=marker_by_domain[domain],
+            color="#555555",
+            linestyle="none",
+            markerfacecolor="none",
+            markersize=7,
+            label=domain,
+        )
+        for domain in domains
+    ]
+    first_legend = ax.legend(
+        handles=cluster_handles,
+        loc="upper left",
+        bbox_to_anchor=(1.01, 1.0),
+        frameon=False,
+        title="Cluster",
+    )
+    ax.add_artist(first_legend)
+    ax.legend(
+        handles=domain_handles,
+        loc="lower left",
+        bbox_to_anchor=(1.01, 0.0),
+        frameon=False,
+        title="Domain",
+    )
+    ax.set_xlabel("Metric-space UMAP 1")
+    ax.set_ylabel("Metric-space UMAP 2")
+    ax.set_title("Combined Metric-Space UMAP of Subfields")
+    ax.grid(color="#eeeeee", linewidth=0.6)
+    fig.tight_layout()
+    fig.savefig(output_path)
+    plt.close(fig)
+
+
 def plot_combined_pca_scatter(
     master: pd.DataFrame,
     representatives: pd.DataFrame,
@@ -886,7 +1156,7 @@ def plot_combined_pca_scatter(
     ax.axvline(0, color="#d0d0d0", linewidth=0.7, zorder=0)
     ax.set_xlabel("Combined PCA 1")
     ax.set_ylabel("Combined PCA 2")
-    ax.set_title("Combined Metric-Space PCA With Representative Labels")
+    ax.set_title("Combined Metric-Space PCA Diagnostic")
     ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False, title="Cluster")
     fig.tight_layout()
     fig.savefig(output_path)

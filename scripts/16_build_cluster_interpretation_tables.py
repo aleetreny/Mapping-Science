@@ -23,6 +23,7 @@ from src.cluster_interpretation import (
     cluster_interpretation_markdown,
     combined_cluster_size_summary,
     main_cluster_column,
+    plot_combined_metric_space_umap,
     plot_combined_pca_scatter,
     plot_contingency_heatmap,
     plot_domain_stacked_bar,
@@ -121,6 +122,18 @@ def load_space_tables(
         cluster_columns_by_space[space] = main_cluster_column(assignments, summary=summary)
 
     return assignments_by_space, pca_scores_by_space, cluster_columns_by_space
+
+
+def load_metric_umap_coordinates(clustering_dir: Path) -> dict[str, pd.DataFrame]:
+    coordinates: dict[str, pd.DataFrame] = {}
+    for space in SUPPORTED_SPACES:
+        csv_path = clustering_dir / f"{space}_metric_umap_coordinates.csv"
+        parquet_path = clustering_dir / f"{space}_metric_umap_coordinates.parquet"
+        if csv_path.exists():
+            coordinates[space] = pd.read_csv(csv_path)
+        elif parquet_path.exists():
+            coordinates[space] = pd.read_parquet(parquet_path)
+    return coordinates
 
 
 def load_optional_representatives(clustering_dir: Path, master: pd.DataFrame) -> pd.DataFrame:
@@ -232,14 +245,23 @@ def write_figures(
     top_differences: pd.DataFrame,
     contingencies: dict[str, pd.DataFrame],
 ) -> list[str]:
-    paths = [
-        output_dir / "combined_cluster_domain_stacked_bar.png",
+    for stale_path in [
         output_dir / "combined_cluster_profile_heatmap_top_metrics.png",
         output_dir / "combined_pca_scatter_labeled.png",
+    ]:
+        if stale_path.exists():
+            stale_path.unlink()
+
+    paths = [
+        output_dir / "combined_cluster_domain_stacked_bar.png",
+        output_dir / "combined_metric_space_umap_clusters.png",
+        output_dir / "combined_cluster_metric_profile_heatmap.png",
+        output_dir / "combined_metric_space_pca_diagnostic.png",
     ]
     plot_domain_stacked_bar(domain_composition, paths[0])
-    plot_profile_heatmap(profile_long, top_differences, paths[1])
-    plot_combined_pca_scatter(master, representatives, paths[2])
+    plot_combined_metric_space_umap(master, representatives, paths[1])
+    plot_profile_heatmap(profile_long, top_differences, paths[2])
+    plot_combined_pca_scatter(master, representatives, paths[3])
 
     optional_specs = [
         (
@@ -279,6 +301,7 @@ def main() -> None:
     assignments_by_space, pca_scores_by_space, cluster_columns_by_space = load_space_tables(
         clustering_dir
     )
+    metric_umap_coordinates_by_space = load_metric_umap_coordinates(clustering_dir)
     umap_metrics = pd.read_parquet(umap_metrics_path)
     embedding_metrics = pd.read_parquet(embedding_metrics_path)
 
@@ -289,6 +312,7 @@ def main() -> None:
         umap_metrics=umap_metrics,
         embedding_metrics=embedding_metrics,
         main_space=args.main_space,
+        metric_umap_coordinates_by_space=metric_umap_coordinates_by_space,
     )
     domain_composition = cluster_composition(master, level="domain")
     field_composition = cluster_composition(master, level="field")
@@ -344,6 +368,14 @@ def main() -> None:
         warnings.append(
             "No metric-space UMAP coordinate table was found; combined_umap_x/y were left empty."
         )
+    missing_coordinate_spaces = [
+        space for space in SUPPORTED_SPACES if space not in metric_umap_coordinates_by_space
+    ]
+    if missing_coordinate_spaces:
+        warnings.append(
+            "Missing metric-space UMAP coordinate tables for: "
+            + ", ".join(missing_coordinate_spaces)
+        )
 
     summary_path = output_dir / "summary.json"
     output_paths = table_outputs + markdown_outputs + figure_outputs + [display_path(summary_path)]
@@ -358,6 +390,7 @@ def main() -> None:
         "n_subfields": int(master["subfield_id"].nunique()),
         "cluster_spaces_used": list(SUPPORTED_SPACES),
         "cluster_columns_by_space": cluster_columns_by_space,
+        "metric_umap_coordinate_spaces": sorted(metric_umap_coordinates_by_space),
         "combined_cluster_sizes": combined_cluster_sizes,
         "dominant_domains_by_cluster": top_domains_by_cluster(domain_composition),
         "top_profile_metrics_by_cluster": top_profile_metrics_by_cluster(top_differences),
