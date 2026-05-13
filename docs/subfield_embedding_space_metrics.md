@@ -43,13 +43,14 @@ $env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
 
 or pass `--embedding-dir embeddings/specter2_v1_2000_2024_400py`.
 
-The default active window is:
+The active `2000_2024_400py` metric window is:
 
 ```text
-2010 <= publication_year <= 2025
+2000 <= publication_year <= 2024
 ```
 
-Year 2026 is excluded because it is incomplete/current.
+The legacy `2010-2025` window is still supported for older artifacts; year
+2026 remains excluded because it is incomplete/current.
 
 ## Outputs
 
@@ -81,6 +82,10 @@ n_available
 n_used
 year_min
 year_max
+early_year_min
+early_year_max
+late_year_min
+late_year_max
 metric_status
 metric_error_message
 metric_warning_message
@@ -157,9 +162,10 @@ embedding_directionality_ratio
 embedding_radial_expansion_slope
 ```
 
-The fixed early window is 2010-2012 and the fixed late window is 2023-2025.
-If a temporal metric cannot be computed because too few papers are available in
-the needed windows, the metric is `NaN` and the row is marked
+The early window is the first five selected years and the late window is the
+last five selected years. For `2000_2024_400py`, that means early 2000-2004 and
+late 2020-2024. If a temporal metric cannot be computed because too few papers
+are available in the needed windows, the metric is `NaN` and the row is marked
 `completed_with_warnings`.
 
 `embedding_radial_expansion_r2` is retained as a diagnostic fit-strength column
@@ -167,9 +173,9 @@ and does not count toward the 25 core metrics.
 
 ## Sampling
 
-Conceptually, the embedding-space metrics use all eligible papers from
-2010-2025. By default, `--max-papers-per-subfield` is unset, so no cap is
-applied.
+Conceptually, the embedding-space metrics use all eligible papers in the
+selected metric year window. For `2000_2024_400py`, that is 2000-2024. By
+default, `--max-papers-per-subfield` is unset, so no cap is applied.
 
 If a cap is provided for runtime reasons, sampling is deterministic for
 `random_state` and `subfield_id`. The output records:
@@ -189,7 +195,7 @@ Smoke test:
 .\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
   --embedding-dir embeddings/specter2_v1_2000_2024_400py `
   --limit-subfields 3 `
-  --year-min 2010 `
+  --year-min 2000 `
   --year-max 2024 `
   --overwrite
 ```
@@ -200,7 +206,7 @@ Single subfield:
 .\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
   --embedding-dir embeddings/specter2_v1_2000_2024_400py `
   --subfield-id 1100 `
-  --year-min 2010 `
+  --year-min 2000 `
   --year-max 2024 `
   --overwrite
 ```
@@ -210,7 +216,7 @@ Full run:
 ```powershell
 .\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
   --embedding-dir embeddings/specter2_v1_2000_2024_400py `
-  --year-min 2010 `
+  --year-min 2000 `
   --year-max 2024 `
   --overwrite
 ```
@@ -220,7 +226,7 @@ Optional deterministic cap:
 ```powershell
 .\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
   --embedding-dir embeddings/specter2_v1_2000_2024_400py `
-  --year-min 2010 `
+  --year-min 2000 `
   --year-max 2024 `
   --max-papers-per-subfield 10000 `
   --overwrite

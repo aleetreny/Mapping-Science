@@ -118,16 +118,18 @@ density_y_max
 - Shape, support and outlier morphology:
   `anisotropy_ratio`, `support_solidity`, `boundary_complexity`,
   `max_normalized_radius`.
-- Temporal morphology across 2010-2025:
+- Temporal morphology across the selected metric year window:
   `centroid_drift_early_late`, `annual_centroid_path_length`,
   `directionality_ratio`, `radial_expansion_slope`,
   `annual_centroid_step_cv`, `radial_expansion_r2`,
   `density_entropy_slope_by_year`.
 
-Temporal metrics use years inside the active analysis period. The fixed early
-window is 2010-2012 and the fixed late window is 2023-2025. If a subfield has
-too few papers in an early, late, or annual window, the affected temporal metric
-is returned as `NaN` and the row is marked `completed_with_warnings`.
+Temporal metrics use years inside the selected metric year window. The early
+window is the first five selected years and the late window is the last five
+selected years. For `2000_2024_400py`, that means early 2000-2004 and late
+2020-2024. If a subfield has too few papers in an early, late, or annual
+window, the affected temporal metric is returned as `NaN` and the row is marked
+`completed_with_warnings`.
 
 `density_entropy_slope_by_year` computes annual density entropy on the
 normalized fixed grid where enough papers are available, then fits a linear
@@ -157,25 +159,25 @@ recorded in the output controls.
 Smoke test:
 
 ```bash
-python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2025 --overwrite
+python scripts/11_compute_subfield_morphology_metrics.py --limit-subfields 3 --year-min 2000 --year-max 2024 --overwrite
 ```
 
 Single subfield:
 
 ```bash
-python scripts/11_compute_subfield_morphology_metrics.py --subfield-id 1100 --year-min 2010 --year-max 2025 --overwrite
+python scripts/11_compute_subfield_morphology_metrics.py --subfield-id 1100 --year-min 2000 --year-max 2024 --overwrite
 ```
 
 Full run:
 
 ```bash
-python scripts/11_compute_subfield_morphology_metrics.py --year-min 2010 --year-max 2025 --overwrite
+python scripts/11_compute_subfield_morphology_metrics.py --year-min 2000 --year-max 2024 --overwrite
 ```
 
 Useful runtime knobs:
 
 ```bash
-python scripts/11_compute_subfield_morphology_metrics.py --grid-size 120 --mst-max-points 2000 --year-min 2010 --year-max 2025 --overwrite
+python scripts/11_compute_subfield_morphology_metrics.py --grid-size 120 --mst-max-points 2000 --year-min 2000 --year-max 2024 --overwrite
 ```
 
 ## Interpretation Caveats

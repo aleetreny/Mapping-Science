@@ -163,6 +163,29 @@ def resolve_coordinate_path(path_value: object) -> Path:
     return resolve_path(str(path_value))
 
 
+def temporal_windows_summary(metrics: pd.DataFrame) -> list[dict[str, int]]:
+    columns = [
+        "year_min",
+        "year_max",
+        "early_year_min",
+        "early_year_max",
+        "late_year_min",
+        "late_year_max",
+    ]
+    if metrics.empty or not set(columns).issubset(metrics.columns):
+        return []
+    windows = (
+        metrics[columns]
+        .dropna()
+        .drop_duplicates()
+        .sort_values(["year_min", "year_max"], kind="mergesort")
+    )
+    return [
+        {column: int(row[column]) for column in columns}
+        for row in windows.to_dict("records")
+    ]
+
+
 def main() -> None:
     args = parse_args()
     if args.grid_size < 10:
@@ -301,6 +324,7 @@ def main() -> None:
             "year_min": args.year_min,
             "year_max": args.year_max,
         },
+        "temporal_windows": temporal_windows_summary(metrics),
         "status_counts": {str(key): int(value) for key, value in status_counts.items()},
         "failed_subfields": failed,
         "warnings": warnings,

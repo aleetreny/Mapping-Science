@@ -13,8 +13,8 @@ targets, regression datasets, classifiers, dashboards, or predictive models.
 ## Current Data Design
 
 - Unit of analysis: OpenAlex subfield
-- Analysis period: 2010-2025
-- Excluded year: 2026, because it is incomplete/current
+- Current versioned analysis period: 2000-2024
+- Legacy supported analysis period: 2010-2025, excluding incomplete/current 2026
 - Text source: title plus abstract
 - Embedding model: SPECTER2
 - OpenAlex classification: `primary_topic.subfield.id`
@@ -146,7 +146,7 @@ $env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
 .\.venv\Scripts\python.exe scripts\10c_build_per_domain_umap_maps.py --year-min 2000 --year-max 2024 --overwrite
 
 .\.venv\Scripts\python.exe scripts\11_compute_subfield_morphology_metrics.py --year-min 2000 --year-max 2024 --overwrite
-.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py --year-min 2010 --year-max 2024 --overwrite
+.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py --year-min 2000 --year-max 2024 --overwrite
 .\.venv\Scripts\python.exe scripts\13_compare_metric_families.py --overwrite
 .\.venv\Scripts\python.exe scripts\14_summarize_metric_distributions.py --overwrite
 .\.venv\Scripts\python.exe scripts\15_cluster_metric_spaces.py --default-k 5 --overwrite
@@ -241,7 +241,7 @@ $env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
 .\.venv\Scripts\python.exe scripts\10b_build_per_field_umap_maps.py --limit-fields 3 --year-min 2000 --year-max 2024 --max-papers-per-group 2000 --overwrite
 .\.venv\Scripts\python.exe scripts\10c_build_per_domain_umap_maps.py --limit-domains 2 --year-min 2000 --year-max 2024 --max-papers-per-group 2000 --overwrite
 .\.venv\Scripts\python.exe scripts\11_compute_subfield_morphology_metrics.py --limit-subfields 3 --year-min 2000 --year-max 2024 --overwrite
-.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py --limit-subfields 3 --year-min 2010 --year-max 2024 --overwrite
+.\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py --limit-subfields 3 --year-min 2000 --year-max 2024 --overwrite
 python scripts/13_compare_metric_families.py --overwrite
 python scripts/14_summarize_metric_distributions.py --overwrite
 python scripts/15_cluster_metric_spaces.py --default-k 5 --overwrite

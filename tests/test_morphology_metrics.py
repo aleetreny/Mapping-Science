@@ -580,7 +580,7 @@ def test_duplicate_display_names_do_not_break_metric_rows() -> None:
 def test_compute_row_rejects_year_window_outside_morphology_period() -> None:
     coords, years = moving_cloud(seed=89)
 
-    with pytest.raises(ValueError, match="2010-2025"):
+    with pytest.raises(ValueError, match="supported artifact window"):
         compute_subfield_metric_row(
             coordinate_frame(coords, years),
             coordinate_path="synthetic.parquet",

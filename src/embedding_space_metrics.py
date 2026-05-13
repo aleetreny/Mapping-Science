@@ -12,13 +12,13 @@ from sklearn.decomposition import PCA
 from sklearn.neighbors import NearestNeighbors
 
 from src.embeddings import normalize_eligibility_flags
+from src.metric_year_windows import (
+    resolve_metric_year_window,
+    validate_metric_year_window,
+)
 from src.subfield_labels import add_subfield_label_columns
 
 
-ACTIVE_YEAR_MIN = 2010
-ACTIVE_YEAR_MAX = 2025
-EARLY_WINDOW = (2010, 2012)
-LATE_WINDOW = (2023, 2025)
 TEMPORAL_MIN_POINTS = 3
 EPS = 1e-12
 
@@ -86,6 +86,10 @@ CONTROL_COLUMNS = [
     "n_used",
     "year_min",
     "year_max",
+    "early_year_min",
+    "early_year_max",
+    "late_year_min",
+    "late_year_max",
     "metric_status",
     "metric_error_message",
     "metric_warning_message",
@@ -104,11 +108,7 @@ OUTPUT_COLUMNS = list(
 
 
 def validate_year_window(year_min: int, year_max: int) -> None:
-    if year_min < ACTIVE_YEAR_MIN or year_max > ACTIVE_YEAR_MAX or year_min > year_max:
-        raise ValueError(
-            "embedding-space metrics must use a year window inside 2010-2025; "
-            f"got {year_min}-{year_max}"
-        )
+    validate_metric_year_window(year_min, year_max)
 
 
 def validate_embedding_index_columns(index: pd.DataFrame) -> None:
@@ -369,9 +369,12 @@ def temporal_embedding_metrics(
 ) -> tuple[dict[str, float], dict[str, int], list[str]]:
     years = np.asarray(years, dtype=int)
     warnings: list[str] = []
+    window = resolve_metric_year_window(year_min, year_max)
     available_years = sorted(int(year) for year in np.unique(years))
-    early_mask = (years >= EARLY_WINDOW[0]) & (years <= EARLY_WINDOW[1])
-    late_mask = (years >= LATE_WINDOW[0]) & (years <= LATE_WINDOW[1])
+    early_mask = (years >= window.early_year_min) & (
+        years <= window.early_year_max
+    )
+    late_mask = (years >= window.late_year_min) & (years <= window.late_year_max)
     n_early = int(np.count_nonzero(early_mask))
     n_late = int(np.count_nonzero(late_mask))
 
@@ -470,6 +473,10 @@ def temporal_embedding_metrics(
         },
         {
             "n_years_available": int(len(available_years)),
+            "early_year_min": int(window.early_year_min),
+            "early_year_max": int(window.early_year_max),
+            "late_year_min": int(window.late_year_min),
+            "late_year_max": int(window.late_year_max),
             "n_early_points": n_early,
             "n_late_points": n_late,
             "n_annual_centroids": int(len(annual_centroids)),
@@ -576,6 +583,10 @@ def compute_subfield_embedding_metric_row(
         "n_used": int(len(subfield_index)),
         "year_min": int(year_min),
         "year_max": int(year_max),
+        "early_year_min": int(controls.get("early_year_min", np.nan)),
+        "early_year_max": int(controls.get("early_year_max", np.nan)),
+        "late_year_min": int(controls.get("late_year_min", np.nan)),
+        "late_year_max": int(controls.get("late_year_max", np.nan)),
         "metric_status": "completed_with_warnings" if warnings else "completed",
         "metric_error_message": "",
         "metric_warning_message": "; ".join(warnings),
@@ -608,6 +619,21 @@ def failed_embedding_metric_row(
     error_message: str,
 ) -> dict[str, Any]:
     getter = subfield_row.get
+    try:
+        window = resolve_metric_year_window(year_min, year_max)
+        temporal_controls: dict[str, Any] = {
+            "early_year_min": int(window.early_year_min),
+            "early_year_max": int(window.early_year_max),
+            "late_year_min": int(window.late_year_min),
+            "late_year_max": int(window.late_year_max),
+        }
+    except ValueError:
+        temporal_controls = {
+            "early_year_min": np.nan,
+            "early_year_max": np.nan,
+            "late_year_min": np.nan,
+            "late_year_max": np.nan,
+        }
     row: dict[str, Any] = {
         "subfield_id": str(getter("subfield_id", "")),
         "subfield_display_name": str(getter("subfield_display_name", "")),
@@ -619,6 +645,7 @@ def failed_embedding_metric_row(
         "n_used": 0,
         "year_min": int(year_min),
         "year_max": int(year_max),
+        **temporal_controls,
         "metric_status": "failed",
         "metric_error_message": str(error_message),
         "metric_warning_message": "",
@@ -756,7 +783,8 @@ def metric_dictionary_frame() -> pd.DataFrame:
         ),
         "embedding_centroid_drift_early_late": (
             "Temporal movement",
-            "Cosine distance between 2010-2012 and 2023-2025 mean embedding centroids.",
+            "Cosine distance between mean embedding centroids for the first and "
+            "last five years of the selected metric window.",
             "Greater net semantic movement.",
         ),
         "embedding_annual_centroid_path_length": (
@@ -802,12 +830,21 @@ def metric_dictionary_frame() -> pd.DataFrame:
             }
         )
 
+    control_definitions = {
+        "early_year_min": "First year in the early temporal period.",
+        "early_year_max": "Last year in the early temporal period.",
+        "late_year_min": "First year in the late temporal period.",
+        "late_year_max": "Last year in the late temporal period.",
+    }
     for name in CONTROL_COLUMNS:
         rows.append(
             {
                 "metric_name": name,
                 "family": "Control",
-                "definition": "Run metadata, subfield metadata, or output status column.",
+                "definition": control_definitions.get(
+                    name,
+                    "Run metadata, subfield metadata, or output status column.",
+                ),
                 "interpretation": "Use for joining, filtering, reproducibility, or diagnostics.",
                 "higher_means": "No direct morphology interpretation.",
                 "computed_on": "Embedding-space metric run",

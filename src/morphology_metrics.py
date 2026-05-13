@@ -15,14 +15,14 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.stats import gaussian_kde
 from sklearn.neighbors import NearestNeighbors
 
+from src.metric_year_windows import (
+    resolve_metric_year_window,
+    validate_metric_year_window,
+)
 from src.subfield_labels import add_subfield_label_columns
 
 
 DEFAULT_DENSITY_EXTENT = (-1.5, 1.5, -1.5, 1.5)
-ACTIVE_YEAR_MIN = 2010
-ACTIVE_YEAR_MAX = 2025
-EARLY_WINDOW = (2010, 2012)
-LATE_WINDOW = (2023, 2025)
 
 REQUIRED_COORDINATE_COLUMNS = {
     "work_id",
@@ -114,6 +114,10 @@ CONTROL_COLUMNS = [
     "mst_points_used",
     "mst_sampling_applied",
     "n_years_available",
+    "early_year_min",
+    "early_year_max",
+    "late_year_min",
+    "late_year_max",
     "n_early_points",
     "n_late_points",
     "n_density_entropy_years",
@@ -163,11 +167,7 @@ def validate_coordinate_frame(frame: pd.DataFrame) -> None:
 
 
 def validate_morphology_year_window(year_min: int, year_max: int) -> None:
-    if year_min < ACTIVE_YEAR_MIN or year_max > ACTIVE_YEAR_MAX or year_min > year_max:
-        raise ValueError(
-            "projected morphology metrics must use a year window inside 2010-2025; "
-            f"got {year_min}-{year_max}"
-        )
+    validate_metric_year_window(year_min, year_max)
 
 
 def validate_density_extent(
@@ -705,9 +705,12 @@ def temporal_metrics(
     years = np.asarray(years, dtype=int)
     warnings: list[str] = []
 
+    window = resolve_metric_year_window(year_min, year_max)
     available_years = sorted(int(year) for year in np.unique(years))
-    early_mask = (years >= EARLY_WINDOW[0]) & (years <= EARLY_WINDOW[1])
-    late_mask = (years >= LATE_WINDOW[0]) & (years <= LATE_WINDOW[1])
+    early_mask = (years >= window.early_year_min) & (
+        years <= window.early_year_max
+    )
+    late_mask = (years >= window.late_year_min) & (years <= window.late_year_max)
     n_early = int(np.count_nonzero(early_mask))
     n_late = int(np.count_nonzero(late_mask))
 
@@ -844,6 +847,10 @@ def temporal_metrics(
         },
         {
             "n_years_available": int(len(available_years)),
+            "early_year_min": int(window.early_year_min),
+            "early_year_max": int(window.early_year_max),
+            "late_year_min": int(window.late_year_min),
+            "late_year_max": int(window.late_year_max),
             "n_early_points": n_early,
             "n_late_points": n_late,
             "n_density_entropy_years": int(len(yearly_entropy)),
@@ -1007,6 +1014,21 @@ def failed_metric_row(
 ) -> dict[str, Any]:
     getter = manifest_row.get
     x_min, x_max, y_min, y_max = DEFAULT_DENSITY_EXTENT
+    try:
+        window = resolve_metric_year_window(year_min, year_max)
+        temporal_controls: dict[str, Any] = {
+            "early_year_min": int(window.early_year_min),
+            "early_year_max": int(window.early_year_max),
+            "late_year_min": int(window.late_year_min),
+            "late_year_max": int(window.late_year_max),
+        }
+    except ValueError:
+        temporal_controls = {
+            "early_year_min": np.nan,
+            "early_year_max": np.nan,
+            "late_year_min": np.nan,
+            "late_year_max": np.nan,
+        }
     row: dict[str, Any] = {
         "subfield_id": str(getter("subfield_id", "")),
         "subfield_display_name": str(getter("subfield_name", "")),
@@ -1027,6 +1049,7 @@ def failed_metric_row(
         "density_x_max": float(x_max),
         "density_y_min": float(y_min),
         "density_y_max": float(y_max),
+        **temporal_controls,
     }
     for column in CONTROL_COLUMNS:
         row.setdefault(column, np.nan)
@@ -1227,7 +1250,8 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
         (
             "centroid_drift_early_late",
             "Temporal morphology",
-            "Distance between median centroids for 2010-2012 and 2023-2025.",
+            "Distance between median centroids for the first and last five "
+            "years of the selected metric window.",
             "Measures net semantic displacement across the active analysis period.",
             "Larger early-to-late displacement.",
         ),
@@ -1249,7 +1273,7 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
             "radial_expansion_slope",
             "Temporal morphology",
             "Least-squares slope of annual median normalized radius on year.",
-            "Measures radial expansion or contraction during 2010-2025.",
+            "Measures radial expansion or contraction during the selected metric window.",
             "Semantic expansion over time.",
         ),
         (
@@ -1270,7 +1294,8 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
             "density_entropy_slope_by_year",
             "Temporal morphology",
             "Least-squares slope of annual density entropy on publication year.",
-            "Measures whether normalized semantic density became more dispersed or concentrated during 2010-2025.",
+            "Measures whether normalized semantic density became more "
+            "dispersed or concentrated during the selected metric window.",
             "Increasing spatial diversification over time.",
         ),
         (
@@ -1432,9 +1457,46 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
             "Only the morphology input window is used.",
         ),
         (
+            "early_year_min",
+            "Quality/control",
+            "First year in the early temporal period.",
+            "Records the early-period window used for centroid_drift_early_late.",
+            "No substantive interpretation.",
+            "Metric year-window resolver",
+            "For 2000-2024 this is 2000; for 2010-2025 this is 2010.",
+        ),
+        (
+            "early_year_max",
+            "Quality/control",
+            "Last year in the early temporal period.",
+            "Records the early-period window used for centroid_drift_early_late.",
+            "No substantive interpretation.",
+            "Metric year-window resolver",
+            "The early period is the first five years of the selected metric window.",
+        ),
+        (
+            "late_year_min",
+            "Quality/control",
+            "First year in the late temporal period.",
+            "Records the late-period window used for centroid_drift_early_late.",
+            "No substantive interpretation.",
+            "Metric year-window resolver",
+            "The late period is the last five years of the selected metric window.",
+        ),
+        (
+            "late_year_max",
+            "Quality/control",
+            "Last year in the late temporal period.",
+            "Records the late-period window used for centroid_drift_early_late.",
+            "No substantive interpretation.",
+            "Metric year-window resolver",
+            "For 2000-2024 this is 2024; for 2010-2025 this is 2025.",
+        ),
+        (
             "n_early_points",
             "Quality/control",
-            "Number of points in 2010-2012.",
+            "Number of points in the first five years of the selected metric "
+            "window.",
             "Early-period temporal sample size.",
             "More early-period papers.",
             "publication_year in coordinate parquet",
@@ -1443,7 +1505,8 @@ def metric_dictionary_rows() -> list[dict[str, str]]:
         (
             "n_late_points",
             "Quality/control",
-            "Number of points in 2023-2025.",
+            "Number of points in the last five years of the selected metric "
+            "window.",
             "Late-period temporal sample size.",
             "More late-period papers.",
             "publication_year in coordinate parquet",

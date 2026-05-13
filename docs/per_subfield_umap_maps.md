@@ -15,14 +15,13 @@ Excluded year: 2026, because it is incomplete/current
 Unit of analysis: OpenAlex subfield
 ```
 
-By default, per-subfield maps use works with:
+For the active `2000_2024_400py` artifacts, per-subfield maps use works with:
 
 ```text
-2010 <= publication_year <= 2025
+2000 <= publication_year <= 2024
 ```
 
-For `2000_2024_400py`, pass `--year-min 2000 --year-max 2024` so the map
-window matches the versioned corpus.
+The legacy/default `2010-2025` window is still supported for older artifacts.
 
 ## Inputs
 
@@ -168,8 +167,8 @@ all UMAP coordinates in memory. For each attempted subfield, it:
 5. Writes the coordinate parquet and PNG immediately.
 
 The default cap is 10,000 papers per subfield and the default minimum is 250
-papers. The cap is a runtime control, not a conceptual exclusion from the active
-2010-2025 period.
+papers. The cap is a runtime control, not a conceptual exclusion from the
+selected year window.
 
 ## Supporting Higher Levels
 

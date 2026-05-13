@@ -27,6 +27,7 @@ from src.embedding_space_metrics import (
     validate_embedding_index_columns,
     validate_year_window,
 )
+from src.metric_year_windows import resolve_metric_year_window
 from src.per_subfield_umap_maps import (
     filter_input_window,
     main_analysis_subfields,
@@ -226,6 +227,7 @@ def maybe_sample_rows(
 def main() -> None:
     args = parse_args()
     validate_year_window(args.year_min, args.year_max)
+    metric_window = resolve_metric_year_window(args.year_min, args.year_max)
     if args.min_papers <= 0:
         raise ValueError("min_papers must be positive")
     if args.k_neighbors < 1:
@@ -370,7 +372,11 @@ def main() -> None:
         "year_window": {
             "year_min": int(args.year_min),
             "year_max": int(args.year_max),
-            "excluded_years": [2026],
+            "early_year_min": int(metric_window.early_year_min),
+            "early_year_max": int(metric_window.early_year_max),
+            "late_year_min": int(metric_window.late_year_min),
+            "late_year_max": int(metric_window.late_year_max),
+            "supported_window": metric_window.supported_window,
         },
         "n_subfields_attempted": int(len(metrics)),
         "n_completed": int(len(metrics) - n_failed),

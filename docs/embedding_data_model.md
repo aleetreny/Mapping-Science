@@ -208,7 +208,7 @@ Compute direct high-dimensional structure metrics from the row-aligned matrix:
 ```powershell
 .\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
   --embedding-dir embeddings/specter2_v1_2000_2024_400py `
-  --year-min 2010 `
+  --year-min 2000 `
   --year-max 2024 `
   --overwrite
 ```

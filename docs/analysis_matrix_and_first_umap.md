@@ -1,8 +1,8 @@
 # Analysis Matrix And First UMAP
 
 This layer prepares the row-aligned SPECTER2 matrix used by the active
-2010-2025 morphology pipeline. This layer itself does not add dashboards or
-predictive models.
+`2000_2024_400py` morphology pipeline. This layer itself does not add
+dashboards or predictive models.
 
 ## Prepare Main-Analysis Matrix
 
@@ -177,7 +177,7 @@ Embedding-space structure metrics:
 .\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py `
   --embedding-dir embeddings/specter2_v1_2000_2024_400py `
   --limit-subfields 3 `
-  --year-min 2010 `
+  --year-min 2000 `
   --year-max 2024 `
   --overwrite
 ```
