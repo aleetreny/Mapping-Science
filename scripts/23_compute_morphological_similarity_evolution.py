@@ -1,0 +1,134 @@
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from src.morphological_similarity_evolution import (
+    build_morphological_similarity_outputs,
+    ensure_morphological_similarity_outputs,
+)
+from src.storage import load_parquet
+from src.temporal_common import display_path, parse_multi_value, resolve_path
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Compute static and temporal morphological similarity between "
+            "disciplines/subfields from embedding metric profiles."
+        )
+    )
+    parser.add_argument(
+        "--static-metrics-path",
+        default=(
+            "outputs/analysis/reduced_interpretable_embedding_core/"
+            "reduced_interpretable_core_metrics.parquet"
+        ),
+    )
+    parser.add_argument(
+        "--temporal-metrics-path",
+        default="data/processed/temporal/subfield_window_embedding_metrics.parquet",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="outputs/analysis/morphological_similarity_evolution",
+    )
+    parser.add_argument(
+        "--metrics",
+        default="reduced_window_structural",
+        help="Reserved for compatibility; temporal analysis uses the reduced window structural metrics.",
+    )
+    parser.add_argument(
+        "--distance",
+        nargs="+",
+        default=["euclidean", "correlation"],
+        help="Distances to compute: euclidean, correlation. Comma-separated values are accepted.",
+    )
+    parser.add_argument(
+        "--scaler",
+        choices=["robust"],
+        default="robust",
+    )
+    parser.add_argument(
+        "--level",
+        nargs="+",
+        default=["subfield", "field", "domain"],
+        help="Levels to compute: subfield, field, domain. Comma-separated values are accepted.",
+    )
+    parser.add_argument("--top-n-pairs", type=int, default=50)
+    parser.add_argument("--year-min", type=int, default=2000)
+    parser.add_argument("--year-max", type=int, default=2024)
+    parser.add_argument("--window-size", type=int, default=5)
+    parser.add_argument("--overwrite", action="store_true")
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    levels = parse_multi_value(args.level)
+    invalid_levels = sorted(set(levels) - {"subfield", "field", "domain"})
+    if invalid_levels:
+        raise ValueError(f"Unsupported levels: {', '.join(invalid_levels)}")
+    distances = parse_multi_value(args.distance)
+    invalid_distances = sorted(set(distances) - {"euclidean", "correlation"})
+    if invalid_distances:
+        raise ValueError(f"Unsupported distances: {', '.join(invalid_distances)}")
+    if args.top_n_pairs <= 0:
+        raise ValueError("top_n_pairs must be positive")
+
+    static_path = resolve_path(args.static_metrics_path, root=ROOT)
+    temporal_path = resolve_path(args.temporal_metrics_path, root=ROOT)
+    output_dir = resolve_path(args.output_dir, root=ROOT)
+    ensure_morphological_similarity_outputs(
+        output_dir,
+        levels=levels,
+        overwrite=args.overwrite,
+        root=ROOT,
+    )
+    if not static_path.exists():
+        raise FileNotFoundError(
+            f"Missing static reduced metrics: {display_path(static_path, root=ROOT)}. "
+            "Run scripts/16b_build_reduced_interpretable_embedding_core.py first."
+        )
+    if not temporal_path.exists():
+        raise FileNotFoundError(
+            f"Missing temporal window metrics: {display_path(temporal_path, root=ROOT)}. "
+            "Run scripts/19_compute_temporal_embedding_metric_evolution.py first."
+        )
+
+    print(f"Loading static metrics: {display_path(static_path, root=ROOT)}")
+    static_metrics = load_parquet(static_path)
+    print(f"Loading temporal metrics: {display_path(temporal_path, root=ROOT)}")
+    temporal_metrics = load_parquet(temporal_path)
+    summary = build_morphological_similarity_outputs(
+        static_metrics,
+        temporal_metrics,
+        levels=levels,
+        distance_metrics=distances,
+        output_dir=output_dir,
+        root=ROOT,
+        top_n_pairs=args.top_n_pairs,
+        input_paths={
+            "static_metrics_path": display_path(static_path, root=ROOT),
+            "temporal_metrics_path": display_path(temporal_path, root=ROOT),
+        },
+        year_min=args.year_min,
+        year_max=args.year_max,
+        window_size=args.window_size,
+    )
+    print(
+        "Done: "
+        f"{summary['n_static_pair_rows']} static pair rows, "
+        f"{summary['n_temporal_pair_rows']} temporal pair rows, "
+        f"{summary['n_temporal_change_rows']} pair changes."
+    )
+    print(f"Wrote {summary['output_paths']['summary_md']}")
+
+
+if __name__ == "__main__":
+    main()
