@@ -11,4 +11,5 @@ umap-learn
 scikit-learn
 scipy
 matplotlib
+phate
 pytest
