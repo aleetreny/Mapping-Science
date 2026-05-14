@@ -8,7 +8,7 @@ import matplotlib
 import numpy as np
 import pandas as pd
 
-from src.embedding_space_metrics import CORE_EMBEDDING_METRIC_COLUMNS, DIAGNOSTIC_COLUMNS
+from src.embedding_space_metrics import CORE_EMBEDDING_METRIC_COLUMNS
 from src.morphology_metrics import CORE_METRIC_COLUMNS_V2, DIAGNOSTIC_METRIC_COLUMNS
 
 matplotlib.use("Agg", force=True)
@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 
 UMAP_METRIC_COLUMNS = CORE_METRIC_COLUMNS_V2 + DIAGNOSTIC_METRIC_COLUMNS
-EMBEDDING_METRIC_COLUMNS = CORE_EMBEDDING_METRIC_COLUMNS + DIAGNOSTIC_COLUMNS
+EMBEDDING_METRIC_COLUMNS = CORE_EMBEDDING_METRIC_COLUMNS
 
 SUMMARY_COLUMNS = [
     "metric_name",

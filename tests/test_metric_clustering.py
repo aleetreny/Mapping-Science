@@ -66,7 +66,7 @@ def config() -> ClusteringConfig:
 
 def test_core_metric_selection_uses_existing_constants() -> None:
     assert len(CORE_METRIC_COLUMNS_V2) == 25
-    assert len(CORE_EMBEDDING_METRIC_COLUMNS) == 25
+    assert len(CORE_EMBEDDING_METRIC_COLUMNS) == 26
     assert "radial_tail_index" in CORE_METRIC_COLUMNS_V2
     assert "embedding_centroid_norm" in CORE_EMBEDDING_METRIC_COLUMNS
 

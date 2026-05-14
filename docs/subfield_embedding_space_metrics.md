@@ -11,8 +11,8 @@ projected UMAP landscape -> visible 2D morphology
 original embedding space -> high-dimensional semantic structure
 ```
 
-The table contains exactly 25 curated core embedding-space metrics plus
-diagnostics and controls. The metric table stage itself does not run
+The table contains 26 curated core embedding-space metrics plus diagnostics and
+controls. The metric table stage itself does not run
 clustering, PCA over the final metric table, regression, classification, or
 visual interpretation.
 
@@ -59,6 +59,25 @@ data/processed/subfield_embedding_space_metrics.parquet
 data/processed/subfield_embedding_space_metrics.csv
 outputs/metrics/subfield_embedding_space_metrics_summary.json
 outputs/metrics/subfield_embedding_space_metrics_dictionary.csv
+outputs/analysis/embedding_space_metric_diagnostics/
+```
+
+The diagnostic folder contains the core metric histogram grid, Spearman and
+Pearson core-metric heatmaps, the corresponding correlation matrices, a ranked
+file of high absolute Spearman pairs, and a distribution diagnostic table that
+labels each candidate column as `core`, `diagnostic`, `control`, or
+`excluded_from_core`.
+
+```text
+outputs/analysis/embedding_space_metric_diagnostics/embedding_metric_histograms_core.png
+outputs/analysis/embedding_space_metric_diagnostics/embedding_metric_spearman_correlation_heatmap.png
+outputs/analysis/embedding_space_metric_diagnostics/embedding_metric_pearson_correlation_heatmap.png
+outputs/analysis/embedding_space_metric_diagnostics/embedding_metric_spearman_correlation_matrix.csv
+outputs/analysis/embedding_space_metric_diagnostics/embedding_metric_pearson_correlation_matrix.csv
+outputs/analysis/embedding_space_metric_diagnostics/embedding_metric_top_abs_spearman_pairs.csv
+outputs/analysis/embedding_space_metric_diagnostics/embedding_metric_distribution_diagnostics.csv
+outputs/analysis/embedding_space_metric_diagnostics/embedding_metric_diagnostics_summary.md
+outputs/analysis/embedding_space_metric_diagnostics/embedding_metric_diagnostics_summary.json
 ```
 
 ## Control Columns
@@ -93,6 +112,12 @@ embedding_matrix_path
 analysis_index_path
 k_neighbors
 effective_k_neighbors
+n_valid_embedding_rows
+n_years_available
+n_early_points
+n_late_points
+n_annual_centroids
+n_pca_components_used
 random_state
 sampling_applied
 max_papers_per_subfield
@@ -101,16 +126,18 @@ max_papers_per_subfield
 Diagnostics include:
 
 ```text
+embedding_graph_connected_component_count
+embedding_graph_largest_component_share
 embedding_radial_expansion_r2
-n_valid_embedding_rows
-n_years_available
-n_early_points
-n_late_points
-n_annual_centroids
-n_pca_components_used
 ```
 
-## The 25 Core Metrics
+`embedding_graph_connected_component_count` and
+`embedding_graph_largest_component_share` are retained as diagnostics because
+they can help check kNN graph construction, but they are not core features. In
+the current embedding-space runs they are close to constant and therefore add
+little substantive discrimination between subfields.
+
+## The 26 Core Metrics
 
 Semantic concentration and dispersion:
 
@@ -131,6 +158,7 @@ embedding_knn_mean_distance
 embedding_knn_median_distance
 embedding_knn_p90_distance
 embedding_knn_distance_cv
+embedding_knn_indegree_gini
 ```
 
 Intrinsic dimensionality:
@@ -142,13 +170,12 @@ embedding_pca_top5_variance_share
 embedding_pca_dim_50
 embedding_pca_dim_80
 embedding_pca_participation_ratio
+embedding_pca_spectral_entropy
 ```
 
 kNN graph structure:
 
 ```text
-embedding_graph_connected_component_count
-embedding_graph_largest_component_share
 embedding_graph_edge_distance_median
 embedding_graph_edge_distance_p90
 ```
@@ -160,6 +187,7 @@ embedding_centroid_drift_early_late
 embedding_annual_centroid_path_length
 embedding_directionality_ratio
 embedding_radial_expansion_slope
+embedding_recent_novelty_score
 ```
 
 The early window is the first five selected years and the late window is the
@@ -169,7 +197,25 @@ are available in the needed windows, the metric is `NaN` and the row is marked
 `completed_with_warnings`.
 
 `embedding_radial_expansion_r2` is retained as a diagnostic fit-strength column
-and does not count toward the 25 core metrics.
+and does not count toward the 26 core metrics.
+
+## New Metric Definitions
+
+`embedding_pca_spectral_entropy` is the normalized Shannon entropy of the
+positive PCA explained-variance spectrum. Low values mean variance is
+concentrated in a few latent directions; high values mean variance is spread
+more evenly across positive-variance directions.
+
+`embedding_knn_indegree_gini` is the Gini coefficient of directed kNN in-degree
+counts. Low values mean papers are selected as local semantic neighbors at more
+similar rates; high values mean a smaller subset of papers acts as stronger
+local semantic hubs.
+
+`embedding_recent_novelty_score` compares late-window papers with the early
+semantic core. It is the median cosine distance from late-window papers to the
+early-window centroid minus the median cosine distance from early-window papers
+to that same early centroid. Positive values indicate that recent papers sit
+farther from the early core than early papers did.
 
 ## Sampling
 
@@ -239,8 +285,8 @@ space. They avoid the distortions of a 2D projection, but they still depend on
 the embedding model and the title-plus-abstract text available in the sampled
 corpus.
 
-The projected and embedding-space families both contain 25 core metrics for a
-balanced, interpretable design. This does not give them equal statistical
+The projected and embedding-space families are related but no longer forced to
+have the same metric count. This does not give either family equal statistical
 weight automatically. Later analysis should standardize features and may use
 block weighting if needed.
 

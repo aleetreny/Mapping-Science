@@ -6,11 +6,14 @@ import pandas as pd
 from src.embedding_space_metrics import (
     CORE_EMBEDDING_METRIC_COLUMNS,
     DIAGNOSTIC_COLUMNS,
+    EXCLUDED_FROM_CORE_COLUMNS,
     OUTPUT_COLUMNS,
     compute_embedding_metrics,
     compute_subfield_embedding_metric_row,
     embedding_metric_row_frame,
+    gini_coefficient,
 )
+from src.embedding_metric_diagnostics import available_core_metric_columns
 from src.per_subfield_umap_maps import sample_subfield_rows
 
 
@@ -79,10 +82,70 @@ def metric_row(
     )
 
 
-def test_core_embedding_metric_columns_are_curated_25() -> None:
-    assert len(CORE_EMBEDDING_METRIC_COLUMNS) == 25
+def test_core_embedding_metric_columns_are_curated_26() -> None:
+    assert len(CORE_EMBEDDING_METRIC_COLUMNS) == 26
+    assert "embedding_knn_indegree_gini" in CORE_EMBEDDING_METRIC_COLUMNS
+    assert "embedding_pca_spectral_entropy" in CORE_EMBEDDING_METRIC_COLUMNS
+    assert "embedding_recent_novelty_score" in CORE_EMBEDDING_METRIC_COLUMNS
     assert "embedding_radial_expansion_r2" not in CORE_EMBEDDING_METRIC_COLUMNS
     assert "embedding_radial_expansion_r2" in DIAGNOSTIC_COLUMNS
+    for column in EXCLUDED_FROM_CORE_COLUMNS:
+        assert column not in CORE_EMBEDDING_METRIC_COLUMNS
+
+
+def test_core_diagnostic_plot_column_selection_excludes_controls() -> None:
+    frame = pd.DataFrame({column: [1.0, 2.0] for column in CORE_EMBEDDING_METRIC_COLUMNS})
+    frame["embedding_graph_connected_component_count"] = [1, 1]
+    frame["embedding_graph_largest_component_share"] = [1.0, 1.0]
+    frame["n_valid_embedding_rows"] = [100, 120]
+
+    selected = available_core_metric_columns(frame)
+
+    assert selected == CORE_EMBEDDING_METRIC_COLUMNS
+    assert "embedding_graph_connected_component_count" not in selected
+    assert "embedding_graph_largest_component_share" not in selected
+    assert "n_valid_embedding_rows" not in selected
+
+
+def test_pca_spectral_entropy_is_finite_unit_interval_for_non_degenerate_matrix() -> None:
+    metrics, _, warnings = compute_embedding_metrics(
+        dispersed_embeddings(n=80, dim=16, seed=101),
+        np.resize(np.arange(2000, 2025), 80),
+        year_min=2000,
+        year_max=2024,
+        k_neighbors=5,
+    )
+
+    entropy = metrics["embedding_pca_spectral_entropy"]
+
+    assert np.isfinite(entropy)
+    assert 0.0 <= entropy <= 1.0
+    assert not any("embedding_pca_spectral_entropy unavailable" in item for item in warnings)
+
+
+def test_gini_coefficient_is_zero_for_uniform_and_higher_for_concentrated() -> None:
+    uniform = gini_coefficient(np.array([3, 3, 3, 3]))
+    concentrated = gini_coefficient(np.array([0, 0, 0, 12]))
+
+    assert uniform == 0.0
+    assert concentrated > uniform
+
+
+def test_recent_novelty_score_positive_when_late_points_shift_from_early_core() -> None:
+    years = np.array([2000, 2001, 2002, 2003, 2004] * 4 + [2020, 2021, 2022, 2023, 2024] * 4)
+    early = np.tile(np.array([1.0, 0.02, 0.0, 0.0], dtype=np.float32), (20, 1))
+    late = np.tile(np.array([0.0, 1.0, 0.02, 0.0], dtype=np.float32), (20, 1))
+    embeddings = np.vstack([early, late])
+
+    metrics, _, _ = compute_embedding_metrics(
+        embeddings,
+        years,
+        year_min=2000,
+        year_max=2024,
+        k_neighbors=5,
+    )
+
+    assert metrics["embedding_recent_novelty_score"] > 0.5
 
 
 def test_compact_subfield_has_lower_centroid_distance_than_dispersed_subfield() -> None:

@@ -46,24 +46,30 @@ CORE_EMBEDDING_METRIC_COLUMNS = [
     "embedding_knn_median_distance",
     "embedding_knn_p90_distance",
     "embedding_knn_distance_cv",
+    "embedding_knn_indegree_gini",
     "embedding_pca_first_component_share",
     "embedding_pca_top3_variance_share",
     "embedding_pca_top5_variance_share",
     "embedding_pca_dim_50",
     "embedding_pca_dim_80",
     "embedding_pca_participation_ratio",
-    "embedding_graph_connected_component_count",
-    "embedding_graph_largest_component_share",
+    "embedding_pca_spectral_entropy",
     "embedding_graph_edge_distance_median",
     "embedding_graph_edge_distance_p90",
     "embedding_centroid_drift_early_late",
     "embedding_annual_centroid_path_length",
     "embedding_directionality_ratio",
     "embedding_radial_expansion_slope",
+    "embedding_recent_novelty_score",
 ]
 
 DIAGNOSTIC_COLUMNS = [
+    "embedding_graph_connected_component_count",
+    "embedding_graph_largest_component_share",
     "embedding_radial_expansion_r2",
+]
+
+QUALITY_CONTROL_COLUMNS = [
     "n_valid_embedding_rows",
     "n_years_available",
     "n_early_points",
@@ -97,6 +103,7 @@ CONTROL_COLUMNS = [
     "analysis_index_path",
     "k_neighbors",
     "effective_k_neighbors",
+    *QUALITY_CONTROL_COLUMNS,
     "random_state",
     "sampling_applied",
     "max_papers_per_subfield",
@@ -104,6 +111,28 @@ CONTROL_COLUMNS = [
 
 OUTPUT_COLUMNS = list(
     dict.fromkeys(CONTROL_COLUMNS + CORE_EMBEDDING_METRIC_COLUMNS + DIAGNOSTIC_COLUMNS)
+)
+
+EXCLUDED_FROM_CORE_COLUMNS = [
+    "embedding_graph_connected_component_count",
+    "embedding_graph_largest_component_share",
+    *QUALITY_CONTROL_COLUMNS,
+]
+
+EMBEDDING_METRIC_ROLE_BY_COLUMN = {
+    **{column: "core" for column in CORE_EMBEDDING_METRIC_COLUMNS},
+    "embedding_graph_connected_component_count": "excluded_from_core",
+    "embedding_graph_largest_component_share": "excluded_from_core",
+    "embedding_radial_expansion_r2": "diagnostic",
+    **{column: "control" for column in QUALITY_CONTROL_COLUMNS},
+}
+
+CANDIDATE_EMBEDDING_METRIC_COLUMNS = list(
+    dict.fromkeys(
+        CORE_EMBEDDING_METRIC_COLUMNS
+        + DIAGNOSTIC_COLUMNS
+        + QUALITY_CONTROL_COLUMNS
+    )
 )
 
 
@@ -148,6 +177,21 @@ def finite_or_nan(value: object) -> float:
     except (TypeError, ValueError):
         return np.nan
     return numeric if np.isfinite(numeric) else np.nan
+
+
+def gini_coefficient(values: np.ndarray) -> float:
+    x = np.asarray(values, dtype=float)
+    x = x[np.isfinite(x)]
+    if x.size == 0:
+        return np.nan
+    if np.allclose(x, 0):
+        return 0.0
+    x = np.sort(x)
+    n = x.size
+    return float(
+        (2.0 * np.sum(np.arange(1, n + 1) * x) / (n * np.sum(x)))
+        - ((n + 1) / n)
+    )
 
 
 def nan_core_metrics() -> dict[str, float]:
@@ -231,25 +275,61 @@ def knn_metrics(
             "embedding_knn_median_distance": np.nan,
             "embedding_knn_p90_distance": np.nan,
             "embedding_knn_distance_cv": np.nan,
+            "embedding_knn_indegree_gini": np.nan,
         }, 0, ["kNN metrics unavailable because fewer than two embeddings are available"]
 
     effective_k = min(int(k_neighbors), len(normalized) - 1)
     model = NearestNeighbors(n_neighbors=effective_k + 1, metric="cosine")
     model.fit(normalized)
-    distances, _ = model.kneighbors(normalized)
-    neighbor_distances = np.clip(distances[:, 1:], 0.0, 2.0).ravel()
+    distances, indices = model.kneighbors(normalized)
+    neighbor_distance_rows: list[np.ndarray] = []
+    neighbor_index_rows: list[np.ndarray] = []
+    warnings: list[str] = []
+    for row_idx in range(len(normalized)):
+        non_self = indices[row_idx] != row_idx
+        row_distances = np.clip(distances[row_idx][non_self], 0.0, 2.0)[:effective_k]
+        row_indices = indices[row_idx][non_self][:effective_k]
+        if len(row_distances) < effective_k:
+            warnings.append(
+                "kNN metrics used fewer than effective_k non-self neighbours for at "
+                f"least one embedding"
+            )
+        neighbor_distance_rows.append(row_distances)
+        neighbor_index_rows.append(row_indices)
+
+    neighbor_distances = (
+        np.concatenate(neighbor_distance_rows)
+        if neighbor_distance_rows
+        else np.array([], dtype=float)
+    )
+    neighbor_indices = (
+        np.concatenate(neighbor_index_rows)
+        if neighbor_index_rows
+        else np.array([], dtype=int)
+    )
+    if len(neighbor_distances) == 0:
+        return {
+            "embedding_knn_mean_distance": np.nan,
+            "embedding_knn_median_distance": np.nan,
+            "embedding_knn_p90_distance": np.nan,
+            "embedding_knn_distance_cv": np.nan,
+            "embedding_knn_indegree_gini": np.nan,
+        }, effective_k, ["kNN metrics unavailable because no non-self neighbours were found"]
+
     mean_distance = float(np.mean(neighbor_distances))
     cv = (
         float(np.std(neighbor_distances) / mean_distance)
         if mean_distance > EPS
         else np.nan
     )
+    indegree = np.bincount(neighbor_indices, minlength=len(normalized))
     return {
         "embedding_knn_mean_distance": mean_distance,
         "embedding_knn_median_distance": float(np.median(neighbor_distances)),
         "embedding_knn_p90_distance": float(np.percentile(neighbor_distances, 90)),
         "embedding_knn_distance_cv": cv,
-    }, effective_k, []
+        "embedding_knn_indegree_gini": gini_coefficient(indegree),
+    }, effective_k, list(dict.fromkeys(warnings))
 
 
 def dimension_for_variance_share(ratios: np.ndarray, threshold: float) -> float:
@@ -262,6 +342,17 @@ def dimension_for_variance_share(ratios: np.ndarray, threshold: float) -> float:
     return float(int(positions[0]) + 1)
 
 
+def pca_spectral_entropy(ratios: np.ndarray) -> float:
+    spectrum = np.asarray(ratios, dtype=float)
+    spectrum = spectrum[np.isfinite(spectrum) & (spectrum > EPS)]
+    total = float(np.sum(spectrum))
+    if len(spectrum) <= 1 or total <= EPS:
+        return np.nan
+    probabilities = spectrum / total
+    entropy = -float(np.sum(probabilities * np.log(probabilities)))
+    return float(entropy / np.log(len(probabilities)))
+
+
 def pca_metrics(normalized: np.ndarray) -> tuple[dict[str, float], int, list[str]]:
     if len(normalized) < 2:
         return {
@@ -271,6 +362,7 @@ def pca_metrics(normalized: np.ndarray) -> tuple[dict[str, float], int, list[str
             "embedding_pca_dim_50": np.nan,
             "embedding_pca_dim_80": np.nan,
             "embedding_pca_participation_ratio": np.nan,
+            "embedding_pca_spectral_entropy": np.nan,
         }, 0, ["PCA metrics unavailable because fewer than two embeddings are available"]
 
     n_components = min(len(normalized) - 1, normalized.shape[1])
@@ -286,6 +378,7 @@ def pca_metrics(normalized: np.ndarray) -> tuple[dict[str, float], int, list[str
             "embedding_pca_dim_50": np.nan,
             "embedding_pca_dim_80": np.nan,
             "embedding_pca_participation_ratio": np.nan,
+            "embedding_pca_spectral_entropy": np.nan,
         }, 0, [f"PCA metrics unavailable: {exc}"]
 
     ratios = ratios[np.isfinite(ratios) & (ratios >= 0)]
@@ -297,9 +390,17 @@ def pca_metrics(normalized: np.ndarray) -> tuple[dict[str, float], int, list[str
             "embedding_pca_dim_50": np.nan,
             "embedding_pca_dim_80": np.nan,
             "embedding_pca_participation_ratio": np.nan,
+            "embedding_pca_spectral_entropy": np.nan,
         }, n_components, ["PCA metrics unavailable because explained variance is zero"]
 
     participation = float(1.0 / np.sum(ratios**2)) if np.sum(ratios**2) > EPS else np.nan
+    spectral_entropy = pca_spectral_entropy(ratios)
+    warnings: list[str] = []
+    if not np.isfinite(spectral_entropy):
+        warnings.append(
+            "embedding_pca_spectral_entropy unavailable because fewer than two "
+            "positive-variance components are available"
+        )
     return {
         "embedding_pca_first_component_share": float(ratios[0]),
         "embedding_pca_top3_variance_share": float(np.sum(ratios[:3])),
@@ -307,7 +408,8 @@ def pca_metrics(normalized: np.ndarray) -> tuple[dict[str, float], int, list[str
         "embedding_pca_dim_50": dimension_for_variance_share(ratios, 0.50),
         "embedding_pca_dim_80": dimension_for_variance_share(ratios, 0.80),
         "embedding_pca_participation_ratio": participation,
-    }, n_components, []
+        "embedding_pca_spectral_entropy": spectral_entropy,
+    }, n_components, warnings
 
 
 def graph_metrics(
@@ -382,10 +484,40 @@ def temporal_embedding_metrics(
         early_centroid = np.mean(normalized[early_mask], axis=0)
         late_centroid = np.mean(normalized[late_mask], axis=0)
         drift = cosine_distance_between_centroids(early_centroid, late_centroid)
+        early_distances_to_early = cosine_distance_to_direction(
+            normalized[early_mask],
+            early_centroid,
+        )
+        late_distances_to_early = cosine_distance_to_direction(
+            normalized[late_mask],
+            early_centroid,
+        )
+        early_distances_to_early = early_distances_to_early[
+            np.isfinite(early_distances_to_early)
+        ]
+        late_distances_to_early = late_distances_to_early[
+            np.isfinite(late_distances_to_early)
+        ]
+        if len(early_distances_to_early) and len(late_distances_to_early):
+            recent_novelty = float(
+                np.median(late_distances_to_early)
+                - np.median(early_distances_to_early)
+            )
+        else:
+            recent_novelty = np.nan
+            warnings.append(
+                "embedding_recent_novelty_score unavailable because cosine distances "
+                "to the early centroid could not be computed"
+            )
     else:
         drift = np.nan
+        recent_novelty = np.nan
         warnings.append(
             "embedding_centroid_drift_early_late unavailable because early or late "
+            f"period has fewer than {TEMPORAL_MIN_POINTS} embeddings"
+        )
+        warnings.append(
+            "embedding_recent_novelty_score unavailable because early or late "
             f"period has fewer than {TEMPORAL_MIN_POINTS} embeddings"
         )
 
@@ -469,6 +601,7 @@ def temporal_embedding_metrics(
             "embedding_annual_centroid_path_length": path,
             "embedding_directionality_ratio": directionality,
             "embedding_radial_expansion_slope": slope,
+            "embedding_recent_novelty_score": recent_novelty,
             "embedding_radial_expansion_r2": radial_r2,
         },
         {
@@ -731,6 +864,11 @@ def metric_dictionary_frame() -> pd.DataFrame:
             "Coefficient of variation of within-subfield kNN cosine distances.",
             "More uneven local density.",
         ),
+        "embedding_knn_indegree_gini": (
+            "Local semantic density and hubness",
+            "Gini coefficient of directed kNN in-degree counts within the subfield.",
+            "More concentrated local semantic hubness.",
+        ),
         "embedding_pca_first_component_share": (
             "Intrinsic dimensionality",
             "Share of variance explained by the first PCA component.",
@@ -760,6 +898,11 @@ def metric_dictionary_frame() -> pd.DataFrame:
             "Intrinsic dimensionality",
             "One divided by the sum of squared PCA explained-variance shares.",
             "More evenly spread variance across dimensions.",
+        ),
+        "embedding_pca_spectral_entropy": (
+            "Intrinsic dimensionality",
+            "Normalized Shannon entropy of the positive PCA explained-variance spectrum.",
+            "More evenly distributed semantic variance across latent directions.",
         ),
         "embedding_graph_connected_component_count": (
             "kNN graph structure",
@@ -802,12 +945,19 @@ def metric_dictionary_frame() -> pd.DataFrame:
             "Linear trend of annual median cosine distance to the full-period centroid.",
             "Semantic expansion away from the period centroid.",
         ),
+        "embedding_recent_novelty_score": (
+            "Temporal novelty",
+            "Median late-period cosine distance to the early-period centroid minus "
+            "median early-period cosine distance to that same centroid.",
+            "Recent papers are farther from the early semantic core.",
+        ),
     }
     for name in CORE_EMBEDDING_METRIC_COLUMNS:
         family, definition, higher = definitions[name]
         rows.append(
             {
                 "metric_name": name,
+                "role": "core",
                 "family": family,
                 "definition": definition,
                 "interpretation": definition,
@@ -818,15 +968,29 @@ def metric_dictionary_frame() -> pd.DataFrame:
         )
 
     for name in DIAGNOSTIC_COLUMNS:
+        family, definition, higher = definitions.get(
+            name,
+            (
+                "Quality/diagnostic",
+                "Diagnostic column for embedding-space metric computation.",
+                "Depends on the diagnostic.",
+            ),
+        )
+        role = EMBEDDING_METRIC_ROLE_BY_COLUMN.get(name, "diagnostic")
+        if name == "embedding_radial_expansion_r2":
+            family = "Temporal diagnostic"
+            definition = "R-squared fit strength for the annual radial expansion trend."
+            higher = "Cleaner linear radial expansion or contraction fit."
         rows.append(
             {
                 "metric_name": name,
-                "family": "Quality/diagnostic",
-                "definition": "Diagnostic column for embedding-space metric computation.",
-                "interpretation": "Use for filtering, interpretation, and quality checks.",
-                "higher_means": "Depends on the diagnostic.",
+                "role": role,
+                "family": family,
+                "definition": definition,
+                "interpretation": "Use for diagnostics and quality checks, not as a core morphology feature.",
+                "higher_means": higher,
                 "computed_on": "Embedding-space metric run",
-                "notes": "Diagnostic only; not one of the 25 core embedding-space metrics.",
+                "notes": "Retained outside the core embedding-space feature set.",
             }
         )
 
@@ -840,6 +1004,7 @@ def metric_dictionary_frame() -> pd.DataFrame:
         rows.append(
             {
                 "metric_name": name,
+                "role": EMBEDDING_METRIC_ROLE_BY_COLUMN.get(name, "control"),
                 "family": "Control",
                 "definition": control_definitions.get(
                     name,
@@ -856,6 +1021,7 @@ def metric_dictionary_frame() -> pd.DataFrame:
         rows,
         columns=[
             "metric_name",
+            "role",
             "family",
             "definition",
             "interpretation",

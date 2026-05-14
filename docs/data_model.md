@@ -354,7 +354,7 @@ data/processed/subfield_embedding_space_metrics.csv
 ```
 
 These contain one row per attempted main-analysis subfield, with control
-columns, 25 core embedding-space metrics, and diagnostic columns. Joins should
+columns, 26 core embedding-space metrics, and diagnostic columns. Joins should
 use `subfield_id`; display names are included for readability but are not
 unique.
 
@@ -362,6 +362,9 @@ Metric diagnostics are written under:
 
 ```text
 outputs/analysis/metric_family_comparison/
+outputs/analysis/embedding_space_metric_diagnostics/
+outputs/analysis/clean_embedding_core_metrics/
+outputs/analysis/reduced_interpretable_embedding_core/
 outputs/analysis/metric_distributions/
 outputs/analysis/metric_clustering/
 ```

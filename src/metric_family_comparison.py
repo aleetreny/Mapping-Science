@@ -25,8 +25,6 @@ ANALOGUE_METRIC_PAIRS = {
     "directionality_ratio": "embedding_directionality_ratio",
     "radial_expansion_slope": "embedding_radial_expansion_slope",
     "mst_gap_index": "embedding_graph_edge_distance_p90",
-    "dense_component_count": "embedding_graph_connected_component_count",
-    "largest_component_mass_share": "embedding_graph_largest_component_share",
     "anisotropy_ratio": "embedding_pca_first_component_share",
 }
 

@@ -27,6 +27,10 @@ from src.embedding_space_metrics import (
     validate_embedding_index_columns,
     validate_year_window,
 )
+from src.embedding_metric_diagnostics import (
+    diagnostic_output_paths,
+    write_embedding_metric_diagnostics,
+)
 from src.metric_year_windows import resolve_metric_year_window
 from src.per_subfield_umap_maps import (
     filter_input_window,
@@ -78,6 +82,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--dictionary-path",
         default="outputs/metrics/subfield_embedding_space_metrics_dictionary.csv",
+    )
+    parser.add_argument(
+        "--diagnostics-output-dir",
+        default="outputs/analysis/embedding_space_metric_diagnostics",
+        help="Folder for embedding metric histograms, correlations, and distribution diagnostics.",
     )
     parser.add_argument("--year-min", type=int, default=2010)
     parser.add_argument("--year-max", type=int, default=2025)
@@ -239,8 +248,16 @@ def main() -> None:
     output_csv = resolve_path(args.output_csv)
     summary_path = resolve_path(args.summary_path)
     dictionary_path = resolve_path(args.dictionary_path)
+    diagnostics_output_dir = resolve_path(args.diagnostics_output_dir)
+    diagnostics_paths = diagnostic_output_paths(diagnostics_output_dir)
     ensure_outputs_do_not_exist(
-        [output_parquet, output_csv, summary_path, dictionary_path],
+        [
+            output_parquet,
+            output_csv,
+            summary_path,
+            dictionary_path,
+            *diagnostics_paths.values(),
+        ],
         args.overwrite,
     )
 
@@ -345,6 +362,10 @@ def main() -> None:
     dictionary = metric_dictionary_frame()
     dictionary_path.parent.mkdir(parents=True, exist_ok=True)
     dictionary.to_csv(dictionary_path, index=False)
+    diagnostics_summary = write_embedding_metric_diagnostics(
+        metrics,
+        diagnostics_output_dir,
+    )
 
     status_counts = metrics["metric_status"].value_counts().to_dict()
     failed = metrics.loc[
@@ -368,6 +389,10 @@ def main() -> None:
             "output_csv": display_path(output_csv),
             "summary_path": display_path(summary_path),
             "dictionary_path": display_path(dictionary_path),
+            "diagnostics_output_dir": display_path(diagnostics_output_dir),
+            "diagnostic_outputs": {
+                key: display_path(path) for key, path in diagnostics_paths.items()
+            },
         },
         "year_window": {
             "year_min": int(args.year_min),
@@ -385,6 +410,7 @@ def main() -> None:
         "n_core_metric_columns": len(CORE_EMBEDDING_METRIC_COLUMNS),
         "diagnostic_columns": DIAGNOSTIC_COLUMNS,
         "control_columns": CONTROL_COLUMNS,
+        "diagnostics_summary": diagnostics_summary,
         "k_neighbors": int(args.k_neighbors),
         "random_state": int(args.random_state),
         "min_papers": int(args.min_papers),
@@ -401,6 +427,7 @@ def main() -> None:
     print(f"Wrote {display_path(output_csv)}")
     print(f"Wrote {display_path(summary_path)}")
     print(f"Wrote {display_path(dictionary_path)}")
+    print(f"Wrote diagnostics in {display_path(diagnostics_output_dir)}")
     print(
         "Done: "
         f"{summary['n_completed']} completed, "

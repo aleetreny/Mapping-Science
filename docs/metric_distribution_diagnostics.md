@@ -27,6 +27,12 @@ outputs/analysis/metric_distributions/embedding_metric_histograms.png
 outputs/analysis/metric_distributions/all_metric_boxplots_zscore.png
 ```
 
+For embedding-space metrics, this cross-family summary now uses only the core
+substantive metric list. The script 12-specific folder
+`outputs/analysis/embedding_space_metric_diagnostics/` contains the broader
+role-labelled embedding diagnostics, including controls and non-core retained
+diagnostic columns.
+
 ## Summary Fields
 
 For each metric, the summary includes:

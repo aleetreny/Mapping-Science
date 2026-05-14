@@ -3,7 +3,7 @@
 This stage builds exploratory subfield typologies from the completed metric
 tables. It clusters subfields in three metric spaces:
 
-- `embedding_only`: the 25 core direct embedding-space metrics.
+- `embedding_only`: the 26 core direct embedding-space metrics.
 - `umap_only`: the 25 core projected UMAP morphology metrics.
 - `combined`: both metric families, using block PCA by default.
 

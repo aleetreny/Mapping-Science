@@ -149,6 +149,8 @@ $env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
 .\.venv\Scripts\python.exe scripts\12_compute_subfield_embedding_space_metrics.py --year-min 2000 --year-max 2024 --overwrite
 .\.venv\Scripts\python.exe scripts\13_compare_metric_families.py --overwrite
 .\.venv\Scripts\python.exe scripts\14_summarize_metric_distributions.py --overwrite
+.\.venv\Scripts\python.exe scripts\16_build_clean_embedding_core_diagnostics.py --overwrite
+.\.venv\Scripts\python.exe scripts\16b_build_reduced_interpretable_embedding_core.py --overwrite
 .\.venv\Scripts\python.exe scripts\15_cluster_metric_spaces.py --default-k 5 --overwrite
 ```
 
@@ -165,10 +167,12 @@ The active analysis produces two complementary metric tables:
 - Embedding-space structure metrics, computed directly from L2-normalized
   SPECTER2 vectors.
 
-The two metric families each expose 25 curated core metrics. This is a balanced
-design choice for interpretation, not a claim of equal statistical weight.
-Later comparative analysis should standardize features and may use block
-weighting if needed.
+The projected UMAP table exposes 25 curated core metrics; the direct
+embedding-space table now exposes 26 curated core metrics after adding
+spectral entropy, kNN hubness, and recent novelty while moving low-information
+graph connectivity checks out of core. This is an interpretation choice, not a
+claim of equal statistical weight. Later comparative analysis should
+standardize features and may use block weighting if needed.
 
 ## Metric Outputs
 
@@ -188,6 +192,7 @@ data/processed/subfield_embedding_space_metrics.parquet
 data/processed/subfield_embedding_space_metrics.csv
 outputs/metrics/subfield_embedding_space_metrics_summary.json
 outputs/metrics/subfield_embedding_space_metrics_dictionary.csv
+outputs/analysis/embedding_space_metric_diagnostics/*
 ```
 
 See [docs/subfield_morphology_metrics.md](docs/subfield_morphology_metrics.md)
@@ -293,6 +298,9 @@ outputs/metrics/subfield_embedding_space_metrics_summary.json
 outputs/metrics/subfield_embedding_space_metrics_dictionary.csv
 outputs/metrics/duplicate_subfield_names_report.csv
 outputs/analysis/metric_family_comparison/*
+outputs/analysis/embedding_space_metric_diagnostics/*
+outputs/analysis/clean_embedding_core_metrics/*
+outputs/analysis/reduced_interpretable_embedding_core/*
 outputs/analysis/metric_distributions/*
 outputs/analysis/metric_clustering/*
 ```
