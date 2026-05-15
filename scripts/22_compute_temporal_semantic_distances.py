@@ -64,7 +64,19 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--distance", choices=["cosine"], default="cosine")
     parser.add_argument("--cluster-heatmaps", action="store_true")
-    parser.add_argument("--top-n-pairs", type=int, default=50)
+    parser.add_argument("--top-n-pairs", type=int, default=10)
+    parser.add_argument("--heatmap-top-n", type=int, default=40)
+    parser.add_argument("--max-label-length", type=int, default=55)
+    parser.add_argument(
+        "--aggregation-mode",
+        choices=["weighted_subfield_centroids", "direct_paper_centroids"],
+        default="weighted_subfield_centroids",
+        help=(
+            "How field/domain centroids are derived. direct_paper_centroids is "
+            "registered as an explicit sensitivity mode but is not computed by "
+            "this script yet."
+        ),
+    )
     parser.add_argument("--year-min", type=int, default=2000)
     parser.add_argument("--year-max", type=int, default=2024)
     parser.add_argument("--window-size", type=int, default=5)
@@ -141,8 +153,18 @@ def main() -> None:
         raise ValueError(f"Unsupported levels: {', '.join(invalid)}")
     if args.top_n_pairs <= 0:
         raise ValueError("top_n_pairs must be positive")
+    if args.heatmap_top_n <= 0:
+        raise ValueError("heatmap_top_n must be positive")
+    if args.max_label_length <= 0:
+        raise ValueError("max_label_length must be positive")
     if args.year_min > args.year_max:
         raise ValueError("year_min must be <= year_max")
+    if args.aggregation_mode == "direct_paper_centroids":
+        print(
+            "Warning: --aggregation-mode direct_paper_centroids is recorded as a "
+            "sensitivity request, but direct paper-level aggregation is not yet "
+            "implemented. Falling back to weighted_subfield_centroids."
+        )
 
     output_dir = resolve_path(args.output_dir, root=ROOT)
     centroids_path = resolve_path(args.centroids_path, root=ROOT)
@@ -159,6 +181,9 @@ def main() -> None:
         output_dir=output_dir,
         root=ROOT,
         top_n_pairs=args.top_n_pairs,
+        heatmap_top_n=args.heatmap_top_n,
+        max_label_length=args.max_label_length,
+        aggregation_mode=args.aggregation_mode,
         input_paths=input_paths,
         year_min=args.year_min,
         year_max=args.year_max,
