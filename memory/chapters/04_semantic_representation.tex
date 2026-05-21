@@ -1,13 +1,88 @@
 % Chapter 4: Semantic Representation
-% Focus: The SPECTER2 embedding architecture, embedding pipeline shards validation, and building the row-aligned analysis matrix.
-% Document Feeds: docs/embedding_pipeline.md, docs/embed_specter2_kaggle.md
-% Outputs: data/processed/analysis_embedding_index.parquet, main_embeddings.float16.npy
-% TODO: Explain row alignment mapping (analysis_row_id to work_id).
-% TODO: Provide mathematical description of how title + abstract text maps to 768-dimensional dense vector space.
 
-\noindent This chapter details the technical and conceptual framework of document semantic representation. It documents the embedding pipeline, shard validation, and the row-aligned document matrix which serves as the quantitative foundation for all downstream morphological analyses.
+\section{From Text Corpus to Semantic Representation}
 
-% TODO: Detail SPECTER2 model selection, fine-tuning task adapters, and output vector space.
-% TODO: Describe shard-by-shard embedding computation and the validation protocol.
-% TODO: Define the mathematical mapping from text input to $\mathbb{R}^{768}$.
-% TODO: Outline the contract between the embedding index and row-aligned matrices.
+Chapter 3 defined the validated title--abstract corpus used in this thesis. The next methodological step is to transform that textual corpus into a quantitative representation in which scientific works can be compared geometrically. This chapter describes that transformation. Its purpose is not to introduce a new theory of meaning, but to define the semantic representation on which all subsequent morphology metrics depend.
+
+Each retained work is represented through the concatenation of its title and abstract. This choice is practical and methodological. Titles provide a compact statement of the central object, method, or contribution of a work, while abstracts summarize the research problem, evidence, and conclusions in a standardized form. Together, they provide enough textual information for document-level representation while remaining consistently available across the balanced corpus. Full texts would contain richer information, but they are not uniformly open, standardized, or available at the scale required here. Bibliographic metadata alone would be too sparse for semantic morphology. The title--abstract representation therefore offers a controlled compromise between semantic content, coverage, and reproducibility.
+
+The synchronized full corpus contains 2,378,036 text-eligible works across 252 OpenAlex subfields, 26 fields, and 4 domains. The active embedding analysis uses 2,344,927 embedded works across 241 analysis subfields. This smaller analysis subset is the population for downstream quantitative metrics because those metrics require valid embeddings, aligned metadata, and sufficient observations per analytical unit.
+
+\input{tables/tab_04_embedding_snapshot}
+
+The resulting representation can be understood as a function that maps each eligible scientific text to a dense vector:
+
+\[
+f_{\theta}(x_i) = \mathbf{z}_i \in \mathbb{R}^{768},
+\]
+
+where \(x_i\) denotes the title--abstract text of work \(i\), \(f_{\theta}\) denotes the trained SPECTER2 representation model, and \(\mathbf{z}_i\) is the corresponding embedding vector. The collection of all retained vectors forms the embedding matrix used in the rest of the thesis.
+
+\section{Scientific Document Embeddings}
+
+Scientific texts are not generic short sentences. They contain disciplinary terminology, conventional abstract structures, references to methods and materials, and domain-specific uses of ordinary words. For this reason, the thesis uses a scientific document embedding model rather than a general-purpose sentence similarity model. The aim is to represent papers as scholarly documents situated in a research literature, not merely as isolated pieces of text.
+
+Earlier scientific language models demonstrated the importance of pretraining on scientific corpora for technical language understanding \parencite{beltagy2019scibert}. SPECTER extended this idea to document-level representation by learning embeddings informed by citation relationships among papers \parencite{cohan2020specter}. This is relevant for the present thesis because scientific proximity is not exhausted by lexical overlap. Two papers may use different terms while participating in the same research area, or they may share vocabulary while addressing different scientific problems. A representation trained for scientific documents is therefore better aligned with the objective of comparing research works in a common semantic space.
+
+The embedding used here is not treated as a transparent measurement of meaning. It is a model-dependent representation learned from text and scientific-document supervision. Distances, neighborhoods, centroids, and densities in the embedding space are meaningful only under the assumptions encoded by the model architecture, training data, and representation objective. The thesis therefore interprets the embedding space as an operational semantic geometry: a reproducible analytical space in which scientific works can be compared, not an objective map of science itself.
+
+\section{SPECTER2 Representation}
+
+The active representation model is SPECTER2, evaluated in the context of SciRepEval, a benchmark designed for scientific document representations across several task formats \parencite{singh2023scirepeval}. SPECTER2 is appropriate for this thesis because the downstream object is the scientific work as a document. The thesis is not measuring word usage, topic prevalence, or sentence-level paraphrase similarity. It is measuring the morphology of sets of papers after they have been embedded in a scientific document space.
+
+For each work, the input text consists of the title and abstract. The model produces a 768-dimensional vector. Conceptually, this vector places the work in a latent scientific space in which nearby vectors tend to correspond to documents that the model represents as semantically or scientifically related. The dimensions themselves are not interpreted individually. Instead, the vector is used as a whole, and the geometry among vectors is the object of later analysis.
+
+This distinction is central. The thesis does not claim that each embedding coordinate corresponds to a named scientific factor, nor that the model reveals the true structure of knowledge. The representation is useful because it gives every retained work a common numerical form, making it possible to compare the internal organization of subfields with the same set of geometric operations.
+
+\section{Embedding Matrix and Row Alignment}
+
+The embedding stage produces a matrix
+
+\[
+\mathbf{Z} =
+\begin{bmatrix}
+\mathbf{z}_1^\top \\
+\mathbf{z}_2^\top \\
+\vdots \\
+\mathbf{z}_n^\top
+\end{bmatrix}
+\in \mathbb{R}^{n \times 768},
+\]
+
+where \(n = 2{,}344{,}927\) for the active analysis subset. Each row corresponds to one embedded work, and each column corresponds to one coordinate of the SPECTER2 representation. The matrix is analytically useful only because it is row-aligned with the metadata used to define subfields, fields, domains, publication years, and work identifiers.
+
+Row alignment is the contract between corpus construction and morphology measurement. If row \(i\) in the embedding matrix contains \(\mathbf{z}_i\), then the corresponding metadata row must refer to the same work. All later groupings by subfield, domain, or time window depend on this invariant. The matrix is therefore not an isolated numerical artifact. It is a structured representation of the corpus in which every vector retains its connection to the bibliographic unit and taxonomic labels established in Chapter 3.
+
+The reduction from the full text corpus to the active analysis subset follows from this requirement. Works that cannot be represented with a valid embedding, cannot be aligned unambiguously with metadata, or belong to analytical units with insufficient usable observations are excluded from metric computation. This exclusion is methodological rather than substantive: it defines the population over which the quantitative morphology is computed.
+
+\section{Original Embedding Space as Analytical Geometry}
+
+All quantitative morphology metrics in this thesis are computed in the original 768-dimensional SPECTER2 embedding space. This choice follows directly from the role of the embedding matrix. The morphology metrics are intended to characterize the distribution of scientific works in the representation space produced by the document model. Distances, neighborhoods, densities, centroids, and dispersion statistics are therefore calculated before any visualization-oriented dimensionality reduction is applied.
+
+The original space is not free from modeling assumptions. It is high-dimensional, learned, and shaped by the training objective of SPECTER2. Nevertheless, it is the space in which the model represents documents. Computing core metrics there avoids introducing an additional transformation whose objective may not preserve the geometric quantities being measured. In this thesis, the phrase ``embedding-space metric'' therefore always refers to a metric computed from the original SPECTER2 vectors unless explicitly stated otherwise.
+
+This decision is especially important for comparative morphology. Subfields are compared through quantities such as relative dispersion, local neighborhood structure, and movement of centroids over time. These quantities must be measured in a common geometry for comparisons to be interpretable. The row-aligned SPECTER2 matrix provides that common geometry.
+
+\section{Role of Dimensionality Reduction}
+
+Dimensionality reduction is useful for visual inspection, communication, and exploratory diagnosis. In later chapters, two-dimensional maps may be used to display broad patterns in the scientific embedding space. However, these maps are not used as quantitative evidence for distances, densities, or neighborhood relationships.
+
+UMAP is a nonlinear method designed to construct low-dimensional representations that preserve selected aspects of local structure under its own modeling assumptions \parencite{mcinnes2018umap}. Such projections can be informative visual summaries, but they do not preserve the full geometry of the original 768-dimensional space. Apparent separation, overlap, or cluster shape in a two-dimensional projection may depend on hyperparameters, sampling, local density, and the projection objective. Similar cautions have been emphasized for nonlinear embeddings and their interpretation as visual evidence \parencite{wattenberg2016tsne,chari2023specious}.
+
+For this reason, UMAP is treated in this thesis as an auxiliary visualization device. It can help communicate large-scale structure and guide qualitative inspection, but it does not define the scientific space in which morphology is measured. The quantitative evidence remains the metric output computed from the original SPECTER2 embedding matrix.
+
+\section{Limitations of Embedding-Based Representation}
+
+The representation strategy has several limitations. First, it depends on the availability and quality of title and abstract text. Works with missing, short, or poor-quality abstracts are outside the semantic population analyzed here. Fields with different abstracting conventions may therefore be represented with unequal fidelity.
+
+Second, the embedding model imposes its own inductive biases. SPECTER2 represents scientific documents according to patterns learned from its training data and evaluation tasks. It may encode disciplinary terminology well in some areas and less well in others. It may also reflect biases in citation practices, publication venues, language, and the historical distribution of scientific corpora. These are not errors that can be eliminated entirely by scale.
+
+Third, the embedding vector is a compressed representation. It cannot retain every aspect of a paper's contribution, evidence, methods, or theoretical commitments. Two works that are close in embedding space are close under the model's representation, not necessarily interchangeable as scientific objects. Conversely, distant works may still be connected through institutional, methodological, or citation relationships not captured by title--abstract semantics.
+
+Fourth, high-dimensional geometry has its own statistical complications. Distances and neighborhoods can be affected by concentration phenomena, anisotropy, and uneven local density. The later morphology metrics are therefore interpreted comparatively and empirically, not as absolute measurements of scientific essence.
+
+\section{Implications for Downstream Morphological Analysis}
+
+Chapter 4 establishes the analytical object used in the rest of the thesis: a row-aligned matrix of SPECTER2 document embeddings linked to validated OpenAlex metadata. This object makes it possible to treat each subfield as a distribution of scientific works in a shared semantic space. The subsequent chapters then measure properties of those distributions, including their spread, local density, internal organization, and temporal movement.
+
+The central implication is that the thesis studies the morphology of model-dependent semantic distributions. The unit of comparison is not a discipline in the abstract, but a set of title--abstract records embedded by SPECTER2 and grouped by the OpenAlex taxonomy. This framing is deliberately modest. It allows the thesis to make reproducible quantitative comparisons while preserving the interpretive caution required by learned semantic representations.
