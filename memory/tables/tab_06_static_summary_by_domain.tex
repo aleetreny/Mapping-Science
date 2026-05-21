@@ -1,0 +1,21 @@
+\begin{table}[H]
+\centering
+\caption{Domain-level static morphology summary}
+\label{tab:static_summary_by_domain}
+\scriptsize
+\begingroup
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth} r r r r r r >{\raggedright\arraybackslash}p{0.27\textwidth}@{}}
+\hline
+\textbf{Domain} & \textbf{Subfields} & \textbf{Disp.} & \textbf{kNN dist.} & \textbf{Hub Gini} & \textbf{PCA D80} & \textbf{Recent nov.} & \textbf{Static reading} \\
+\hline
+Life Sciences & 40 & +0.16 & +0.05 & +0.06 & +0.12 & -0.96 & Moderate dispersion, strong contraction, and near-average local structure. \\
+Social Sciences & 55 & -1.19 & +0.19 & -1.17 & -0.39 & +0.79 & Most compact domain profile and comparatively low local-density unevenness. \\
+Physical Sciences & 86 & +1.52 & +1.28 & -0.44 & +1.51 & +1.19 & Most dispersed and spectrally strongest broad-domain profile. \\
+Health Sciences & 60 & -0.48 & -1.53 & +1.56 & -1.24 & -1.02 & Densest local neighborhoods with strongest hub concentration and low spectral entropy. \\
+\hline
+\end{tabular}
+\endgroup
+\par\vspace{0.15cm}
+\footnotesize\textit{Note.} Metric values are z-scores computed across the four domain profiles for the selected metrics. Dispersion is median centroid distance; recent novelty is the late-minus-early distance score from Chapter~5.
+\end{table}

@@ -5,6 +5,11 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
+\contentsline {figure}{\numberline {6.1}{\ignorespaces Standardized domain-level morphological profiles. Values are z-scores computed across the four domain profiles for each metric; positive values indicate domains above the cross-domain average on that metric. Metrics are grouped by semantic dispersion, local density and hubness, spectral structure, and temporal movement.}}{15}{figure.caption.11}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces Field-level standardized morphological profiles. Rows are fields, ordered by domain and by a compact profile score within domain; the colored strip marks the parent domain. The figure shows that field-level morphology varies substantially inside broad domains, especially for dispersion, local density, hubness, and temporal movement.}}{16}{figure.caption.13}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces Subfield-level metric distributions by domain. Values are z-scores across the 241 eligible subfields for five representative metrics. The distributions show that domain averages hide substantial within-domain heterogeneity, especially for recent novelty, hubness, and spectral structure.}}{17}{figure.caption.14}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces Exploratory PCA map of subfield metric profiles. Points are subfields represented by their eleven standardized morphological metrics, not by paper-level embeddings. The map is used as a visual summary of profile similarity; it is not evidence of discrete discipline categories. Selected labels mark the most atypical profiles.}}{19}{figure.caption.16}%
+\contentsline {figure}{\numberline {6.5}{\ignorespaces Most atypical subfield profiles. Outlyingness is the Euclidean distance from the average standardized profile across the eleven metrics. The ranking identifies subfields whose overall morphology is unusual, without assigning them to groups or treating the ranking as a typology.}}{20}{figure.caption.17}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
