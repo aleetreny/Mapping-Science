@@ -176,6 +176,11 @@ def test_smooth_hist_density_helper_uses_image_not_hexbin() -> None:
     assert artist in ax.images
     assert len(ax.collections) == 0
     assert artist.get_cmap().name == "viridis"
+    density = np.asarray(artist.get_array())
+    positive = density[np.isfinite(density) & (density > 0)]
+    expected_vmax = float(np.nanpercentile(positive, 99.0))
+    assert float(np.nanmax(density)) > 1.0
+    assert artist.get_clim() == pytest.approx((0.0, expected_vmax))
     plt.close(fig)
 
 
@@ -202,6 +207,9 @@ def test_field_and_domain_wrapper_args_set_fixed_level_and_aliases() -> None:
     assert field_args.embedding_dir == "embeddings/specter2_v1_2000_2024_400py"
     assert field_args.embeddings_path is None
     assert field_args.density_method == "smooth_hist"
+    assert field_args.density_grid_size == 150
+    assert field_args.density_sigma == 3.0
+    assert field_args.density_vmax_percentile == 99.0
     assert domain_args.level == "domain"
     assert domain_args.group_id == "D1"
     assert domain_args.limit_groups == 1

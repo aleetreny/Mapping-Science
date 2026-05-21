@@ -26,7 +26,14 @@ from src.per_category_umap_maps import (
     select_attempted_groups,
     validate_category_index_columns,
 )
-from src.per_subfield_umap_maps import VALID_DENSITY_METHODS, validate_year_window
+from src.per_subfield_umap_maps import (
+    DEFAULT_DENSITY_GRID_SIZE,
+    DEFAULT_DENSITY_METHOD,
+    DEFAULT_DENSITY_SIGMA,
+    DEFAULT_DENSITY_VMAX_PERCENTILE,
+    VALID_DENSITY_METHODS,
+    validate_year_window,
+)
 from src.storage import load_parquet, save_parquet
 
 
@@ -69,11 +76,20 @@ def add_common_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--density-method",
         choices=sorted(VALID_DENSITY_METHODS),
-        default="smooth_hist",
+        default=DEFAULT_DENSITY_METHOD,
         help="Density renderer for panel B. smooth_hist avoids hexbin artifacts on large groups.",
     )
-    parser.add_argument("--density-grid-size", type=int, default=180)
-    parser.add_argument("--density-sigma", type=float, default=1.5)
+    parser.add_argument("--density-grid-size", type=int, default=DEFAULT_DENSITY_GRID_SIZE)
+    parser.add_argument("--density-sigma", type=float, default=DEFAULT_DENSITY_SIGMA)
+    parser.add_argument(
+        "--density-vmax-percentile",
+        type=float,
+        default=DEFAULT_DENSITY_VMAX_PERCENTILE,
+        help=(
+            "Positive-density percentile used as panel B color maximum. "
+            "This reduces domination by tiny max-density hotspots."
+        ),
+    )
     parser.add_argument("--overwrite", action="store_true")
 
 
@@ -228,6 +244,8 @@ def validate_category_args(args: argparse.Namespace) -> None:
         raise ValueError("density_grid_size must be at least 10")
     if args.density_sigma <= 0:
         raise ValueError("density_sigma must be positive")
+    if not 0 < args.density_vmax_percentile <= 100:
+        raise ValueError("density_vmax_percentile must be in (0, 100]")
 
 
 def run_category_umap_maps(args: argparse.Namespace, *, root: Path = ROOT) -> None:
@@ -367,6 +385,7 @@ def run_category_umap_maps(args: argparse.Namespace, *, root: Path = ROOT) -> No
                 density_method=args.density_method,
                 density_grid_size=args.density_grid_size,
                 density_sigma=args.density_sigma,
+                density_vmax_percentile=args.density_vmax_percentile,
             )
             print(
                 f"{progress_prefix}: completed "
@@ -472,6 +491,7 @@ def run_category_umap_maps(args: argparse.Namespace, *, root: Path = ROOT) -> No
             "method": args.density_method,
             "grid_size": args.density_grid_size,
             "sigma": args.density_sigma,
+            "vmax_percentile": args.density_vmax_percentile,
         },
     }
     write_json(summary_path, summary)

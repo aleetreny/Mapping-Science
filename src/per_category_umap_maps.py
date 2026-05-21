@@ -10,6 +10,10 @@ import pandas as pd
 
 from src.embeddings import MAIN_ANALYSIS_FLAG, normalize_eligibility_flags
 from src.per_subfield_umap_maps import (
+    DEFAULT_DENSITY_GRID_SIZE,
+    DEFAULT_DENSITY_METHOD,
+    DEFAULT_DENSITY_SIGMA,
+    DEFAULT_DENSITY_VMAX_PERCENTILE,
     coordinate_limits,
     plot_density_panel,
     safe_filename_part,
@@ -372,9 +376,10 @@ def plot_category_panels(
     output_path: str | Path,
     dpi: int,
     max_legend_categories: int = 25,
-    density_method: str = "smooth_hist",
-    density_grid_size: int = 180,
-    density_sigma: float = 1.5,
+    density_method: str = DEFAULT_DENSITY_METHOD,
+    density_grid_size: int = DEFAULT_DENSITY_GRID_SIZE,
+    density_sigma: float = DEFAULT_DENSITY_SIGMA,
+    density_vmax_percentile: float = DEFAULT_DENSITY_VMAX_PERCENTILE,
 ) -> dict[str, Any]:
     coordinates = np.asarray(coordinates, dtype=float)
     xlim, ylim = coordinate_limits(coordinates)
@@ -440,6 +445,7 @@ def plot_category_panels(
             density_method=density_method,
             density_grid_size=density_grid_size,
             density_sigma=density_sigma,
+            density_vmax_percentile=density_vmax_percentile,
         )
         axes[1].set_title("B. Density", fontsize=10)
         fig.colorbar(density_artist, ax=axes[1], fraction=0.046, pad=0.04)

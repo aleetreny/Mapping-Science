@@ -54,6 +54,10 @@ MANIFEST_COLUMNS = [
 ]
 
 VALID_DENSITY_METHODS = {"auto", "kde", "smooth_hist"}
+DEFAULT_DENSITY_METHOD = "smooth_hist"
+DEFAULT_DENSITY_GRID_SIZE = 150
+DEFAULT_DENSITY_SIGMA = 3.0
+DEFAULT_DENSITY_VMAX_PERCENTILE = 99.0
 
 VALID_STATUSES = {"completed", "skipped", "failed"}
 
@@ -347,13 +351,16 @@ def plot_continuous_density_panel(
     *,
     xlim: tuple[float, float],
     ylim: tuple[float, float],
-    grid_size: int = 180,
-    sigma: float = 1.5,
+    grid_size: int = DEFAULT_DENSITY_GRID_SIZE,
+    sigma: float = DEFAULT_DENSITY_SIGMA,
+    density_vmax_percentile: float = DEFAULT_DENSITY_VMAX_PERCENTILE,
 ) -> Any:
     if grid_size < 10:
         raise ValueError("density grid_size must be at least 10")
     if sigma <= 0:
         raise ValueError("density sigma must be positive")
+    if not 0 < density_vmax_percentile <= 100:
+        raise ValueError("density_vmax_percentile must be in (0, 100]")
 
     coordinates = np.asarray(coordinates, dtype=float)
     finite = np.isfinite(coordinates).all(axis=1)
@@ -370,11 +377,13 @@ def plot_continuous_density_panel(
 
     from scipy.ndimage import gaussian_filter
 
+    # Density panels are for visual interpretation only.
+    # We use moderate Gaussian smoothing and percentile clipping so that density maps
+    # show broad semantic mass rather than isolated maximum-density pixels.
     density = gaussian_filter(hist.T, sigma=sigma)
     density = np.nan_to_num(density, nan=0.0, posinf=0.0, neginf=0.0)
-    max_density = float(density.max()) if density.size else 0.0
-    if max_density > 0:
-        density = density / max_density
+    density = np.clip(density, 0.0, None)
+    vmax = density_plot_vmax(density, density_vmax_percentile)
 
     artist = ax.imshow(
         density,
@@ -382,8 +391,26 @@ def plot_continuous_density_panel(
         extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
         aspect="auto",
         cmap="viridis",
+        vmin=0,
+        vmax=vmax,
     )
     return artist
+
+
+def density_plot_vmax(density: np.ndarray, percentile: float) -> float:
+    if not 0 < percentile <= 100:
+        raise ValueError("density_vmax_percentile must be in (0, 100]")
+
+    positive = density[np.isfinite(density) & (density > 0)]
+    if len(positive) == 0:
+        return 1.0
+
+    vmax = float(np.nanpercentile(positive, percentile))
+    if np.isfinite(vmax) and vmax > 0:
+        return vmax
+
+    fallback = float(np.nanmax(positive))
+    return fallback if np.isfinite(fallback) and fallback > 0 else 1.0
 
 
 def plot_density_panel(
@@ -392,16 +419,19 @@ def plot_density_panel(
     *,
     xlim: tuple[float, float],
     ylim: tuple[float, float],
-    density_method: str = "auto",
+    density_method: str = DEFAULT_DENSITY_METHOD,
     kde_max_points: int = 5000,
-    density_grid_size: int = 180,
-    density_sigma: float = 1.5,
+    density_grid_size: int = DEFAULT_DENSITY_GRID_SIZE,
+    density_sigma: float = DEFAULT_DENSITY_SIGMA,
+    density_vmax_percentile: float = DEFAULT_DENSITY_VMAX_PERCENTILE,
 ) -> tuple[Any, str]:
     if density_method not in VALID_DENSITY_METHODS:
         raise ValueError(
             "density_method must be one of "
             f"{', '.join(sorted(VALID_DENSITY_METHODS))}: {density_method}"
         )
+    if not 0 < density_vmax_percentile <= 100:
+        raise ValueError("density_vmax_percentile must be in (0, 100]")
     coordinates = np.asarray(coordinates, dtype=float)
     finite = np.isfinite(coordinates).all(axis=1)
     coordinates = coordinates[finite]
@@ -425,12 +455,17 @@ def plot_density_panel(
             ys = np.linspace(ylim[0], ylim[1], 140)
             xx, yy = np.meshgrid(xs, ys)
             density = kde(np.vstack([xx.ravel(), yy.ravel()])).reshape(xx.shape)
+            density = np.nan_to_num(density, nan=0.0, posinf=0.0, neginf=0.0)
+            density = np.clip(density, 0.0, None)
+            vmax = density_plot_vmax(density, density_vmax_percentile)
             artist = ax.imshow(
                 density,
                 origin="lower",
                 extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
                 aspect="auto",
                 cmap="viridis",
+                vmin=0,
+                vmax=vmax,
             )
             return artist, "kde"
         except Exception:
@@ -443,6 +478,7 @@ def plot_density_panel(
         ylim=ylim,
         grid_size=density_grid_size,
         sigma=density_sigma,
+        density_vmax_percentile=density_vmax_percentile,
     )
     return artist, "smooth_hist"
 
@@ -456,9 +492,10 @@ def plot_subfield_panels(
     year_max: int,
     output_path: str | Path,
     dpi: int,
-    density_method: str = "auto",
-    density_grid_size: int = 180,
-    density_sigma: float = 1.5,
+    density_method: str = DEFAULT_DENSITY_METHOD,
+    density_grid_size: int = DEFAULT_DENSITY_GRID_SIZE,
+    density_sigma: float = DEFAULT_DENSITY_SIGMA,
+    density_vmax_percentile: float = DEFAULT_DENSITY_VMAX_PERCENTILE,
 ) -> str:
     coordinates = np.asarray(coordinates, dtype=float)
     xlim, ylim = coordinate_limits(coordinates)
@@ -495,6 +532,7 @@ def plot_subfield_panels(
             density_method=density_method,
             density_grid_size=density_grid_size,
             density_sigma=density_sigma,
+            density_vmax_percentile=density_vmax_percentile,
         )
         axes[1].set_title("B. Density", fontsize=10)
         fig.colorbar(density_artist, ax=axes[1], fraction=0.046, pad=0.04)

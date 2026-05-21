@@ -223,7 +223,7 @@ def test_density_plot_helper_writes_png(tmp_path: Path) -> None:
     )
     plt.close("all")
 
-    assert method in {"kde", "smooth_hist"}
+    assert method == "smooth_hist"
     assert output_path.exists()
     assert output_path.stat().st_size > 0
 
@@ -263,6 +263,14 @@ def test_cli_runs_on_tiny_synthetic_embedding_matrix(tmp_path: Path) -> None:
             "3",
             "--dpi",
             "80",
+            "--density-method",
+            "smooth_hist",
+            "--density-grid-size",
+            "150",
+            "--density-sigma",
+            "3.0",
+            "--density-vmax-percentile",
+            "99",
             "--overwrite",
         ],
         cwd=ROOT,
@@ -277,6 +285,12 @@ def test_cli_runs_on_tiny_synthetic_embedding_matrix(tmp_path: Path) -> None:
 
     assert manifest["status"].tolist() == ["completed"]
     assert summary["n_completed"] == 1
+    assert summary["density"] == {
+        "method": "smooth_hist",
+        "grid_size": 150,
+        "sigma": 3.0,
+        "vmax_percentile": 99.0,
+    }
     assert len(list((output_dir / "coordinates").glob("*.parquet"))) == 1
     assert len(list((output_dir / "figures").glob("*.png"))) == 1
 

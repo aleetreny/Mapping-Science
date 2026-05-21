@@ -17,6 +17,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.per_subfield_umap_maps import (
+    DEFAULT_DENSITY_GRID_SIZE,
+    DEFAULT_DENSITY_METHOD,
+    DEFAULT_DENSITY_SIGMA,
+    DEFAULT_DENSITY_VMAX_PERCENTILE,
+    VALID_DENSITY_METHODS,
     build_coordinate_frame,
     build_manifest_row,
     filter_input_window,
@@ -73,6 +78,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--min-dist", type=float, default=0.05)
     parser.add_argument("--metric", default="cosine")
     parser.add_argument("--dpi", type=int, default=180)
+    parser.add_argument(
+        "--density-method",
+        choices=sorted(VALID_DENSITY_METHODS),
+        default=DEFAULT_DENSITY_METHOD,
+        help="Density renderer for panel B. smooth_hist is the stable default for map figures.",
+    )
+    parser.add_argument("--density-grid-size", type=int, default=DEFAULT_DENSITY_GRID_SIZE)
+    parser.add_argument("--density-sigma", type=float, default=DEFAULT_DENSITY_SIGMA)
+    parser.add_argument(
+        "--density-vmax-percentile",
+        type=float,
+        default=DEFAULT_DENSITY_VMAX_PERCENTILE,
+        help=(
+            "Positive-density percentile used as panel B color maximum. "
+            "This reduces domination by tiny max-density hotspots."
+        ),
+    )
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
 
@@ -202,6 +224,12 @@ def main() -> None:
         raise ValueError("max_papers_per_subfield must be positive")
     if args.n_neighbors < 2:
         raise ValueError("n_neighbors must be at least 2")
+    if args.density_grid_size < 10:
+        raise ValueError("density_grid_size must be at least 10")
+    if args.density_sigma <= 0:
+        raise ValueError("density_sigma must be positive")
+    if not 0 < args.density_vmax_percentile <= 100:
+        raise ValueError("density_vmax_percentile must be in (0, 100]")
 
     index_path = resolve_path(args.index_path)
     embeddings_path = resolve_embeddings_path(args)
@@ -344,6 +372,10 @@ def main() -> None:
                 year_max=args.year_max,
                 output_path=figure_path,
                 dpi=args.dpi,
+                density_method=args.density_method,
+                density_grid_size=args.density_grid_size,
+                density_sigma=args.density_sigma,
+                density_vmax_percentile=args.density_vmax_percentile,
             )
 
             print(
@@ -446,6 +478,12 @@ def main() -> None:
             "random_state": args.random_state,
             "subfield_id": args.subfield_id,
             "limit_subfields": args.limit_subfields,
+        },
+        "density": {
+            "method": args.density_method,
+            "grid_size": args.density_grid_size,
+            "sigma": args.density_sigma,
+            "vmax_percentile": args.density_vmax_percentile,
         },
     }
     write_json(summary_path, summary)
