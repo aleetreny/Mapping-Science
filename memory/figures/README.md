@@ -21,10 +21,9 @@ fig_[chapter_num]_[descriptive_snake_case_name].[ext]
   - `fig_07_top_shifting_disciplines.png`
 - **Chapter 8: Morphological Similarity, Convergence and Divergence**
   - `fig_08_subfield_morphological_similarity_heatmap.png`
-- **Chapter 9: Visualization of the Scientific Space**
-  - `fig_09_global_umap_layout.png`
-  - `fig_09_smooth_density_fields.png`
-  - `fig_09_temporal_centroid_paths.png`
+- **Chapter 9: Exploratory Morphological Typologies**
+  - `fig_09_exploratory_clustering_dendrogram.png`
+  - `fig_09_cluster_umap_projection.png`
 - **Appendix C: Additional Figures**
   - `fig_C_diagnostic_knn_cv_distribution.png`
 

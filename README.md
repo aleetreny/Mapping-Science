@@ -116,6 +116,7 @@ Generated artifacts are ignored by Git and organized by active pipeline stage:
 ```text
 outputs/
   01_corpus_construction/
+  02_embedding_matrix/
   03_embedding_metrics/
   04_reduced_metric_core/
   05_static_comparison/
@@ -128,7 +129,7 @@ outputs/
   archive_or_legacy/
 ```
 
-Core data tables remain in `data/processed/`, including the analysis embedding
+`outputs/02_embedding_matrix/` contains only lightweight summary and row alignment diagnostics (`.json`), not the large matrix itself. Core data tables remain in `data/processed/`, including the analysis embedding
 index, full embedding metric table, reduced temporal tables, and pairwise
 morphological distance tables.
 

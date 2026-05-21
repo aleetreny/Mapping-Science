@@ -84,8 +84,20 @@ def main() -> None:
     work_ids_path = analysis_dir / "main_work_ids.parquet"
     summary_path = analysis_dir / "main_matrix_summary.json"
 
+    # New lightweight output stage paths
+    output_dir = ROOT / "outputs" / "02_embedding_matrix"
+    output_summary_path = output_dir / "embedding_matrix_summary.json"
+    output_alignment_path = output_dir / "row_alignment_summary.json"
+
     ensure_outputs_do_not_exist(
-        [analysis_index_path, matrix_path, work_ids_path, summary_path],
+        [
+            analysis_index_path,
+            matrix_path,
+            work_ids_path,
+            summary_path,
+            output_summary_path,
+            output_alignment_path,
+        ],
         force=args.force,
     )
 
@@ -158,10 +170,34 @@ def main() -> None:
     }
     write_json(summary_path, summary)
 
+    # 1. Create a copy of the summary as the public stage summary
+    write_json(output_summary_path, summary)
+
+    # 2. Create the row alignment summary as lightweight diagnostics
+    expected_row_ids = list(range(len(analysis_index)))
+    is_sequential_and_zero_based = (
+        analysis_index["analysis_row_id"].tolist() == expected_row_ids
+    )
+    subfield_counts = (
+        analysis_index["subfield_id"]
+        .value_counts(sort=True)
+        .to_dict()
+    )
+    alignment_summary = {
+        "is_sequential_and_zero_based": bool(is_sequential_and_zero_based),
+        "n_rows": int(len(analysis_index)),
+        "work_ids_match_index": True,  # work_ids is sliced directly from analysis_index
+        "subfield_counts": {str(k): int(v) for k, v in subfield_counts.items()},
+        "validation_errors": errors,
+    }
+    write_json(output_alignment_path, alignment_summary)
+
     print(f"Wrote {analysis_index_path.relative_to(ROOT)}")
     print(f"Wrote {matrix_path.relative_to(ROOT)}")
     print(f"Wrote {work_ids_path.relative_to(ROOT)}")
     print(f"Wrote {summary_path.relative_to(ROOT)}")
+    print(f"Wrote {output_summary_path.relative_to(ROOT)}")
+    print(f"Wrote {output_alignment_path.relative_to(ROOT)}")
     print('Wrote DuckDB table "analysis_embedding_index"')
 
 

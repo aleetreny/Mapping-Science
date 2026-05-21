@@ -19,7 +19,10 @@ data/processed/analysis_embedding_index.parquet
 embeddings/specter2_v1_2000_2024_400py/analysis/main_embeddings.float16.npy
 embeddings/specter2_v1_2000_2024_400py/analysis/main_work_ids.parquet
 embeddings/specter2_v1_2000_2024_400py/analysis/main_matrix_summary.json
+outputs/02_embedding_matrix/embedding_matrix_summary.json
+outputs/02_embedding_matrix/row_alignment_summary.json
 ```
 
-The mapping between `analysis_row_id`, `work_id`, metadata, and matrix row is
-the contract for every downstream metric stage.
+The new `outputs/02_embedding_matrix/` folder contains only lightweight summaries and row-alignment validation diagnostics (`.json`), not the large embedding matrix itself.
+
+The mapping between `analysis_row_id`, `work_id`, metadata, and matrix row is the contract for every downstream metric stage.

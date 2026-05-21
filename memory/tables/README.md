@@ -23,6 +23,9 @@ tab_[chapter_num]_[descriptive_snake_case_name].[ext]
 - **Chapter 8: Morphological Similarity, Convergence and Divergence**
   - `tab_08_top_converging_pairs.tex`
   - `tab_08_top_diverging_pairs.tex`
+- **Chapter 9: Exploratory Morphological Typologies**
+  - `tab_09_cluster_morphological_profiles.tex`
+  - `tab_09_subfield_cluster_assignments.tex`
 
 ## Best Practices
 - **Format**: Preferred format for direct input into LaTeX is `.tex`. Raw spreadsheets can be stored as `.csv` for reproducibility.

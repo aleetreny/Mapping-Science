@@ -5,6 +5,7 @@ The active output tree is stage-based:
 ```text
 outputs/
   01_corpus_construction/
+  02_embedding_matrix/
   03_embedding_metrics/
   04_reduced_metric_core/
   05_static_comparison/
@@ -17,9 +18,8 @@ outputs/
   archive_or_legacy/
 ```
 
-`outputs/archive_or_legacy/` contains generated artifacts from the older UMAP
-metric, metric-family comparison, clustering, dimensionality-reduction, and
-semantic-distance experiments.
+- `outputs/02_embedding_matrix/` contains only lightweight summary and row-alignment validation diagnostics (`.json`), not the large matrix itself.
+- `outputs/archive_or_legacy/` contains generated artifacts from the older UMAP metric, metric-family comparison, clustering, dimensionality-reduction, and semantic-distance experiments.
 
 Ignored data archives live under:
 
