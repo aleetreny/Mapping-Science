@@ -1,154 +1,139 @@
 % Chapter 3: Data and Corpus Construction
-% TODO: Add final corpus counts, number of retained subfields, total works, and domain/field distribution tables after rerunning the final pipeline.
-% TODO: Add table: corpus filters and sampling design.
-% TODO: Add table: final retained works by domain/field/subfield.
-% TODO: Add figure: corpus construction pipeline if useful.
 
 \section{Data Source}
 
-This thesis uses OpenAlex as the primary bibliographic data source. OpenAlex is a large-scale open index of scholarly works, authors, venues, institutions, and research concepts, designed as an open alternative to proprietary bibliographic databases \parencite{priem2022openalex}. Its open data model makes it particularly suitable for reproducible large-scale science mapping, since the corpus construction process can be explicitly documented, versioned, and rerun.
+This thesis uses OpenAlex as its primary bibliographic data source. OpenAlex is a fully open index of scholarly works, authors, venues, institutions, and research concepts, designed to support large-scale and reproducible analyses of scientific literature \parencite{priem2022openalex}. Its openness is central to the design of this thesis: the corpus construction process can be documented, versioned, audited, and rerun without dependence on proprietary bibliographic infrastructures.
 
-The choice of OpenAlex is also motivated by the need to work at a level of disciplinary granularity that is finer than broad domains but still stable enough for comparative analysis. In this thesis, the main unit of analysis is the OpenAlex \textit{subfield}, with higher-level aggregation to \textit{fields} and \textit{domains}. This hierarchy provides a practical compromise between excessive granularity, which would make temporal sampling unstable, and excessive aggregation, which would obscure meaningful disciplinary variation.
+The choice of OpenAlex is also motivated by its disciplinary hierarchy. The empirical analysis requires a unit that is more granular than broad scientific domains but still stable enough to support comparative and temporal measurement. For this reason, the main analytical unit is the OpenAlex \textit{subfield}. Subfields are later aggregated into \textit{fields} and \textit{domains} whenever broader comparisons are required. This hierarchy makes it possible to study scientific morphology at several levels of resolution without redefining the classification system at each stage.
 
-OpenAlex is not treated as a perfect representation of the scientific literature. Coverage, metadata completeness, language representation, and abstract availability vary across disciplines and time. For this reason, the corpus construction procedure applies explicit filters and records diagnostics at each stage. Prior studies comparing large bibliographic databases suggest that open bibliographic sources can provide broad coverage for science mapping, but also show that coverage and metadata quality remain database-dependent \parencite{martinmartin2021google}. More recent evidence indicates that OpenAlex reference coverage is broadly comparable to Web of Science and Scopus in cleaned shared-publication comparisons, while also documenting limitations such as lower abstract coverage \parencite{culbert2025reference}. These limitations are important because the present thesis relies on title and abstract text to construct scientific document embeddings.
+OpenAlex is not treated as a flawless representation of science. Like all large bibliographic databases, it is affected by coverage differences, metadata incompleteness, classification uncertainty, and language bias. Previous comparisons of large bibliographic sources show that open databases can provide broad coverage for science mapping, but also that coverage varies by database, discipline, and document type \parencite{martinmartin2021google}. More recent evidence indicates that OpenAlex reference coverage is broadly comparable to Web of Science and Scopus under cleaned shared-publication comparisons, while also documenting metadata limitations, including lower abstract coverage \parencite{culbert2025reference}. These limitations are especially relevant here because the thesis relies on title and abstract text to construct scientific document embeddings.
 
-\section{Unit of Analysis}
+The resulting corpus should therefore be understood as a controlled analytical corpus, not as a census of all scientific production. Its purpose is to support comparable semantic measurements across scientific regions, not to reproduce the true publication volume of each discipline.
 
-The empirical design is built around OpenAlex subfields. Each work is assigned to a subfield through its primary topic metadata. The corpus construction pipeline keeps a work for a given analytical cell only when the work's primary-topic subfield matches the planned subfield and its publication year matches the planned annual cell.
+\section{Corpus Version and Analytical Scope}
 
-The subfield is used as the main analytical unit for three reasons. First, it is sufficiently specific to capture differences in the internal semantic organization of scientific areas. Second, it is sufficiently large to support the computation of stable geometric indicators, such as dispersion, local density, hubness, and intrinsic dimensionality. Third, subfields can be aggregated into fields and domains, allowing the analysis to move between fine-grained and broader levels of scientific organization.
-
-The resulting hierarchy used throughout the thesis is therefore:
-
-\begin{itemize}
-    \item \textbf{Subfield}: the primary unit of analysis.
-    \item \textbf{Field}: an intermediate aggregation used for comparative summaries.
-    \item \textbf{Domain}: the highest aggregation level used for broad structural patterns.
-\end{itemize}
-
-This design is descriptive rather than causal. The objective is not to infer that OpenAlex categories are natural or definitive boundaries of science, but to use them as a transparent and reproducible reference system for comparing semantic morphology across scientific regions.
-
-\section{Temporal Scope}
-
-The active corpus version used in the thesis is:
+The active corpus version used throughout this thesis is:
 
 \begin{center}
 \texttt{2000\_2024\_400py}
 \end{center}
 
-It covers publications from 2000 to 2024, inclusive. The extraction remains annual: each retained work preserves its original publication year, and temporal windows are constructed later during the analysis stage. This design avoids hard-coding temporal blocks into the raw corpus and allows the same corpus to support both full-period and windowed analyses.
+It covers publications from 2000 to 2024, inclusive. The corpus contains 2,378,036 text-eligible OpenAlex works distributed across 252 subfields, 26 fields, and 4 domains. This full corpus is the synchronized thesis snapshot used for data description and validation.
 
-The natural temporal windows used in the downstream temporal analysis are:
+The downstream embedding-based analysis uses a slightly smaller analysis subset. After aligning the corpus with the available SPECTER2 embeddings and applying the requirements for metric computation, the active analysis matrix contains 2,344,927 embedded works across 241 analysis subfields. This distinction is important: the full corpus describes the validated text extraction, whereas the analysis subset defines the observations that enter the embedding-space morphology metrics.
 
-\begin{itemize}
-    \item 2000--2004,
-    \item 2005--2009,
-    \item 2010--2014,
-    \item 2015--2019,
-    \item 2020--2024.
-\end{itemize}
+\input{tables/tab_03_corpus_summary}
 
-These five-year windows provide a compromise between temporal resolution and sample stability. Shorter windows would produce more detailed trajectories but would increase sampling noise, especially in smaller or historically sparse subfields. Longer windows would provide more stable estimates but would smooth over meaningful changes in disciplinary structure.
+The difference between the full corpus and the analysis subset is not a contradiction. It reflects the fact that metric computation requires a row-aligned embedding matrix and sufficient observations per analytical unit. The thesis therefore reports both levels: the full text corpus for corpus construction, and the analysis subset for the embedding-space results.
 
-\section{Eligibility Criteria}
+\section{Unit of Analysis}
 
-The corpus is designed as a text corpus for embedding-based analysis. A work is eligible only if it satisfies the textual and metadata requirements needed to produce a meaningful title--abstract representation.
+The primary unit of analysis is the OpenAlex subfield. Each work is retained for a subfield only when its primary-topic subfield matches the planned analytical cell. This primary-topic rule avoids assigning the same paper to multiple subfields in the main corpus and preserves a clear one-work--one-subfield structure for downstream comparison.
 
-The active extraction applies the following filters:
+The analysis uses three nested levels:
 
 \begin{itemize}
-    \item the work must belong to the planned OpenAlex subfield through its primary topic;
-    \item the publication year must fall between 2000 and 2024;
-    \item the language must be English;
-    \item the work type must be either \textit{article} or \textit{preprint};
-    \item the title must be available and contain at least five tokens;
-    \item the abstract must be available and contain at least eighty tokens;
-    \item retracted works are excluded;
-    \item paratextual records are excluded.
+    \item \textbf{Subfield}: the main unit for metric computation and comparison.
+    \item \textbf{Field}: an intermediate aggregation level used to summarize related subfields.
+    \item \textbf{Domain}: the broadest level, used to compare large scientific regions.
 \end{itemize}
 
-The requirement of both title and abstract is central to the thesis. The semantic representation of each document is based on the concatenation of title and abstract, which provides a compact textual description of the research problem, methods, and contribution. This choice also makes the corpus more homogeneous than one based on full texts, which would be less consistently available across publishers, fields, and years.
+This structure is used pragmatically. The thesis does not claim that OpenAlex subfields are natural or definitive boundaries of scientific knowledge. Rather, they provide a transparent and reproducible reference system for comparing the internal semantic morphology of scientific regions. This distinction matters because the thesis studies differences in semantic organization, not the ontological status of disciplinary categories.
 
-At the same time, this filter introduces a limitation: papers without sufficiently informative abstracts are excluded. This may affect older publications and fields where abstract coverage is weaker. Therefore, the validation stage records coverage diagnostics by year and subfield, and the limitation is explicitly considered when interpreting temporal results.
+\section{Textual Eligibility Criteria}
+
+The corpus is designed specifically for embedding-based analysis. A work is eligible only if it contains enough textual information to support a meaningful document representation. The text used for embedding is the concatenation of title and abstract.
+
+The active extraction applies the following filters.
+
+\input{tables/tab_03_corpus_filters}
+
+Several choices deserve emphasis. First, the corpus is restricted to English-language records. This improves linguistic consistency for the embedding model but introduces a language bias that must be acknowledged when interpreting results. Second, only articles and preprints are retained. This excludes document types whose structure or purpose may differ substantially from research papers. Third, both title and abstract are required, with minimum token thresholds. This prevents very short or uninformative records from entering the semantic space.
+
+The abstract requirement is methodologically necessary but not neutral. Abstract availability varies across fields, publishers, and historical periods. Older records and some disciplines may be disproportionately excluded. For this reason, the corpus construction stage includes explicit validation diagnostics by year, subfield, and domain. The later empirical results should be interpreted as statements about a title--abstract corpus of scientific works, not about all scholarly outputs indexed by OpenAlex.
 
 \section{Sampling Design}
 
-The corpus uses a balanced annual sampling strategy. For each OpenAlex subfield and publication year, the pipeline targets up to 400 valid works. The planned annual sample size is therefore:
+The corpus uses a balanced annual sampling design. For each subfield and publication year, the extraction targets up to 400 eligible works. Formally, for subfield \(s\) and year \(t\), the planned annual sample size is
 
 \[
-n_{s,t}^{planned} = \min(N_{s,t}^{valid}, 400),
+n_{s,t}^{planned} = \min \left( N_{s,t}^{eligible}, 400 \right),
 \]
 
-where \(N_{s,t}^{valid}\) is the number of eligible works available for subfield \(s\) in year \(t\).
+where \(N_{s,t}^{eligible}\) denotes the number of OpenAlex works satisfying the textual, language, type, and metadata filters in that subfield-year cell.
 
-This produces a maximum full-period target of 10,000 works per subfield:
+Since the period covers 25 years, the maximum full-period target per subfield is
 
 \[
-400 \text{ works/year} \times 25 \text{ years} = 10,000 \text{ works}.
+400 \times 25 = 10{,}000
 \]
 
-The purpose of this design is comparability. Without balancing, very large subfields would dominate the embedding space and downstream summaries, while smaller but structurally meaningful subfields would contribute less information. The annual cap also prevents recent years, where metadata and abstract coverage are usually stronger, from overwhelming the temporal structure of the corpus.
+works. The complete plan contains 2,431,303 planned works. The synchronized corpus retains 2,378,036 works, implying a total shortfall of 53,267 works. The shortfall is not a validation failure. It reflects the fact that some subfield-year cells contain fewer than 400 eligible works, or that local filtering and backfilling could not fully recover the target.
 
-The design does not redistribute unused capacity from sparse years to denser years. If a subfield-year cell contains fewer than 400 eligible works, the shortfall is recorded rather than filled from another year. This decision preserves the annual structure of the corpus and avoids artificially inflating historically sparse periods.
+The design does not redistribute unused capacity from sparse years into denser years. If a subfield-year cell has fewer than 400 eligible works, the missing observations are recorded as shortfall rather than replaced by additional works from other years. This preserves the temporal structure of the corpus and avoids artificially inflating years with stronger metadata coverage.
+
+The purpose of this sampling design is comparability. Without an annual cap, very large and recent fields would dominate the corpus. The balanced design reduces the influence of publication-volume differences and makes it more meaningful to compare semantic dispersion, density, dimensionality, and temporal movement across subfields.
+
+\section{Domain Composition}
+
+The synchronized corpus covers all four OpenAlex domains. Physical Sciences represents the largest share of retained works, followed by Health Sciences, Social Sciences, and Life Sciences.
+
+\input{tables/tab_03_domain_distribution}
+
+The domain distribution reflects both the OpenAlex taxonomy and the availability of eligible title--abstract records under the sampling design. It should not be interpreted as the true distribution of global scientific production. The annual cap and text-eligibility filters deliberately reshape the corpus to support comparative semantic analysis.
 
 \section{Corpus Construction Pipeline}
 
-The corpus construction pipeline is implemented as a sequence of reproducible stages. First, the OpenAlex taxonomy is fetched and harmonized. Second, annual counts are built for subfields, fields, and domains. Third, a corpus plan and sample plan are constructed for the active dataset version. Fourth, sampled works are downloaded from OpenAlex and locally validated. Finally, the database is checked and an analysis-subfield summary is generated.
+The corpus construction pipeline is organized as a sequence of reproducible stages. First, the OpenAlex taxonomy is fetched and stored. Second, annual counts are computed for subfields, fields, and domains. Third, a versioned corpus plan and sample plan are constructed. Fourth, sampled works are downloaded from OpenAlex. Fifth, the downloaded records are locally validated against the planned subfield-year cells and eligibility filters. Finally, the processed corpus is written to Parquet and used as input for the embedding pipeline.
 
-Conceptually, the pipeline can be summarized as:
+The pipeline can be summarized as follows:
 
-\begin{center}
-\texttt{taxonomy} \(\rightarrow\) \texttt{counts} \(\rightarrow\) \texttt{corpus plan} \(\rightarrow\) \texttt{sample plan} \(\rightarrow\) \texttt{downloaded corpus} \(\rightarrow\) \texttt{validated corpus}
-\end{center}
+\[
+\text{taxonomy}
+\rightarrow
+\text{annual counts}
+\rightarrow
+\text{corpus plan}
+\rightarrow
+\text{sample plan}
+\rightarrow
+\text{downloaded works}
+\rightarrow
+\text{validated text corpus}.
+\]
 
-The normalized output preserves both bibliographic metadata and the text fields required for embedding generation. The main retained variables include the OpenAlex work identifier, DOI, title, abstract, text used for embedding, publication year, work type, language, subfield, field, domain, primary-topic metadata, token counts, citation counts, and reference counts.
-
-The main processed corpus table is stored as a Parquet file under the versioned dataset name:
-
-\begin{center}
-\texttt{data/processed/works\_text\_2000\_2024\_400py.parquet}
-\end{center}
-
-A companion table summarizes the analysis-eligible subfields:
-
-\begin{center}
-\texttt{data/processed/analysis\_subfields\_2000\_2024\_400py.parquet}
-\end{center}
-
-Intermediate counts, sampling plans, and download manifests are also stored in versioned Parquet files. This separation between plans, manifests, and processed tables makes the extraction auditable: one can distinguish what was planned, what was requested, what was downloaded, and what was finally retained.
-
-\section{Validation and Diagnostics}
-
-Validation is a necessary part of the corpus construction process because the downstream analysis depends on cross-field and temporal comparability. The pipeline produces validation reports and diagnostics under:
+The main processed corpus table is stored as
 
 \begin{center}
-\texttt{outputs/01\_corpus\_construction/}
+\texttt{data/processed/works\_text\_2000\_2024\_400py.parquet}.
 \end{center}
 
-The validation diagnostics track several aspects of the extraction, including subfield-year download coverage, subfield-level coverage summaries, year-level coverage summaries, and extraction-level summaries. These outputs are used to identify sparse years, incomplete cells, possible download failures, and subfields whose coverage may be insufficient for robust downstream analysis.
+The active embedding pipeline then builds an embedding index and a row-aligned analysis matrix from this corpus. The active SPECTER2 embedding directory is
 
-% TODO: Insert final validation statistics after rerunning the final pipeline.
-% Suggested table:
-% - total works retained;
-% - number of subfields retained;
-% - number of fields/domains represented;
-% - median works per subfield;
-% - minimum/maximum works per subfield;
-% - percentage of completed subfield-year cells;
-% - number of cells below target.
+\begin{center}
+\texttt{embeddings/specter2\_v1\_2000\_2024\_400py/}.
+\end{center}
 
-The corpus construction process also includes operational protections. The OpenAlex downloader handles rate-limit responses and supports resume behavior. Cells that exceed the maximum allowed rate-limit retries are not treated as completed; instead, they are recorded for later retry. This prevents incomplete downloads from being silently treated as successful extractions.
+This directory contains the embedding shards for the full synchronized corpus. The analysis matrix used by downstream morphology scripts contains 2,344,927 rows and 241 analysis subfields. This row-aligned matrix is the contract between the corpus, the embedding representation, and the metric computation stages.
 
-\section{Implications for the Thesis}
+\section{Validation Diagnostics}
 
-The final corpus is not intended to be a census of all scientific publications. It is a balanced, text-eligible analytical corpus designed for comparative semantic morphology. This distinction matters. The thesis does not ask which disciplines publish the most papers, nor does it attempt to reproduce the true production volume of each field. Instead, it asks how comparable samples of scientific documents are distributed in a semantic embedding space.
+The validation stage checks whether the extracted corpus satisfies the planned design and whether the retained records meet the required metadata and text conditions. The synchronized validation report did not fail. Critical checks are clean: there are no duplicate work identifiers, no rows outside the 2000--2024 period, no rows in 2025 or 2026, no missing subfield, field, or domain identifiers, no missing primary-topic identifiers, no missing title or abstract fields, no records below the minimum title or abstract length thresholds, no non-English rows, and no disallowed work types.
 
-The sampling strategy therefore prioritizes three properties:
+The remaining limitation is coverage rather than validity. Out of 6,300 diagnostic subfield-year rows, 5,493 reach the annual target of 400 works, while 807 remain below target. These below-target cells account for the total shortfall of 53,267 works. Most shortfalls arise because the corresponding subfield-year cells contain fewer than 400 eligible works or because the download and filtering process could not fully recover the planned count.
 
-\begin{itemize}
-    \item \textbf{Temporal comparability}: each year contributes at most the same number of works per subfield.
-    \item \textbf{Cross-disciplinary comparability}: large subfields do not dominate the analysis solely because of publication volume.
-    \item \textbf{Textual consistency}: each retained work has sufficient title and abstract information to support embedding-based representation.
-\end{itemize}
+This validation structure is important for the interpretation of the thesis. The corpus is internally consistent and synchronized with the embedding pipeline, but some parts of the OpenAlex taxonomy are less densely populated under the title--abstract eligibility rules. Temporal comparisons in sparse subfields should therefore be interpreted with greater caution.
 
-These design choices shape the interpretation of all later chapters. The embedding-space metrics should be read as indicators of the semantic morphology of a balanced title--abstract corpus, not as direct measures of the total size, productivity, or causal dynamics of scientific disciplines.
+\section{Implications for the Empirical Analysis}
+
+The corpus construction strategy determines what the later embedding-space metrics can and cannot mean. The metrics in this thesis should be interpreted as indicators of the semantic morphology of a balanced title--abstract corpus. They are not measures of total field size, research funding, institutional capacity, citation impact, or causal scientific development.
+
+Three implications follow.
+
+First, the corpus is designed for \textbf{cross-disciplinary comparability}. The annual cap prevents large subfields from dominating the analysis only because they produce more papers.
+
+Second, the corpus is designed for \textbf{temporal comparability}. The annual structure allows later analyses to construct five-year windows without changing the underlying extraction logic.
+
+Third, the corpus is designed for \textbf{textual consistency}. Each retained work has sufficient title and abstract information to support SPECTER2-based representation.
+
+These choices make the corpus appropriate for the central objective of the thesis: comparing the shape and evolution of scientific regions in a shared semantic embedding space. They also impose boundaries on interpretation. The results describe model-dependent semantic structures derived from OpenAlex title--abstract records. They should not be read as objective maps of science itself, but as reproducible measurements of how scientific works are distributed under a specific data source, taxonomy, text representation, and sampling design.
