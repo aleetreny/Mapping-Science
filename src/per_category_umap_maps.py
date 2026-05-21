@@ -34,7 +34,7 @@ LEVEL_SPECS = {
     "field": {
         "id_column": "field_id",
         "name_column": "field_display_name",
-        "output_dir": "outputs/maps/per_field_umap",
+        "output_dir": "outputs/08_visualization/per_field_umap_smooth_density",
         "manifest_filename": "per_field_umap_manifest.parquet",
         "summary_filename": "per_field_umap_summary.json",
         "color_column": "subfield_display_name",
@@ -43,7 +43,7 @@ LEVEL_SPECS = {
     "domain": {
         "id_column": "domain_id",
         "name_column": "domain_display_name",
-        "output_dir": "outputs/maps/per_domain_umap",
+        "output_dir": "outputs/08_visualization/per_domain_umap_smooth_density",
         "manifest_filename": "per_domain_umap_manifest.parquet",
         "summary_filename": "per_domain_umap_summary.json",
         "color_column": "field_display_name",

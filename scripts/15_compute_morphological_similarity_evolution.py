@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--static-metrics-path",
         default=(
-            "outputs/analysis/reduced_interpretable_embedding_core/"
+            "outputs/04_reduced_metric_core/"
             "reduced_interpretable_core_metrics.parquet"
         ),
     )
@@ -36,7 +36,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-dir",
-        default="outputs/analysis/morphological_similarity_evolution",
+        default="outputs/07_morphological_similarity",
     )
     parser.add_argument(
         "--metrics",
@@ -105,12 +105,12 @@ def main() -> None:
     if not static_path.exists():
         raise FileNotFoundError(
             f"Missing static reduced metrics: {display_path(static_path, root=ROOT)}. "
-            "Run scripts/16b_build_reduced_interpretable_embedding_core.py first."
+            "Run scripts/12_build_reduced_metric_core.py first."
         )
     if not temporal_path.exists():
         raise FileNotFoundError(
             f"Missing temporal window metrics: {display_path(temporal_path, root=ROOT)}. "
-            "Run scripts/19_compute_temporal_embedding_metric_evolution.py first."
+            "Run scripts/14_compute_temporal_metric_evolution.py first."
         )
 
     print(f"Loading static metrics: {display_path(static_path, root=ROOT)}")

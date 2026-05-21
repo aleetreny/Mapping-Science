@@ -43,7 +43,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--embedding-dir",
-        default=os.getenv("LOCAL_EMBEDDINGS_DIR", "embeddings/specter2_v1"),
+        default=os.getenv(
+            "LOCAL_EMBEDDINGS_DIR",
+            "embeddings/specter2_v1_2000_2024_400py",
+        ),
         help="Local folder containing SPECTER2 embedding shards.",
     )
     parser.add_argument(

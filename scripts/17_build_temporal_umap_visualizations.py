@@ -58,7 +58,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--embeddings-path", default=None)
     parser.add_argument(
         "--output-dir",
-        default="outputs/analysis/subfield_temporal_umap_panels",
+        default="outputs/08_visualization/subfield_temporal_umap_panels",
     )
     parser.add_argument(
         "--reuse-existing-coordinates",
@@ -67,7 +67,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--coordinates-dir",
-        default="outputs/maps/per_subfield_umap/coordinates",
+        default="outputs/08_visualization/per_subfield_umap_smooth_density/coordinates",
     )
     parser.add_argument("--fit-if-missing", action="store_true")
     parser.add_argument("--year-min", type=int, default=2000)

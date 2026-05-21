@@ -53,7 +53,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--embedding-dir",
-        default=os.getenv("LOCAL_EMBEDDINGS_DIR", "embeddings/specter2_v1"),
+        default=os.getenv(
+            "LOCAL_EMBEDDINGS_DIR",
+            "embeddings/specter2_v1_2000_2024_400py",
+        ),
         help=(
             "Local folder containing SPECTER2 embedding artifacts. Used to derive "
             "--embeddings-path when that argument is not provided."
@@ -77,19 +80,19 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--summary-path",
-        default="outputs/metrics/subfield_embedding_space_metrics_summary.json",
+        default="outputs/03_embedding_metrics/subfield_embedding_space_metrics_summary.json",
     )
     parser.add_argument(
         "--dictionary-path",
-        default="outputs/metrics/subfield_embedding_space_metrics_dictionary.csv",
+        default="outputs/03_embedding_metrics/subfield_embedding_space_metrics_dictionary.csv",
     )
     parser.add_argument(
         "--diagnostics-output-dir",
-        default="outputs/analysis/embedding_space_metric_diagnostics",
+        default="outputs/03_embedding_metrics/diagnostics",
         help="Folder for embedding metric histograms, correlations, and distribution diagnostics.",
     )
-    parser.add_argument("--year-min", type=int, default=2010)
-    parser.add_argument("--year-max", type=int, default=2025)
+    parser.add_argument("--year-min", type=int, default=2000)
+    parser.add_argument("--year-max", type=int, default=2024)
     parser.add_argument("--min-papers", type=int, default=1)
     parser.add_argument(
         "--max-papers-per-subfield",

@@ -20,8 +20,8 @@ if [ -f ".env" ]; then
 fi
 
 RCLONE_REMOTE="${RCLONE_REMOTE:-gdrive}"
-DRIVE_EMBEDDINGS_PATH="${DRIVE_EMBEDDINGS_PATH:-TFM/openalex_subfields/embeddings/specter2_v1}"
-LOCAL="${LOCAL_EMBEDDINGS_DIR:-embeddings/specter2_v1}"
+DRIVE_EMBEDDINGS_PATH="${DRIVE_EMBEDDINGS_PATH:-TFM/openalex_subfields/embeddings/specter2_v1_2000_2024_400py}"
+LOCAL="${LOCAL_EMBEDDINGS_DIR:-embeddings/specter2_v1_2000_2024_400py}"
 
 if [[ "$DRIVE_EMBEDDINGS_PATH" == *:* ]]; then
   REMOTE="$DRIVE_EMBEDDINGS_PATH"

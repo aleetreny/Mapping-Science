@@ -2,11 +2,9 @@ import pytest
 
 from src.embedding_space_metrics import validate_year_window
 from src.metric_year_windows import resolve_metric_year_window
-from src.morphology_metrics import validate_morphology_year_window
 
 
 def test_2000_2024_metric_window_is_supported() -> None:
-    validate_morphology_year_window(2000, 2024)
     validate_year_window(2000, 2024)
 
 

@@ -42,12 +42,15 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--embedding-dir",
-        default=os.getenv("LOCAL_EMBEDDINGS_DIR", "embeddings/specter2_v1"),
+        default=os.getenv(
+            "LOCAL_EMBEDDINGS_DIR",
+            "embeddings/specter2_v1_2000_2024_400py",
+        ),
         help="Local folder containing SPECTER2 embedding artifacts.",
     )
     parser.add_argument("--sample-per-subfield", type=int, default=500)
-    parser.add_argument("--year-min", type=int, default=2010)
-    parser.add_argument("--year-max", type=int, default=2025)
+    parser.add_argument("--year-min", type=int, default=2000)
+    parser.add_argument("--year-max", type=int, default=2024)
     parser.add_argument(
         "--color-by",
         choices=["domain", "field", "subfield"],
@@ -178,7 +181,7 @@ def main() -> None:
     analysis_index_path = processed_dir / "analysis_embedding_index.parquet"
     matrix_path = embedding_dir / "analysis" / "main_embeddings.float16.npy"
 
-    output_dir = ROOT / "outputs" / "maps"
+    output_dir = ROOT / "outputs" / "08_visualization" / "global_umap"
     parquet_path = output_dir / "umap_global_sample.parquet"
     png_path = output_dir / "umap_global_sample.png"
     summary_path = output_dir / "umap_global_sample_summary.json"

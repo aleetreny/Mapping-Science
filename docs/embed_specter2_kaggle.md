@@ -50,7 +50,7 @@ Debido a las estrictas limitaciones físicas de los entornos virtuales de Kaggle
 
 ## Estructura del Dataset de Salida en Producción
 
-El proceso en producción generó exitosamente el dataset ubicado en la ruta corporativa de la nube `gdrive:TFM/openalex_subfields/embeddings/specter2_v1`, constando de:
+El proceso en producción generó exitosamente el dataset ubicado en la ruta corporativa de la nube `gdrive:TFM/openalex_subfields/embeddings/specter2_v1_2000_2024_400py`, constando de:
 *   **37 Fragmentos Completos:** Numerados secuencialmente desde `shard_0000_*` hasta `shard_0036_*`.
 *   **111 Archivos de Datos:** 37 matrices NumPy, 37 tablas Parquet de metadatos y 37 ficheros JSON de resumen.
 *   **Archivo `embedding_config.json`:** Registro histórico con todos los hiperparámetros y metadatos de configuración aplicados en la nube.

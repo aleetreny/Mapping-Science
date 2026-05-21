@@ -130,14 +130,21 @@ def extraction_paths(
     processed_dir = root / storage["processed_dir"]
     if dataset_version is None:
         validation_dir = interim_dir
-        diagnostics_dir = root / "outputs" / "diagnostics" / "openalex_extraction"
-        validation_report = validation_dir / "validation_report.md"
-        validation_summary = validation_dir / "validation_summary.json"
-    else:
-        validation_dir = root / "outputs" / "validation"
         diagnostics_dir = (
             root
             / "outputs"
+            / "01_corpus_construction"
+            / "diagnostics"
+            / "openalex_extraction"
+        )
+        validation_report = validation_dir / "validation_report.md"
+        validation_summary = validation_dir / "validation_summary.json"
+    else:
+        validation_dir = root / "outputs" / "01_corpus_construction" / "validation"
+        diagnostics_dir = (
+            root
+            / "outputs"
+            / "01_corpus_construction"
             / "diagnostics"
             / f"openalex_extraction_{dataset_version}"
         )

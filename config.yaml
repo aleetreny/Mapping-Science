@@ -8,9 +8,10 @@ openalex:
   max_requests_per_second: 5
   per_page: 200
 windows:
-  morphology_start_year: 2010
-  morphology_end_year: 2025
+  morphology_start_year: 2000
+  morphology_end_year: 2024
   exclude_years:
+  - 2025
   - 2026
 filters:
   unit: subfield
@@ -26,15 +27,15 @@ filters:
   exclude_retracted: true
   exclude_paratext: true
 sampling:
-  target_sample_per_subfield: 3000
-  max_sample_per_subfield: 3000
+  target_sample_per_subfield: 10000
+  max_sample_per_subfield: 10000
   min_valid_texts_per_subfield: 500
   stratify_by_year: true
-  target_per_year_per_subfield: 300
+  target_per_year_per_subfield: 400
   random_seed: 42
   use_openalex_sample_api: true
   oversample_factor: 1.75
-  max_backfill_rounds: 1
+  max_backfill_rounds: 4
   backfill_seed_step: 100000
   write_every_n_subfields: 5
   resume_existing_download: true

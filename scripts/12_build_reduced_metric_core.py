@@ -24,11 +24,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--input",
         default="data/processed/subfield_embedding_space_metrics.parquet",
-        help="Full embedding-space metric table produced by script 12.",
+        help="Full embedding-space metric table produced by scripts/11_compute_embedding_space_metrics.py.",
     )
     parser.add_argument(
         "--output-dir",
-        default="outputs/analysis/reduced_interpretable_embedding_core",
+        default="outputs/04_reduced_metric_core",
         help="Output folder for reduced interpretable embedding-core diagnostics.",
     )
     parser.add_argument("--overwrite", action="store_true")
@@ -67,7 +67,7 @@ def main() -> None:
     if not input_path.exists():
         raise FileNotFoundError(
             f"Missing embedding metric table: {display_path(input_path)}. "
-            "Run scripts/12_compute_subfield_embedding_space_metrics.py first."
+            "Run scripts/11_compute_embedding_space_metrics.py first."
         )
 
     metrics = pd.read_parquet(input_path)

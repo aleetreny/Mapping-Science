@@ -122,13 +122,13 @@ python scripts/07_validate_embeddings.py
 The remote folder is:
 
 ```text
-gdrive:TFM/openalex_subfields/embeddings/specter2_v1
+gdrive:TFM/openalex_subfields/embeddings/specter2_v1_2000_2024_400py
 ```
 
 The local folder is:
 
 ```text
-embeddings/specter2_v1/
+embeddings/specter2_v1_2000_2024_400py/
 ```
 
 The validator checks the expected embedding shards, metadata shards, summary
@@ -145,7 +145,7 @@ After embedding validation succeeds, prepare the main-analysis matrix and first 
 ```powershell
 $env:LOCAL_EMBEDDINGS_DIR = "embeddings/specter2_v1_2000_2024_400py"
 .\.venv\Scripts\python.exe scripts\08_prepare_analysis_matrix.py --force
-.\.venv\Scripts\python.exe scripts\09_build_first_umap_maps.py `
+.\.venv\Scripts\python.exe scripts\09_build_global_umap_visualization.py `
   --sample-per-subfield 500 `
   --year-min 2000 `
   --year-max 2024 `
@@ -157,7 +157,7 @@ The matrix uses only rows where `main_analysis_eligible == true`. The first map 
 Downstream matrix consumers also accept explicit embedding directories:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\10_build_per_subfield_umap_maps.py `
+.\.venv\Scripts\python.exe scripts\10_build_subfield_umap_visualizations.py `
   --embedding-dir embeddings/specter2_v1_2000_2024_400py `
   --year-min 2000 `
   --year-max 2024 `
@@ -207,9 +207,9 @@ python scripts/05_validate_database.py
 - `warehouse/tfm_openalex.duckdb`
 - `data/interim/validation_report.md`
 - `data/interim/validation_summary.json`
-- `outputs/maps/umap_global_sample.parquet`
-- `outputs/maps/umap_global_sample.png`
-- `outputs/maps/umap_global_sample_summary.json`
+- `outputs/08_visualization/global_umap/umap_global_sample.parquet`
+- `outputs/08_visualization/global_umap/umap_global_sample.png`
+- `outputs/08_visualization/global_umap/umap_global_sample_summary.json`
 
 ## Shortfall Guidance
 

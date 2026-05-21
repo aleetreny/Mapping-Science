@@ -26,9 +26,9 @@ $Root = Split-Path -Parent $PSScriptRoot
 Import-DotEnv -Path (Join-Path $Root ".env")
 
 $RemoteName = if ($env:RCLONE_REMOTE) { $env:RCLONE_REMOTE } else { "gdrive" }
-$DriveEmbeddingsPath = if ($env:DRIVE_EMBEDDINGS_PATH) { $env:DRIVE_EMBEDDINGS_PATH } else { "TFM/openalex_subfields/embeddings/specter2_v1" }
+$DriveEmbeddingsPath = if ($env:DRIVE_EMBEDDINGS_PATH) { $env:DRIVE_EMBEDDINGS_PATH } else { "TFM/openalex_subfields/embeddings/specter2_v1_2000_2024_400py" }
 $Remote = Resolve-RemotePath -RemoteName $RemoteName -DrivePath $DriveEmbeddingsPath
-$Local = if ($env:LOCAL_EMBEDDINGS_DIR) { $env:LOCAL_EMBEDDINGS_DIR } else { "embeddings/specter2_v1" }
+$Local = if ($env:LOCAL_EMBEDDINGS_DIR) { $env:LOCAL_EMBEDDINGS_DIR } else { "embeddings/specter2_v1_2000_2024_400py" }
 
 New-Item -ItemType Directory -Force -Path $Local | Out-Null
 

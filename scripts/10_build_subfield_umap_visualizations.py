@@ -48,7 +48,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--embedding-dir",
-        default=os.getenv("LOCAL_EMBEDDINGS_DIR", "embeddings/specter2_v1"),
+        default=os.getenv(
+            "LOCAL_EMBEDDINGS_DIR",
+            "embeddings/specter2_v1_2000_2024_400py",
+        ),
         help=(
             "Local folder containing SPECTER2 embedding artifacts. Used to derive "
             "--embeddings-path when that argument is not provided."
@@ -64,11 +67,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-dir",
-        default="outputs/maps/per_subfield_umap",
+        default="outputs/08_visualization/per_subfield_umap_smooth_density",
         help="Directory for per-subfield coordinates, figures, manifest, and summary.",
     )
-    parser.add_argument("--year-min", type=int, default=2010)
-    parser.add_argument("--year-max", type=int, default=2025)
+    parser.add_argument("--year-min", type=int, default=2000)
+    parser.add_argument("--year-max", type=int, default=2024)
     parser.add_argument("--min-papers", type=int, default=250)
     parser.add_argument("--max-papers-per-subfield", type=int, default=10000)
     parser.add_argument("--subfield-id", default=None)

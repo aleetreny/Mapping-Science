@@ -244,7 +244,7 @@ def test_cli_runs_on_tiny_synthetic_embedding_matrix(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             sys.executable,
-            str(ROOT / "scripts" / "10_build_per_subfield_umap_maps.py"),
+            str(ROOT / "scripts" / "10_build_subfield_umap_visualizations.py"),
             "--index-path",
             str(index_path),
             "--embedding-dir",
@@ -310,7 +310,7 @@ def test_cli_fails_clearly_when_index_and_matrix_versions_differ(
     result = subprocess.run(
         [
             sys.executable,
-            str(ROOT / "scripts" / "10_build_per_subfield_umap_maps.py"),
+            str(ROOT / "scripts" / "10_build_subfield_umap_visualizations.py"),
             "--index-path",
             str(index_path),
             "--embedding-dir",

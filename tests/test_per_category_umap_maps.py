@@ -217,10 +217,10 @@ def test_field_and_domain_wrapper_args_set_fixed_level_and_aliases() -> None:
 
 def test_field_and_domain_wrapper_scripts_declare_expected_levels() -> None:
     field_globals = runpy.run_path(
-        str(ROOT / "scripts" / "10b_build_per_field_umap_maps.py")
+        str(ROOT / "scripts" / "10b_build_field_umap_visualizations.py")
     )
     domain_globals = runpy.run_path(
-        str(ROOT / "scripts" / "10c_build_per_domain_umap_maps.py")
+        str(ROOT / "scripts" / "10c_build_domain_umap_visualizations.py")
     )
 
     assert field_globals["FIXED_LEVEL"] == "field"
@@ -228,12 +228,18 @@ def test_field_and_domain_wrapper_scripts_declare_expected_levels() -> None:
 
 
 def test_field_and_domain_output_paths_remain_stable() -> None:
-    assert level_spec("field")["output_dir"] == "outputs/maps/per_field_umap"
+    assert (
+        level_spec("field")["output_dir"]
+        == "outputs/08_visualization/per_field_umap_smooth_density"
+    )
     assert (
         level_spec("field")["manifest_filename"]
         == "per_field_umap_manifest.parquet"
     )
-    assert level_spec("domain")["output_dir"] == "outputs/maps/per_domain_umap"
+    assert (
+        level_spec("domain")["output_dir"]
+        == "outputs/08_visualization/per_domain_umap_smooth_density"
+    )
     assert (
         level_spec("domain")["summary_filename"]
         == "per_domain_umap_summary.json"

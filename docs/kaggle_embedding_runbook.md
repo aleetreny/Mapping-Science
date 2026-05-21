@@ -13,7 +13,7 @@ It is kept for reproducibility of the existing SPECTER2 artifacts. Do not rerun 
 The current Drive artifact set lives at:
 
 ```text
-gdrive:TFM/openalex_subfields/embeddings/specter2_v1
+gdrive:TFM/openalex_subfields/embeddings/specter2_v1_2000_2024_400py
 ```
 
 It contains:
@@ -71,7 +71,7 @@ gdrive:TFM/openalex_subfields/data/works_text.parquet
 The default remote output is:
 
 ```text
-gdrive:TFM/openalex_subfields/embeddings/specter2_v1
+gdrive:TFM/openalex_subfields/embeddings/specter2_v1_2000_2024_400py
 ```
 
 ## Local Follow-Up
@@ -86,5 +86,5 @@ Then prepare the main-analysis matrix and first sampled UMAP map:
 
 ```bash
 python scripts/08_prepare_analysis_matrix.py
-python scripts/09_build_first_umap_maps.py --sample-per-subfield 500
+python scripts/09_build_global_umap_visualization.py --sample-per-subfield 500
 ```

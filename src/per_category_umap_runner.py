@@ -48,7 +48,10 @@ def add_common_arguments(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument(
         "--embedding-dir",
-        default=os.getenv("LOCAL_EMBEDDINGS_DIR", "embeddings/specter2_v1"),
+        default=os.getenv(
+            "LOCAL_EMBEDDINGS_DIR",
+            "embeddings/specter2_v1_2000_2024_400py",
+        ),
         help=(
             "Local folder containing SPECTER2 embedding artifacts. Used to derive "
             "--embeddings-path when that argument is not provided."
@@ -63,8 +66,8 @@ def add_common_arguments(parser: argparse.ArgumentParser) -> None:
         ),
     )
     parser.add_argument("--output-dir", default=None)
-    parser.add_argument("--year-min", type=int, default=2010)
-    parser.add_argument("--year-max", type=int, default=2025)
+    parser.add_argument("--year-min", type=int, default=2000)
+    parser.add_argument("--year-max", type=int, default=2024)
     parser.add_argument("--min-papers", type=int, default=250)
     parser.add_argument("--max-papers-per-group", type=int, default=10000)
     parser.add_argument("--random-state", type=int, default=42)
@@ -103,8 +106,8 @@ def parse_category_args(
     if fixed_level is None:
         description = (
             "Deprecated compatibility wrapper for grouped OpenAlex field/domain "
-            "UMAP maps. Prefer scripts/10b_build_per_field_umap_maps.py or "
-            "scripts/10c_build_per_domain_umap_maps.py."
+            "UMAP maps. Prefer scripts/10b_build_field_umap_visualizations.py or "
+            "scripts/10c_build_domain_umap_visualizations.py."
             if deprecated
             else "Build one UMAP scatter+density map per OpenAlex field or domain."
         )
@@ -514,7 +517,7 @@ def main(
     args = parse_category_args(argv, fixed_level=fixed_level, deprecated=deprecated)
     if deprecated:
         print(
-            "Deprecated: prefer scripts/10b_build_per_field_umap_maps.py or "
-            "scripts/10c_build_per_domain_umap_maps.py."
+            "Deprecated: prefer scripts/10b_build_field_umap_visualizations.py or "
+            "scripts/10c_build_domain_umap_visualizations.py."
         )
     run_category_umap_maps(args)
