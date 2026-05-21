@@ -59,5 +59,5 @@ $$\text{OpenAlex Balanced Corpus} \longrightarrow \text{SPECTER2 Embeddings (768
     *   *Reference Category:* `core-active`
     *   *Role in Pipeline:* Formulates the k-means++ seeding technique. Implemented in our profile analysis to optimize the initial centroids for our planned exploratory KMeans typologies of subfield metrics.
 *   **[kleinberg2002clustering](file:///c:/Users/Z0058EYW/Workspace/TFM/research/literature_review/candidate_references.bib)** (Kleinberg, 2002)
-    *   *Reference Category:* `core-justification`
+    *   *Reference Category:* `core-justification / planned`
     *   *Role in Pipeline:* Proves mathematically that no single clustering algorithm can satisfy scale-invariance, richness, and consistency simultaneously. Directly justifies why our planned morphological typologies are presented strictly as **exploratory, qualitative characterizations** rather than objective "natural categories" of science.

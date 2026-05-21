@@ -2,7 +2,7 @@
 
 **Thesis Title:** Measuring the Shape of Science: Morphological Indicators and Evolution of Research Fields  
 **Date:** May 2026  
-**Author:** Candidate for Master of Science  
+**Author:** Alejandro Treny Ortega  
 **Workspace:** `c:\Users\Z0058EYW\Workspace\TFM`  
 
 ---

@@ -1,0 +1,27 @@
+\begin{table}[H]
+\centering
+\caption{Corpus eligibility filters and sampling design}
+\label{tab:corpus_filters}
+\footnotesize
+\begin{tabular}{p{0.34\textwidth} p{0.56\textwidth}}
+\hline
+\textbf{Component} & \textbf{Active setting} \\
+\hline
+Dataset version & \texttt{2000\_2024\_400py} \\
+Analytical unit & OpenAlex subfield \\
+Subfield assignment & Primary-topic subfield only \\
+Publication years & 2000--2024 inclusive \\
+Language & English \\
+Work types & Article and preprint \\
+Text requirement & Title and abstract required \\
+Minimum title length & At least 5 tokens \\
+Minimum abstract length & At least 80 tokens \\
+Exclusions & Retracted and paratextual records \\
+Annual sampling target & Up to 400 works per subfield-year \\
+Full-period cap & 10,000 works per subfield \\
+Sampling controls & Oversample factor 1.75; maximum 4 backfill rounds \\
+\hline
+\end{tabular}
+\par\vspace{0.2cm}
+\footnotesize\textit{Note.} Settings are from the validation summary for corpus version \texttt{2000\_2024\_400py}.
+\end{table}
