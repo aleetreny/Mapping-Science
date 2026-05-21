@@ -9,8 +9,8 @@ Every reference has been verified using stable identifiers (DOIs, arXiv IDs, or 
 ## 1. Academic Status Breakdown
 
 *   **Total References in Database:** 37
-*   **Peer-Reviewed Journal Articles / Conference Papers / Book Chapters:** 29
-*   **Preprints (arXiv / Zenodo):** 6
+*   **Peer-Reviewed Journal Articles / Conference Papers / Book Chapters:** 30
+*   **Preprints (arXiv / Zenodo):** 5
 *   **Gray Literature (Working Papers / Blog Posts):** 2
 *   **Unverified or Missing Metadata:** 0
 
@@ -25,7 +25,7 @@ These sources are published in peer-reviewed scientific journals, canonical comp
 | `vaneck2010vosviewer` | Van Eck, N. | *Scientometrics* | `10.1007/s11192-009-0146-3` | **Verified** |
 | `borner2003visualizing` | Börner, K. | *ARIST* | `10.1002/aris.1440370106` | **Verified** |
 | `cohan2020specter` | Cohan, A. | *ACL Conference* | `10.18653/v1/2020.acl-main.207` | **Verified** |
-| `singh2023scirepeval` | Singh, A. | *EMNLP Conference* | `10.18653/v1/2023.emnlp-main.657` | **Verified** |
+| `singh2023scirepeval` | Singh, A. | *EMNLP Conference* | `10.18653/v1/2023.emnlp-main.338` | **Verified** |
 | `pennington2014glove` | Pennington, J.| *EMNLP Conference* | `10.3115/v1/D14-1162` | **Verified** |
 | `radovanovic2010hubness` | Radovanović, M.| *Journal of Machine Learning Research* | [JMLR 11:86](https://jmlr.org/papers/v11/radovanovic10a.html) | **Verified** |
 | `feldbauer2019skhubness` | Feldbauer, R. | *Journal of Open Source Software* | `10.21105/joss.01957` | **Verified** |
@@ -37,8 +37,9 @@ These sources are published in peer-reviewed scientific journals, canonical comp
 | `nooteboom2007cognitive` | Nooteboom, B. | *Research Policy* | `10.1016/j.respol.2007.04.003` | **Verified** |
 | `traag2019leiden` | Traag, V. | *Scientific Reports* | `10.1038/s41598-019-41695-z` | **Verified** |
 | `chari2023specious` | Chari, T. | *PLOS Computational Biology* | `10.1371/journal.pcbi.1011288` | **Verified** |
-| `scheidsteger2025reference` | Scheidsteger, T.| *Scientometrics* | `10.1007/s11192-025-05293-3` | **Verified** |
-| `visser2020google` | Visser, M. | *Scientometrics* | `10.1007/s11192-020-03690-4` | **Verified** |
+| `culbert2025reference` | Culbert, J. | *Scientometrics* | `10.1007/s11192-025-05293-3` | **Verified** |
+| `martinmartin2021google` | Martín-Martín, A.| *Scientometrics* | `10.1007/s11192-020-03690-4` | **Verified** |
+| `mcinnes2018umap` | McInnes, L. | *Journal of Open Source Software* | `10.21105/joss.00861` | **Verified** |
 | `beltagy2019scibert` | Beltagy, I. | *EMNLP Conference* | `10.18653/v1/D19-1371` | **Verified** |
 | `wattenberg2016tsne` | Wattenberg, M. | *Distill* | `10.23721/100.1.10` | **Verified** |
 | `leydesdorff2013global` | Leydesdorff, L.| *JASIST* | `10.1002/asi.22748` | **Verified** |
@@ -47,7 +48,7 @@ These sources are published in peer-reviewed scientific journals, canonical comp
 | `salton1983vector` | Salton, G. | *Communications of the ACM* | `10.1145/182.358466` | **Verified** |
 | `wagner2011interdisciplinarity`| Wagner, C. | *Journal of Informetrics* | `10.1016/j.joi.2010.06.004` | **Verified** |
 | `blondel2008louvain` | Blondel, V. | *J. Stat. Mech.* | `10.1088/1742-5468/2008/10/P10008` | **Verified** |
-| `boyack2014creation` | Boyack, K. | *Scientometrics* | `10.1007/s11192-014-1234-x` | **Verified** |
+| `boyack2014creation` | Boyack, K. | *JASIST* | `10.1002/asi.22990` | **Verified** |
 | `levina2004intrinsic` | Levina, E. | *NeurIPS Proceedings (Peer-reviewed)*| [NeurIPS 17](https://papers.nips.cc/paper/2004/hash/72ab0da9081255c42e20b3558f625076-Abstract.html) | **Verified** |
 | `kleinberg2002clustering` | Kleinberg, J. | *NeurIPS Proceedings (Peer-reviewed)*| [NeurIPS 15](https://papers.nips.cc/paper/2002/hash/6211087b27299a9b6c0032e6503c4078-Abstract.html) | **Verified** |
 | `arthur2007kmeans` | Arthur, D. | *SODA Proceedings (Peer-reviewed)* | [ACM SODA 2007](https://dl.acm.org/doi/10.5555/1283383.1283494) | **Verified** |
@@ -58,16 +59,12 @@ These sources are published in peer-reviewed scientific journals, canonical comp
 
 The following references are highly useful for our research, but are technically **gray literature, preprints, or blog posts**. They must be handled with appropriate care during the thesis defense to prevent reviews criticizing "non-peer-reviewed" claims.
 
-### 3.1 Preprints (6 References)
+### 3.1 Preprints (5 References)
 
 *   **`priem2022openalex` (Priem, Piwowar, & Orr, 2022)**
     *   *Type:* Preprint (published on Zenodo and arXiv).
     *   *Verification Status:* **Verified** (DOI: `10.5281/zenodo.6936227`).
-    *   *Defense Standing:* While technically a preprint, it is the **official publication** for the OpenAlex platform written by its founders. It is widely cited throughout modern informetrics. We can confidently use it, backing its reliability with peer-reviewed empirical audits like Visser et al. (2020) and Scheidsteger & Lindner (2025).
-*   **`mcinnes2018umap` (McInnes, Healy, & Melville, 2018)**
-    *   *Type:* Preprint (arXiv).
-    *   *Verification Status:* **Verified** (arXiv: `1802.03426`).
-    *   *Defense Standing:* The primary algorithm paper for UMAP. Although published on arXiv, it has thousands of academic citations and represents the universally accepted mathematical description of UMAP. We use it solely to define UMAP's math for our qualitative-only visualization layer.
+    *   *Defense Standing:* While technically a preprint, it is the **official publication** for the OpenAlex platform written by its founders. It is widely cited throughout modern informetrics. We can confidently use it, backing its reliability with peer-reviewed empirical audits like Martín-Martín et al. (2021) and Culbert et al. (2025).
 *   **`devlin2018bert` (Devlin et al., 2018)**
     *   *Type:* Preprint (arXiv).
     *   *Verification Status:* **Verified** (arXiv: `1810.04805`).

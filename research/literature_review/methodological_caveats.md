@@ -15,8 +15,8 @@ Non-linear dimensionality reduction algorithms like UMAP (Uniform Manifold Appro
 3. **Volume Inflation/Deflation:** The apparent density or size of a 2D cluster on a plot is highly sensitive to UMAP's hyperparameters (`n_neighbors`, `min_dist`) and does not correspond to the actual volume of the point cloud in 768-D.
 
 ### Academic Defense (How We Mitigate It):
-*   We cite **Chari, Banerjee, & Pachter (2023)** ("The Specious Art of Single-Cell Genomics") as our primary mathematical backing. They proved that UMAP distortions make it fundamentally unsuitable for quantitative morphological measurements.
-*   **Methodological Decision:** We perform **all** 11 morphological calculations (e.g., dispersion, volume, intrinsic dimension, cognitive distance, centroid drift) in the **raw 768-dimensional SPECTER2 space**. UMAP is used **exclusively** for qualitative, auxiliary visualization.
+*   We cite **Chari, Banerjee, & Pachter (2023)** ("The Specious Art of Single-Cell Genomics") as our primary mathematical backing. They demonstrated that non-linear projections introduce metric distortions, meaning they are **not used as quantitative evidence because nonlinear projections may distort distances, densities, and neighborhood relations**.
+*   **Methodological Decision:** We perform **all** 11 morphological calculations (e.g., dispersion, volume, intrinsic dimension, cognitive distance, centroid drift) in the **raw 768-dimensional SPECTER2 space**. UMAP is used **exclusively** for qualitative, auxiliary visualization. Embedding-space distances are treated as model-dependent semantic approximations, not objective measures of scientific reality.
 
 ---
 
@@ -52,6 +52,7 @@ Clustering is a fundamental step in grouping subfields into Morphological Typolo
 ### Academic Defense (How We Mitigate It):
 *   We cite **Kleinberg (2002)** to provide a rigorous theoretical backing for treating our morphological typologies as **exploratory, qualitative heuristics** rather than objective, absolute taxonomies of knowledge.
 *   **Methodological Decision:** Our active pipeline groups disciplines strictly by running standard KMeans and hierarchical Ward clustering **over the reduced 11 embedding-space metric profiles** at the subfield level.
+*   **Clustering Chapter Status:** This chapter is planned as a downstream exploratory analysis and must be implemented only over the reduced 11-metric profiles. No active clustering script is in our active production pipeline.
 *   **Non-Active Extension (Future Work):** We do **not** build paper-level citation or kNN graphs, nor do we run graph-level community detection such as **Leiden community detection** (**Traag et al., 2019**). These paper-level graph models are explicitly relegated to **future work extensions**.
 
 ---
@@ -67,7 +68,7 @@ Our empirical pipeline relies on OpenAlex. While OpenAlex is an exceptional open
 3. **Geographical & Language Bias:** Scholarly indexes historically underrepresent non-English and regional publications. This skew can distort our macro-level temporal maps of global scientific evolution.
 
 ### Academic Defense (How We Mitigate It):
-*   We cite **Visser et al. (2020)** and **Scheidsteger & Lindner (2025)**, who audited OpenAlex's coverage and demonstrated that its metadata quality is statistically equivalent to commercial standards (WoS, Scopus) for large-scale science mapping.
+*   We cite **Martín-Martín et al. (2021)** and **Culbert et al. (2025)**, who audited OpenAlex's coverage and demonstrated that its metadata quality is statistically equivalent to commercial standards (WoS, Scopus) for large-scale science mapping.
 *   **Methodological Decision:** We implement a strict data cleaning protocol: filtering out works missing abstract text, restricting our analysis to peer-reviewed publications, and acknowledging regional metadata limitations in the discussion.
 
 ---
