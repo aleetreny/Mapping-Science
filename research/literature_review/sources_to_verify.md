@@ -64,7 +64,7 @@ The following references are highly useful for our research, but are technically
 *   **`priem2022openalex` (Priem, Piwowar, & Orr, 2022)**
     *   *Type:* Preprint (published on Zenodo and arXiv).
     *   *Verification Status:* **Verified** (DOI: `10.5281/zenodo.6936227`).
-    *   *Defense Standing:* While technically a preprint, it is the **official publication** for the OpenAlex platform written by its founders. It is widely cited throughout modern informetrics. We can confidently use it, backing its reliability with peer-reviewed empirical audits like Martín-Martín et al. (2021) and Culbert et al. (2025).
+    *   *Defense Standing:* While technically a preprint, it is the **official publication** for the OpenAlex platform written by its founders. It is widely cited throughout modern informetrics. We can confidently use it, backing its database standing with peer-reviewed empirical audits like Martín-Martín et al. (2021) and Culbert et al. (2025).
 *   **`devlin2018bert` (Devlin et al., 2018)**
     *   *Type:* Preprint (arXiv).
     *   *Verification Status:* **Verified** (arXiv: `1810.04805`).

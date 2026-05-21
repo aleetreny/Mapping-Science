@@ -68,7 +68,7 @@ Our empirical pipeline relies on OpenAlex. While OpenAlex is an exceptional open
 3. **Geographical & Language Bias:** Scholarly indexes historically underrepresent non-English and regional publications. This skew can distort our macro-level temporal maps of global scientific evolution.
 
 ### Academic Defense (How We Mitigate It):
-*   We cite **Martín-Martín et al. (2021)** and **Culbert et al. (2025)**, who audited OpenAlex's coverage and demonstrated that its metadata quality is statistically equivalent to commercial standards (WoS, Scopus) for large-scale science mapping.
+*   We cite **Martín-Martín et al. (2021)**, who audited database coverage, and **Culbert et al. (2025)**, who show that OpenAlex reference coverage is broadly comparable to Web of Science and Scopus in a cleaned shared-publication comparison, while also documenting metadata limitations, including lower abstract coverage.
 *   **Methodological Decision:** We implement a strict data cleaning protocol: filtering out works missing abstract text, restricting our analysis to peer-reviewed publications, and acknowledging regional metadata limitations in the discussion.
 
 ---

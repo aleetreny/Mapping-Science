@@ -44,7 +44,7 @@ This represents the active mathematical engine of the thesis:
 *   **OpenAlex Corpus and Taxonomy:**
     *   *Methodology Status:* `implemented`
     *   *References:* **Priem et al. (2022)** (`Core Active-Methodology`). This validates the completeness and coverage of OpenAlex as our data source.
-    *   *References:* **Martín-Martín et al. (2021)** (`Core Active-Methodology` | `methodological justification`), **Culbert et al. (2025)** (`Core Active-Methodology` | `methodological justification`). These validate that open citation databases provide a complete, reliable basis for large-scale science mapping.
+    *   *References:* **Martín-Martín et al. (2021)** (`Core Active-Methodology` | `methodological justification`). This validates that open citation databases provide a highly comprehensive basis for large-scale science mapping. **Culbert et al. (2025)** (`Core Active-Methodology` | `methodological justification`) show that OpenAlex reference coverage is broadly comparable to Web of Science and Scopus in a cleaned shared-publication comparison, while also documenting metadata limitations, including lower abstract coverage.
 *   **SPECTER2 Document Embeddings:**
     *   *Methodology Status:* `implemented`
     *   *References:* **Singh et al. (2023)** (`Core Active-Methodology`). This validates that SPECTER2 embeddings represent cohesive, citation-informed topical semantic spaces.
@@ -105,7 +105,7 @@ To protect the thesis from critique during the defense, we list the primary clai
 2.  **SPECTER2 is a citation-informed semantic vector space:** The representations carry deep semantic and structural citation signals, outperforming standard language models for scholarly document mapping.
 3.  **Local subfield profiles suffer from varying hubness:** We can measure this using `embedding_knn_indegree_gini`, showing that some subfields have highly dominant "central papers" (hubs) while others are topologically flat.
 4.  **Morphological typologies are strictly exploratory:** We present our planned KMeans groupings of the 11 metrics as qualitative, heuristic typologies, backed by Kleinberg's (2002) proof that no clustering is absolute.
-5.  **OpenAlex coverage is statistically sound for macro-level mapping:** Its coverage matches Scopus/WoS as proven by Martín-Martín et al. (2021) and Culbert et al. (2025).
+5.  **OpenAlex coverage is statistically sound for macro-level mapping:** OpenAlex reference coverage is broadly comparable to Web of Science and Scopus in a cleaned shared-publication comparison, as shown by Culbert et al. (2025), and is highly comprehensive, as shown by Martín-Martín et al. (2021).
 
 ---
 

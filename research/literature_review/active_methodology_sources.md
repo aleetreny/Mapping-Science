@@ -28,7 +28,7 @@ $$\text{OpenAlex Balanced Corpus} \longrightarrow \text{SPECTER2 Embeddings (768
     *   *Role in Pipeline:* Provides statistical evidence that open bibliographic metadata databases (such as Google Scholar and Microsoft Academic Graph, which underlies OpenAlex) have citation coverage and quality equivalent to or exceeding proprietary databases (Scopus, WoS) for large-scale science mapping, justifying our database choice.
 *   **[culbert2025reference](file:///c:/Users/Z0058EYW/Workspace/TFM/research/literature_review/candidate_references.bib)** (Culbert et al., 2025)
     *   *Reference Category:* `core-justification`
-    *   *Role in Pipeline:* Provides a recent peer-reviewed audit confirming that OpenAlex's citation reference list coverage is complete and reliable for large-scale structural analysis compared to Web of Science and Scopus, justifying its use in structural modeling.
+    *   *Role in Pipeline:* Culbert et al. (2025) show that OpenAlex reference coverage is broadly comparable to Web of Science and Scopus in a cleaned shared-publication comparison, while also documenting metadata limitations, including lower abstract coverage.
 
 ### 2.2 Semantic Vector Representations
 *   **[singh2023scirepeval](file:///c:/Users/Z0058EYW/Workspace/TFM/research/literature_review/candidate_references.bib)** (Singh et al., 2023)

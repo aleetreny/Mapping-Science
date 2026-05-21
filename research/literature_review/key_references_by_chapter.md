@@ -97,7 +97,7 @@ All references are marked with their explicit category (`Core Active-Methodology
 *   **Methodology Status:** `implemented`
 *   **Short Summary:** Presents the design, data model, and metadata indexing pipeline of the OpenAlex scientific database, detailing its system of taxonomic concepts.
 *   **Thesis Chapter:** Chapter 3: Data and Corpus Construction
-*   **Claim Supported:** OpenAlex is a highly complete, reliable, and open-access index of global scientific literature, and its hierarchical subfield categorization is a valid unit of analysis for macro-bibliometrics.
+*   **Claim Supported:** OpenAlex is a highly comprehensive and open-access index of global scientific literature, and its hierarchical subfield categorization is a valid unit of analysis for macro-bibliometrics.
 *   **Caveats:** The hierarchical taxonomy of concepts has undergone refinement, and automated classifications can introduce small classification errors.
 *   **Confidence Level:** 5/5
 

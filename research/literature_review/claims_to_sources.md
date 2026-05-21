@@ -49,7 +49,7 @@ Every claim has been scoped conservatively to **avoid overstating what the empir
         *   *Thesis Support:* Statistical comparison showing that open citation data has equivalent or superior coverage to Scopus and Web of Science.
     *   **[culbert2025reference](file:///c:/Users/Z0058EYW/Workspace/TFM/research/literature_review/candidate_references.bib)** (Culbert et al., 2025)  
         *   *Methodology Status:* `methodological justification`  
-        *   *Thesis Support:* Recent reference list coverage audit validating that OpenAlex represents an academically sound basis for citation-informed modeling.
+        *   *Thesis Support:* Culbert et al. (2025) show that OpenAlex reference coverage is broadly comparable to Web of Science and Scopus in a cleaned shared-publication comparison, while also documenting metadata limitations, including lower abstract coverage.
 
 ### Claim 4: "SPECTER2 embeddings effectively capture both semantic text context and citation-informed relatedness, providing a dense vector coordinate space for document-level science mapping. High-dimensional relationships are treated as model-dependent semantic approximations, not objective measures of scientific reality."
 *   **Supporting Literature:**

@@ -37,7 +37,7 @@ This ledger documents the strict, peer-review-quality bibliographic audit perfor
 | `kleinberg2002clustering` | **verified** | Confirmed metadata. | NeurIPS 15: `463--470` (NeurIPS official archive) | Clustering Impossibility Theorem. |
 | `mcinnes2018umap` | **corrected** | Changed preprint to peer-reviewed. | DOI: `10.21105/joss.00861` | Upgraded to the peer-reviewed JOSS publication (Volume 3, Issue 29, Page 861). |
 | `chari2023specious` | **verified** | Confirmed metadata. | DOI: `10.1371/journal.pcbi.1011288` | Non-linear distance distortions in *PLOS Comp. Bio*. |
-| `culbert2025reference` | **corrected** | Renamed key, corrected mixed authors. | DOI: `10.1007/s11192-025-05293-3` | Previously `scheidsteger2025reference`. Corrected authors to Jack H. Culbert et al. (2025) in *Scientometrics*. |
+| `culbert2025reference` | **corrected** | Corrected key, pages, and issue number. | DOI: `10.1007/s11192-025-05293-3` | Corrected authors (previously `scheidsteger2025reference`), updated page numbers to `2475--2492`, and removed unverified issue number. |
 | `martinmartin2021google` | **corrected** | Renamed key, corrected mixed authors. | DOI: `10.1007/s11192-020-03690-4` | Previously `visser2020google`. Corrected authors to Alberto Martín-Martín et al. (2021) in *Scientometrics*. |
 | `devlin2018bert` | **verified** | Confirmed metadata. | arXiv: `1810.04805` / DOI: `10.48550/arXiv.1810.04805` | Canonical BERT pre-training preprint. |
 | `beltagy2019scibert` | **verified** | Confirmed metadata. | DOI: `10.18653/v1/D19-1371` | SciBERT scientific text model (EMNLP 2019). |
