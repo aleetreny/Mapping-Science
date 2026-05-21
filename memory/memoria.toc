@@ -1,3 +1,17 @@
 \babel@toc {english}{}\relax 
 \contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
+\contentsline {chapter}{\numberline {2}Background and Related Work}{2}{chapter.2}%
+\contentsline {chapter}{\numberline {3}Data and Corpus Construction}{3}{chapter.3}%
+\contentsline {chapter}{\numberline {4}Semantic Representation}{4}{chapter.4}%
+\contentsline {chapter}{\numberline {5}Embedding-Space Morphological Metrics}{5}{chapter.5}%
+\contentsline {chapter}{\numberline {6}Static Comparison of Scientific Disciplines}{6}{chapter.6}%
+\contentsline {chapter}{\numberline {7}Temporal Evolution of Scientific Morphology}{7}{chapter.7}%
+\contentsline {chapter}{\numberline {8}Morphological Similarity, Convergence and Divergence}{8}{chapter.8}%
+\contentsline {chapter}{\numberline {9}Visualization of the Scientific Space}{9}{chapter.9}%
+\contentsline {chapter}{\numberline {10}Discussion}{10}{chapter.10}%
+\contentsline {chapter}{\numberline {11}Conclusion}{11}{chapter.11}%
+\contentsline {chapter}{Bibliography}{12}{chapter.11}%
+\contentsline {chapter}{\numberline {A}Pipeline Details and Execution Commands}{12}{appendix.A}%
+\contentsline {chapter}{\numberline {B}Embedding-Space Metric Formulations}{13}{appendix.B}%
+\contentsline {chapter}{\numberline {C}Additional Figures and Diagnostic Plots}{14}{appendix.C}%
 \contentsfinish 

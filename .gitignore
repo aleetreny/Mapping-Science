@@ -44,3 +44,20 @@ data/processed/subfield_morphology_metrics.parquet
 data/processed/subfield_morphology_metrics.csv
 models/
 embeddings/
+
+# LaTeX build artifacts for memory/
+memory/*.aux
+memory/*.log
+memory/*.bcf
+memory/*.run.xml
+memory/*.toc
+memory/*.lof
+memory/*.lot
+memory/*.out
+memory/*.bbl
+memory/*.blg
+memory/*.fdb_latexmk
+memory/*.fls
+memory/*.synctex.gz
+memory/*.pdf
+

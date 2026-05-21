@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.17)  21 MAY 2026 11:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.4.17)  21 MAY 2026 11:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1316,12 +1316,13 @@ Package: blx-case-expl3 2025/07/10 v3.21 expl3 case changing code for biblatex
 ))
 Package csquotes Info: Checking for multilingual support...
 Package csquotes Info: ... found 'babel' package.
- (memoria.aux)
+
+No file memoria.aux.
 \openout1 = `memoria.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/txmi/m/it on input line 203.
 LaTeX Font Info:    Trying to load font information for OML+txmi on input line 203.
- (C:\Users\Z0058EYW\AppData\Local\Programs\MiKTeX\tex/latex/txfonts\omltxmi.fd
+(C:\Users\Z0058EYW\AppData\Local\Programs\MiKTeX\tex/latex/txfonts\omltxmi.fd
 File: omltxmi.fd 2000/12/15 v3.1
 )
 LaTeX Font Info:    ... okay on input line 203.
@@ -1408,7 +1409,6 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 48
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
 Package hyperref Info: Link coloring ON on input line 203.
- (memoria.out) (memoria.out)
 \@outlinefile=\write5
 \openout5 = `memoria.out'.
 
@@ -1459,7 +1459,7 @@ File: t1txss.fd 2000/12/15 v3.1
 )
 LaTeX Font Info:    Font shape `T1/txss/m/n' will be
 (Font)              scaled to size 11.39996pt on input line 210.
-<imagenes/logo_UC3M.png, id=10, 456.2865pt x 45.99pt>
+<imagenes/logo_UC3M.png, id=6, 456.2865pt x 45.99pt>
 File: imagenes/logo_UC3M.png Graphic file (type png)
 <use imagenes/logo_UC3M.png>
 Package pdftex.def Info: imagenes/logo_UC3M.png  used on input line 214.
@@ -1506,7 +1506,7 @@ Overfull \hbox (9.96916pt too wide) in paragraph at lines 242--243
 [] 
  []
 
-<imagenes/creativecommons.png, id=12, 338.76563pt x 118.19156pt>
+<imagenes/creativecommons.png, id=8, 338.76563pt x 118.19156pt>
 File: imagenes/creativecommons.png Graphic file (type png)
 <use imagenes/creativecommons.png>
 Package pdftex.def Info: imagenes/creativecommons.png  used on input line 245.
@@ -1530,56 +1530,131 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.i}) has b
 l.277 \chapter
               *{Dedication} [1] [5
 
-] [6] (memoria.toc)
+] [6]
+No file memoria.toc.
 \tf@toc=\write6
 \openout6 = `memoria.toc'.
 
- [7
+[7
 
-] [8] (memoria.lof)
+] [8]
+No file memoria.lof.
 \tf@lof=\write7
 \openout7 = `memoria.lof'.
 
- [9
+[9
 
-] [10] (memoria.lot)
+] [10]
+No file memoria.lot.
 \tf@lot=\write8
 \openout8 = `memoria.lot'.
 
- [11
+[11
 
 ] [12]
 Chapter 1.
-[1
+(chapters/01_introduction.tex) [1
 
 
 ]
+Chapter 2.
+(chapters/02_background.tex) [2
 
-LaTeX Warning: Empty bibliography on input line 390.
+]
+Chapter 3.
+(chapters/03_data_and_corpus.tex) [3
 
-(memoria.aux)
+]
+Chapter 4.
+(chapters/04_semantic_representation.tex) [4
+
+]
+Chapter 5.
+(chapters/05_embedding_space_metrics.tex) [5
+
+]
+Chapter 6.
+(chapters/06_static_comparison.tex) [6
+
+]
+Chapter 7.
+(chapters/07_temporal_evolution.tex
+Overfull \hbox (2.76065pt too wide) in paragraph at lines 8--9
+\T1/txr/m/n/12 This chap-ter traces the lon-gi-tu-di-nal mor-pho-log-i-cal evo-lu-tion of sci-en-tific dis-ci-plines across
+ []
+
+) [7
+
+]
+Chapter 8.
+(chapters/08_morphological_similarity.tex) [8
+
+]
+Chapter 9.
+(chapters/09_visualization.tex) [9
+
+]
+Chapter 10.
+(chapters/10_discussion.tex) [10
+
+]
+Chapter 11.
+(chapters/11_conclusion.tex) [11
+
+]
+
+LaTeX Warning: Empty bibliography on input line 371.
+
+Appendix A.
+(appendices/appendix_pipeline_details.tex) [12
+
+
+]
+Appendix B.
+(appendices/appendix_metric_definitions.tex) [13
+
+]
+Appendix C.
+(appendices/appendix_additional_figures.tex) [14
+
+] (memoria.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
-Package rerunfilecheck Info: File `memoria.out' has not changed.
-(rerunfilecheck)             Checksum: 4D47AFB7107A54A21B0D2C438B3C2BD0;103.
+
+
+LaTeX Warning: There were undefined references.
+
+
+Package rerunfilecheck Warning: File `memoria.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `memoria.out':
+(rerunfilecheck)             Before: <no file>
+(rerunfilecheck)             After:  27A3A501206AE88EBC18C5110CBE1F83;2997.
+
+Package biblatex Warning: Please (re)run Biber on the file:
+(biblatex)                memoria
+(biblatex)                and rerun LaTeX afterwards.
+
 Package logreq Info: Writing requests to 'memoria.run.xml'.
 \openout1 = `memoria.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 28603 strings out of 467871
- 483456 string characters out of 5416924
- 1427188 words of memory out of 5000000
- 57068 multiletter control sequences out of 15000+600000
+ 28726 strings out of 467871
+ 488026 string characters out of 5416924
+ 1427084 words of memory out of 5000000
+ 57131 multiletter control sequences out of 15000+600000
  683718 words of font info for 134 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  92i,11n,103p,735b,5052s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<C:/Users/Z0058EYW/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvb8a.pfb><C:/Users/Z0058EYW/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/Z0058EYW/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/Z0058EYW/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/Z0058EYW/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb>
-Output written on memoria.pdf (13 pages, 100326 bytes).
+<C:/Users/Z0058EYW/AppData/Local/Programs/MiKTeX/fonts/type1/public/txfonts/rtxr.pfb><C:/Users/Z0058EYW/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvb8a.pfb><C:/Users/Z0058EYW/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/Z0058EYW/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/Z0058EYW/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/Z0058EYW/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb>
+Output written on memoria.pdf (26 pages, 127816 bytes).
 PDF statistics:
- 109 PDF objects out of 1000 (max. 8388607)
- 18 named destinations out of 1000 (max. 500000)
- 31 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 182 PDF objects out of 1000 (max. 8388607)
+ 44 named destinations out of 1000 (max. 500000)
+ 23 words of extra memory for PDF output out of 10000 (max. 10000000)
 

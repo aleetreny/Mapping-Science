@@ -1,0 +1,13 @@
+% Chapter 4: Semantic Representation
+% Focus: The SPECTER2 embedding architecture, embedding pipeline shards validation, and building the row-aligned analysis matrix.
+% Document Feeds: docs/embedding_pipeline.md, docs/embed_specter2_kaggle.md
+% Outputs: data/processed/analysis_embedding_index.parquet, main_embeddings.float16.npy
+% TODO: Explain row alignment mapping (analysis_row_id to work_id).
+% TODO: Provide mathematical description of how title + abstract text maps to 768-dimensional dense vector space.
+
+\noindent This chapter details the technical and conceptual framework of document semantic representation. It documents the embedding pipeline, shard validation, and the row-aligned document matrix which serves as the quantitative foundation for all downstream morphological analyses.
+
+% TODO: Detail SPECTER2 model selection, fine-tuning task adapters, and output vector space.
+% TODO: Describe shard-by-shard embedding computation and the validation protocol.
+% TODO: Define the mathematical mapping from text input to $\mathbb{R}^{768}$.
+% TODO: Outline the contract between the embedding index and row-aligned matrices.
