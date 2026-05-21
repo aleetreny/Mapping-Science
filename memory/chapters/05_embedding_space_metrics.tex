@@ -30,56 +30,31 @@ Together these metrics turn geometry into interpretable morphology. They do not 
 
 \section{Operational Definitions}
 
-Semantic dispersion is measured from the centroid-distance distribution \(\{r_i : i \in s\}\). The median distance describes the typical radial position of papers around the subfield center. The interquartile range describes heterogeneity in the middle of the distribution. The 90th percentile captures the outer semantic periphery. A field can therefore be compact at the center while still having a long tail of distant papers.
+The compact notation in this section states the implemented definitions; Appendix~\ref{app:metric-formulations} records the full formula set. Semantic dispersion is measured from the centroid-distance distribution \(\{r_i : i \in s\}\). The median distance describes the typical radial position of papers around the subfield center. The interquartile range describes heterogeneity in the middle of the distribution. The 90th percentile captures the outer semantic periphery. A field can therefore be compact at the center while still having a long tail of distant papers.
 
-Local density is computed from within-subfield nearest-neighbor distances. Let \(N_k(i)\) be the \(k\)-nearest-neighbor set of paper \(i\), with \(k = 15\) unless fewer non-self neighbors are available. The median kNN distance measures typical local packing; smaller values indicate tighter neighborhoods. The coefficient of variation of all directed kNN distances measures unevenness in local density. To capture hubness, each paper receives an in-degree count
+Local density is computed from within-subfield nearest-neighbor distances. Let \(N_k(i)\) be the \(k\)-nearest-neighbor set of paper \(i\), with \(k = 15\) unless fewer non-self neighbors are available. The median kNN distance measures typical local packing; smaller values indicate tighter neighborhoods. The coefficient of variation of all directed kNN distances measures unevenness in local density. Hubness is captured by the Gini coefficient of the in-degree counts \(h_j = \sum_{i \in s}\mathbf{1}\{j \in N_k(i)\}\). High \(\texttt{knn\_indegree\_gini}\) values indicate that a small subset of papers appears disproportionately often as nearest neighbors, a known issue in high-dimensional spaces \parencite{radovanovic2010hubness}.
 
-\[
-h_j = \sum_{i \in s} \mathbf{1}\{j \in N_k(i)\}.
-\]
-
-The metric \(\texttt{knn\_indegree\_gini}\) is the Gini coefficient of these counts. High values indicate that a small subset of papers appears disproportionately often as nearest neighbors. This is a known issue in high-dimensional spaces, where certain points can become unusually frequent neighbors across many queries \parencite{radovanovic2010hubness}.
-
-Spectral structure is measured with PCA on the normalized embeddings of each subfield. Let \(\lambda_1,\ldots,\lambda_p\) be the PCA explained-variance values, with \(p \leq 768\) depending on the number of available observations and positive-variance components. The 80 percent dimensionality proxy is
+Spectral structure is measured with PCA on the normalized embeddings of each subfield. Let \(\lambda_1,\ldots,\lambda_p\) be the PCA explained-variance values, with \(p \leq 768\) depending on the number of available observations and positive-variance components. The 80 percent dimensionality proxy and normalized spectral entropy are
 
 \[
-D_{80}(s) = \min \left\{m : \frac{\sum_{j=1}^{m} \lambda_j}{\sum_{j=1}^{p} \lambda_j} \geq 0.80 \right\}.
-\]
-
-Higher values mean that more principal components are needed to explain the same share of variance. This is an operational PCA proxy, not a claim about the true intrinsic dimension of a field.
-
-The spectral entropy metric summarizes how evenly variance is distributed across PCA directions:
-
-\[
-H(s) = -\frac{\sum_{j=1}^{q} p_j \log p_j}{\log q},
+D_{80}(s)=\min\left\{m:\frac{\sum_{j\leq m}\lambda_j}{\sum_{j\leq p}\lambda_j}\geq 0.80\right\},
 \qquad
-p_j = \frac{\lambda_j}{\sum_{\ell=1}^{q} \lambda_\ell},
+H(s)=-\frac{\sum_{j\leq q}p_j\log p_j}{\log q}.
 \]
 
-where \(q\) is the number of positive-variance components. Values are normalized by \(\log q\), so higher entropy indicates a flatter variance spectrum and less dominance by a few directions.
+Here \(q\) is the number of positive-variance components and \(p_j = \lambda_j / \sum_{\ell\leq q}\lambda_\ell\). Higher \(D_{80}\) values mean that more principal components are needed to explain the same share of variance. This is an operational PCA proxy, not a claim about the true intrinsic dimension of a field. Higher entropy indicates a flatter variance spectrum and less dominance by a few directions.
 
-Temporal morphology is measured with three indicators. The first, \(\texttt{centroid\_drift}\), is the cosine distance between the centroid of the early period and the centroid of the late period. For the full thesis window, the early period is 2000--2004 and the late period is 2020--2024:
+Temporal morphology is measured with three indicators. For the full thesis window, the early period is 2000--2004 and the late period is 2020--2024. The implemented definitions are
 
 \[
-\Delta_c(s) = d(c_s^{early}, c_s^{late}).
+\begin{aligned}
+\Delta_c(s) &= d(c_s^{early}, c_s^{late}), &
+a_{s,t} &= \beta_0 + \beta_1(t-\bar{t}) + \varepsilon_t,\\
+R(s) &= \widetilde{d}_{late\to early} - \widetilde{d}_{early\to early}.
+\end{aligned}
 \]
 
-The second, \(\texttt{radial\_expansion\_slope}\), is the linear slope of annual median distance to the full-period centroid. If \(a_{s,t}\) is the median distance of papers published in year \(t\) to \(c_s\), then the metric is the fitted slope \(\hat{\beta}_1\) in
-
-\[
-a_{s,t} = \beta_0 + \beta_1(t-\bar{t}) + \varepsilon_t.
-\]
-
-Positive values indicate expansion away from the period centroid; negative values indicate contraction toward it. The third temporal metric, \(\texttt{recent\_novelty\_score}\), compares late papers with the early semantic core:
-
-\[
-R(s) =
-\operatorname{median}_{i \in late} d(z_i, c_s^{early})
--
-\operatorname{median}_{i \in early} d(z_i, c_s^{early}).
-\]
-
-A positive value means that recent papers are farther from the early-period centroid than early papers were. These temporal metrics describe movement and radial change; they do not identify causes.
+Centroid drift is \(\Delta_c(s)\), the cosine distance between early and late centroids. Radial expansion is the fitted \(\hat{\beta}_1\), where \(a_{s,t}\) is the annual median distance to the full-period centroid; positive values indicate expansion away from the period center and negative values indicate contraction toward it. In the recent-novelty score \(R(s)\), the two tilded terms are median late-period and early-period distances to the early centroid. A positive value means that recent papers are farther from the early-period centroid than early papers were. These temporal metrics describe movement and radial change; they do not identify causes.
 
 \section{Reduction to an Interpretable Metric Core}
 

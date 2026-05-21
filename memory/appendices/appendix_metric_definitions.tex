@@ -1,12 +1,49 @@
 % Appendix B: Embedding-Space Metric Formulations
-% Focus: Detailed mathematical derivations and formulations for the 11 core metrics.
-% Document Feeds: docs/embedding_metrics.md, docs/reduced_metric_core.md
-% TODO: Formulate formal LaTeX equations for dispersion, hubness, dimensionality, and drift metrics.
 
-\noindent This appendix compiles the formal mathematical definitions, algorithms, and geometric derivations for the reduced set of eleven core metrics used to analyze scientific discipline morphology.
+\label{app:metric-formulations}
 
-% TODO: Write equations for centroid-based measures (median, IQR, p90 distance).
-% TODO: Write equations for Local Density via K-Nearest Neighbor (KNN) distance distribution.
-% TODO: Formulate Hubness via the Gini Coefficient of the KNN In-degree distribution.
-% TODO: Detail Intrinsic Dimensionality using PCA cumulative variance thresholds and Spectral Entropy.
-% TODO: Outline formulas for Drift, Radial Expansion Slope, and Recent Novelty.
+\noindent This appendix records the formal definitions behind the reduced eleven-metric core. All quantities are computed on L2-normalized SPECTER2 document embeddings in the original embedding space. For a subfield \(s\), let \(Z_s=\{z_i:i\in s\}\), \(n_s=|Z_s|\), \(c_s=n_s^{-1}\sum_{i\in s}z_i\), and \(r_i=d(z_i,c_s)\), where \(d(\cdot,\cdot)\) is cosine distance.
+
+\medskip
+\noindent\textbf{Semantic dispersion.} The three centroid-based dispersion metrics are
+\[
+\operatorname{median}_{i\in s}(r_i), \qquad
+Q_{0.75}(r)-Q_{0.25}(r), \qquad
+Q_{0.90}(r).
+\]
+They correspond to typical radial distance, middle-spread heterogeneity, and the outer semantic periphery.
+
+\medskip
+\noindent\textbf{Local density and hubness.} Let \(N_k(i)\) be the directed set of within-subfield nearest neighbors for paper \(i\), with \(k=15\) unless the subfield has fewer available non-self neighbors. Let
+\[
+D_k(s)=\{d(z_i,z_j): i\in s,\ j\in N_k(i)\},
+\qquad
+h_j=\sum_{i\in s}\mathbf{1}\{j\in N_k(i)\}.
+\]
+The local-density metrics are \(\operatorname{median}(D_k(s))\) and \(\operatorname{sd}(D_k(s))/\operatorname{mean}(D_k(s))\). Hubness is the Gini coefficient of the in-degree counts \(h_j\). If \(h_{(1)}\leq\cdots\leq h_{(n_s)}\), then
+\[
+G_h(s)=\frac{2\sum_{\ell=1}^{n_s}\ell h_{(\ell)}}{n_s\sum_{\ell=1}^{n_s}h_{(\ell)}}-\frac{n_s+1}{n_s}.
+\]
+
+\medskip
+\noindent\textbf{Spectral structure.} Let \(\lambda_1,\ldots,\lambda_p\) be the positive PCA explained-variance values for the normalized embeddings of subfield \(s\). The dimensionality proxy and normalized spectral entropy are
+\[
+D_{80}(s)=\min\left\{m:\frac{\sum_{j=1}^{m}\lambda_j}{\sum_{j=1}^{p}\lambda_j}\geq 0.80\right\},
+\qquad
+H(s)=-\frac{\sum_{j=1}^{p}p_j\log p_j}{\log p},
+\]
+where \(p_j=\lambda_j/\sum_{\ell=1}^{p}\lambda_\ell\). The first quantity counts the PCA components needed to explain 80 percent of variance; the second measures how evenly variance is spread across positive-variance directions.
+
+\medskip
+\noindent\textbf{Temporal movement.} Let \(c_s^{early}\) and \(c_s^{late}\) be centroids for the early and late windows. In the full thesis period these are 2000--2004 and 2020--2024. Centroid drift is
+\[
+\Delta_c(s)=d(c_s^{early},c_s^{late}).
+\]
+For radial expansion, let \(a_{s,t}=\operatorname{median}_{i\in s,t}d(z_i,c_s)\). The metric is the fitted slope \(\widehat{\beta}_1\) in \(a_{s,t}=\beta_0+\beta_1(t-\bar{t})+\varepsilon_t\), using annual years with sufficient observations. Recent novelty is
+\[
+R(s)=
+\operatorname{median}_{i\in late}d(z_i,c_s^{early})
+-
+\operatorname{median}_{i\in early}d(z_i,c_s^{early}).
+\]
+These temporal indicators summarize movement, expansion or contraction, and the displacement of recent work from the early semantic core.
