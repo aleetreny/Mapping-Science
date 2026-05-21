@@ -12,13 +12,7 @@ The resulting corpus should therefore be understood as a controlled analytical c
 
 \section{Corpus Version and Analytical Scope}
 
-The active corpus version used throughout this thesis is:
-
-\begin{center}
-\texttt{2000\_2024\_400py}
-\end{center}
-
-It covers publications from 2000 to 2024, inclusive. The corpus contains 2,378,036 text-eligible OpenAlex works distributed across 252 subfields, 26 fields, and 4 domains. This full corpus is the synchronized thesis snapshot used for data description and validation.
+The empirical analyses in this thesis are based on a synchronized OpenAlex title--abstract corpus covering publications from 2000 to 2024. The corpus contains 2,378,036 text-eligible OpenAlex works distributed across 252 subfields, 26 fields, and 4 domains. This full corpus is the synchronized thesis snapshot used for data description and validation.
 
 The downstream embedding-based analysis uses a slightly smaller analysis subset. After aligning the corpus with the available SPECTER2 embeddings and applying the requirements for metric computation, the active analysis matrix contains 2,344,927 embedded works across 241 analysis subfields. This distinction is important: the full corpus describes the validated text extraction, whereas the analysis subset defines the observations that enter the embedding-space morphology metrics.
 
@@ -84,37 +78,25 @@ The domain distribution reflects both the OpenAlex taxonomy and the availability
 
 \section{Corpus Construction Pipeline}
 
-The corpus construction pipeline is organized as a sequence of reproducible stages. First, the OpenAlex taxonomy is fetched and stored. Second, annual counts are computed for subfields, fields, and domains. Third, a versioned corpus plan and sample plan are constructed. Fourth, sampled works are downloaded from OpenAlex. Fifth, the downloaded records are locally validated against the planned subfield-year cells and eligibility filters. Finally, the processed corpus is written to Parquet and used as input for the embedding pipeline.
+The corpus construction pipeline is organized as a sequence of reproducible stages. First, the OpenAlex taxonomy is fetched and stored. Second, annual counts are computed for subfields, fields, and domains. Third, a versioned corpus plan and sample plan are constructed. Fourth, sampled works are downloaded from OpenAlex. Fifth, the downloaded records are locally validated against the planned subfield-year cells and eligibility filters. Finally, the validated corpus snapshot is preserved as the processed text corpus and used as input for the embedding pipeline.
 
-The pipeline can be summarized as follows:
-
-\[
-\text{taxonomy}
-\rightarrow
-\text{annual counts}
-\rightarrow
-\text{corpus plan}
-\rightarrow
-\text{sample plan}
-\rightarrow
-\text{downloaded works}
-\rightarrow
-\text{validated text corpus}.
-\]
-
-The main processed corpus table is stored as
+The pipeline can be represented schematically as follows:
 
 \begin{center}
-\texttt{data/processed/works\_text\_2000\_2024\_400py.parquet}.
+\fcolorbox{gray45}{gray97}{%
+\begin{minipage}{0.9\textwidth}
+\centering
+\small
+\begin{tabular}{@{}c@{}}
+taxonomy $\rightarrow$ annual counts $\rightarrow$ corpus plan $\rightarrow$\\
+sample plan $\rightarrow$ downloaded works $\rightarrow$ validated text corpus.
+\end{tabular}
+\end{minipage}}
 \end{center}
 
-The active embedding pipeline then builds an embedding index and a row-aligned analysis matrix from this corpus. The active SPECTER2 embedding directory is
+The active embedding pipeline then builds the active SPECTER2 embedding set and a row-aligned analysis matrix from this corpus. The analysis matrix used by downstream morphology scripts contains 2,344,927 rows and 241 analysis subfields. This row-aligned matrix is the contract between the corpus, the embedding representation, and the metric computation stages.
 
-\begin{center}
-\texttt{embeddings/specter2\_v1\_2000\_2024\_400py/}.
-\end{center}
-
-This directory contains the embedding shards for the full synchronized corpus. The analysis matrix used by downstream morphology scripts contains 2,344,927 rows and 241 analysis subfields. This row-aligned matrix is the contract between the corpus, the embedding representation, and the metric computation stages.
+The implementation-level artifact names and execution commands are documented in Appendix A.
 
 \section{Validation Diagnostics}
 

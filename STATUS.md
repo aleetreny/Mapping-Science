@@ -5,3 +5,18 @@
 - 2026-05-21: Verified that citations render as APA author-year citations in the PDF and that the bibliography appears at the end.
 - 2026-05-21: No unresolved citation keys remain in the rendered PDF text.
 - 2026-05-21: Non-blocking LaTeX warnings remain about `pdfx` metadata and some overfull boxes.
+- 2026-05-21: Reworked Chapter 3 to remove repository-path language from the main prose and moved implementation-level artifact names to Appendix A.
+- 2026-05-21: Updated table styling so Chapter 3 captions render above the table body with notes below.
+- 2026-05-21: Reflowed the Chapter 3 pipeline summary so the taxonomy-to-corpus chain no longer overruns the right margin.
+- 2026-05-21: Reworked the pipeline summary into a balanced two-line centered block for symmetric presentation.
+- 2026-05-21: Reframed the pipeline summary as a boxed callout with a label so it is visually distinct and symmetric.
+- 2026-05-21: Added a continuation arrow after corpus plan in the pipeline summary callout so the wrap reads explicitly as a continuation.
+- 2026-05-21: Suppressed bibliography note fields in the final thesis output so OpenAlex audit IDs no longer print.
+- 2026-05-21: Braced acronym and proper-noun title terms in the bibliography to preserve capitalization under APA sentence case.
+- 2026-05-21: Removed the corpus version label from Chapter 3 prose and table notes.
+- 2026-05-21: Reworked citation commands so the hyperlink covers the full author-year citation text instead of only the year.
+- 2026-05-21: Removed the remaining visible corpus-version string from Appendix A.
+- 2026-05-21: Rephrased the Chapter 3 corpus-scope sentence to describe the synchronized OpenAlex title--abstract corpus covering 2000--2024.
+- 2026-05-21: Removed the standalone Pipeline summary label and kept the pipeline as a schematic block.
+- 2026-05-21: Protected Dimensions in the Martín-Martín reference title and switched table captions to a newline separator without breaking the List of Tables.
+- 2026-05-21: Recompiled the thesis with pdflatex -> biber -> pdflatex -> pdflatex and verified the PDF output.

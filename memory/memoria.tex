@@ -117,10 +117,15 @@ hmargin=3cm
 \graphicspath{{imagenes/}} % images fodler
 
 % Table layout for social sciences and humanities
-\captionsetup*[table]{
+\floatsetup[table]{
+    style=plaintop,
+    footposition=bottom,
+    font=small
+}
+\captionsetup[table]{
+	position=top,
 	justification=raggedright,
 	labelsep=newline,
-	labelfont=small,
 	singlelinecheck=false,
 	labelfont=bf,
 	font=small,
@@ -194,6 +199,107 @@ hmargin=3cm
 \usepackage[style=apa, backend=biber, natbib=true, hyperref=true, uniquelist=false, sortcites]{biblatex}
 
 \addbibresource{referencias.bib} % The references.bib file in which the bibliography used should be
+\AtEveryBibitem{\clearfield{note}}
+
+\renewbibmacro*{cite:plabelyear+extradate}{%
+		\iffieldundef{labelyear}
+			{}
+			{%
+				\clearfield{labelmonth}% don't want months in citations
+				\clearfield{labelday}% don't want days in citations
+				\clearfield{labelendmonth}% don't want months in citations
+				\clearfield{labelendday}% don't want days in citations
+				\clearfield{labelyeardivision}% don't want yeardivisions in citations
+				\clearfield{labelendyeardivision}% don't want yeardivisions in citations
+				\iffieldsequal{labelyear}{labelendyear}% Don't want no-op year ranges
+					{\clearfield{labelendyear}}
+					{}%
+				\iffieldundef{origyear}
+					{}
+					{\printorigdate%
+					 \setunit*{\addslash}}%
+				\iffieldundef{related}
+					{}
+					{\iffieldequalstr{relatedtype}{reprintfrom}
+						{\entrydata*{\thefield{related}}{\printlabeldateextra}%
+						 \setunit*{\addslash}}
+						{}}%
+				\printlabeldateextra}}
+
+\DeclareCiteCommand{\citeyear}
+	{\boolfalse{citetracker}%
+	 \boolfalse{pagetracker}%
+	 \usebibmacro{prenote}}
+	{\printtext[bibhyperref]{\usebibmacro{cite:plabelyear+extradate}}}
+	{\multinamedelim}
+	{\usebibmacro{postnote}}
+
+\DeclareCiteCommand{\cite}
+	{\usebibmacro{cite:init}%
+	 \usebibmacro{prenote}}
+	{\printtext[bibhyperref]{\usebibmacro{citeindex}%
+	 \usebibmacro{cite}%
+	 \usebibmacro{cite:post}}}
+	{}
+	{\usebibmacro{postnote}}
+
+\DeclareCiteCommand{\parencite}[\mkbibparens]
+	{\usebibmacro{cite:init}%
+	 \usebibmacro{prenote}%
+	 \toggletrue{apa:inpcite}}
+	{\printtext[bibhyperref]{\usebibmacro{citeindex}%
+	 \usebibmacro{cite}%
+	 \usebibmacro{cite:post}}}
+	{}
+	{\usebibmacro{postnote}%
+	 \togglefalse{apa:inpcite}}
+
+\DeclareCiteCommand{\nptextcite}
+	{\usebibmacro{cite:init}%
+	 \usebibmacro{prenote}%
+	 \toggletrue{apa:inpcite}}
+	{\printtext[bibhyperref]{\usebibmacro{citeindex}%
+	 \usebibmacro{cite}%
+	 \usebibmacro{cite:post}}}
+	{}
+	{\usebibmacro{postnote}%
+	 \togglefalse{apa:inpcite}}
+
+\DeclareCiteCommand{\footcite}[\mkbibfootnote]
+	{\usebibmacro{cite:init}%
+	 \usebibmacro{prenote}}
+	{\printtext[bibhyperref]{\usebibmacro{citeindex}%
+	 \usebibmacro{cite}%
+	 \usebibmacro{cite:post}}}
+	{}
+	{\usebibmacro{postnote}}
+
+\DeclareCiteCommand{\footcitetext}[\mkbibfootnotetext]
+	{\usebibmacro{cite:init}%
+	 \usebibmacro{prenote}}
+	{\printtext[bibhyperref]{\usebibmacro{citeindex}%
+	 \usebibmacro{cite}%
+	 \usebibmacro{cite:post}}}
+	{}
+	{\usebibmacro{postnote}}
+
+\DeclareCiteCommand{\smartcite}[\iffootnote\mkbibparens\mkbibfootnote]
+	{\usebibmacro{cite:init}%
+	 \usebibmacro{prenote}}
+	{\printtext[bibhyperref]{\usebibmacro{citeindex}%
+	 \usebibmacro{cite}}}
+	{}
+	{\usebibmacro{postnote}}
+
+\DeclareCiteCommand{\cbx@textcite}
+	{\usebibmacro{cite:init}%
+	 \toggletrue{apa:intcite}}
+	{\printtext[bibhyperref]{\usebibmacro{citeindex}%
+	 \usebibmacro{textcite}%
+	 \usebibmacro{cite:post}}%
+	 \togglefalse{apa:intcite}}
+	{}
+	{\usebibmacro{textcite:postnote}}
 
 
 %-------------
