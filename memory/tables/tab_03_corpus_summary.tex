@@ -1,26 +1,27 @@
 \begin{table}[H]
 \centering
-\caption{Validation-backed corpus summary}
+\caption{Synchronized corpus summary}
 \label{tab:corpus_summary}
 \footnotesize
 \begin{tabular}{p{0.55\textwidth} r}
 \hline
 \textbf{Measure} & \textbf{Value} \\
 \hline
-Retained works & 2,358,036 \\
-Retained non-empty subfields & 250 \\
-Planned taxonomy subfields & 252 \\
+Retained works in corpus snapshot & 2,378,036 \\
+Retained subfields in corpus snapshot & 252 \\
 Fields represented & 26 \\
 Domains represented & 4 \\
 Years covered & 2000--2024 \\
 Planned works & 2,431,303 \\
-Total shortfall & 73,267 \\
+Total shortfall & 53,267 \\
+Analysis embedding rows & 2,344,927 \\
+Analysis subfields & 241 \\
 Subfield-year diagnostic rows & 6,300 \\
-Cells reaching annual target of 400 works & 5,443 \\
-Cells below annual target of 400 works & 857 \\
+Cells reaching annual target of 400 works & 5,493 \\
+Cells below annual target of 400 works & 807 \\
 Validation failed & False \\
 \hline
 \end{tabular}
 \par\vspace{0.2cm}
-\footnotesize\textit{Note.} Counts use the validation-backed corpus-construction outputs. The current Parquet copies under \texttt{data/processed/} and \texttt{data/interim/} are not fully synchronized with these validation outputs.
+\footnotesize\textit{Note.} Counts use the synchronized \texttt{2000\_2024\_400py} corpus snapshot. The analysis embedding rows refer to the eligible subset used by downstream morphology metrics.
 \end{table}

@@ -22,7 +22,6 @@ class MetricYearWindow:
 
 SUPPORTED_METRIC_WINDOWS: tuple[tuple[int, int, str], ...] = (
     (2000, 2024, "2000_2024_400py"),
-    (2010, 2025, "legacy_2010_2025"),
 )
 
 

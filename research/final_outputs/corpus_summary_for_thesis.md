@@ -1,8 +1,6 @@
 # Corpus Construction Summary for Thesis
 
-This summary uses the validation-backed corpus-construction outputs for dataset version `2000_2024_400py`. The headline figures below are taken from `outputs/01_corpus_construction/validation/validation_summary_2000_2024_400py.json` and the accompanying diagnostic CSV files.
-
-Important reliability note: the validation outputs and the current Parquet copies under `data/processed/` and `data/interim/` are not fully synchronized. The validation-backed corpus contains 2,358,036 retained works and 250 non-empty subfields. The current `data/processed/works_text_2000_2024_400py.parquet` contains 2,378,036 works and 252 subfields, 20,000 works more. Treat the validation-backed figures as the thesis snapshot until the Parquet files are regenerated or validation is rerun.
+This summary uses the synchronized validation outputs for dataset version `2000_2024_400py`. The active thesis corpus snapshot contains 2,378,036 text-eligible OpenAlex works across 252 subfields. The downstream analysis matrix is the eligible analysis subset of this same snapshot: 2,344,927 embedded works across 241 analysis subfields.
 
 ## Headline Corpus Counts
 
@@ -10,16 +8,26 @@ Important reliability note: the validation outputs and the current Parquet copie
 |---|---:|
 | Dataset version | `2000_2024_400py` |
 | Years covered | 2000-2024 inclusive |
-| Retained works | 2,358,036 |
-| Retained non-empty subfields | 250 |
-| Planned taxonomy subfields | 252 |
+| Retained works in corpus snapshot | 2,378,036 |
+| Retained subfields in corpus snapshot | 252 |
 | Fields represented | 26 |
 | Domains represented | 4 |
 | Target annual sample | up to 400 works per subfield-year |
 | Maximum full-period target | 10,000 works per subfield |
 | Planned works | 2,431,303 |
-| Total shortfall | 73,267 |
+| Total shortfall | 53,267 |
 | Validation failed | false |
+
+## Downstream Analysis Snapshot
+
+| Artifact | Works or rows | Subfields | Notes |
+|---|---:|---:|---|
+| Processed text corpus | 2,378,036 | 252 | `data/processed/works_text_2000_2024_400py.parquet` |
+| Embedding index | 2,378,036 | 252 | Full embedded corpus index |
+| Active SPECTER2 shard set | 2,378,036 | 252 | `embeddings/specter2_v1_2000_2024_400py/` |
+| Analysis embedding index | 2,344,927 | 241 | Main metric-analysis subset |
+| Active analysis matrix | 2,344,927 | 241 | `analysis/main_embeddings.float16.npy` |
+| Subfield metric outputs | 241 | 241 | One metric row per analysis subfield |
 
 ## Target Sampling Design
 
@@ -29,41 +37,41 @@ The corpus is organized by OpenAlex primary-topic subfield. For each subfield-ye
 
 | Domain | Fields | Retained subfields | Retained works | Share of retained works |
 |---|---:|---:|---:|---:|
-| Life Sciences | 5 | 42 | 397,808 | 16.87% |
-| Social Sciences | 6 | 58 | 542,774 | 23.02% |
-| Physical Sciences | 10 | 89 | 844,382 | 35.81% |
-| Health Sciences | 5 | 61 | 573,072 | 24.30% |
-| **Total** | **26** | **250** | **2,358,036** | **100.00%** |
+| Life Sciences | 5 | 42 | 397,808 | 16.73% |
+| Social Sciences | 6 | 58 | 542,774 | 22.82% |
+| Physical Sciences | 10 | 89 | 844,382 | 35.51% |
+| Health Sciences | 5 | 63 | 593,072 | 24.94% |
+| **Total** | **26** | **252** | **2,378,036** | **100.00%** |
 
 ## Works by Year
 
 | Year | Retained works | Cells below target |
 |---:|---:|---:|
-| 2000 | 87,674 | 71 |
-| 2001 | 88,585 | 68 |
-| 2002 | 89,684 | 58 |
-| 2003 | 90,272 | 62 |
-| 2004 | 90,978 | 53 |
-| 2005 | 91,623 | 54 |
-| 2006 | 92,357 | 43 |
-| 2007 | 92,806 | 41 |
-| 2008 | 93,510 | 41 |
-| 2009 | 94,328 | 36 |
-| 2010 | 94,711 | 35 |
-| 2011 | 95,046 | 31 |
-| 2012 | 95,425 | 29 |
-| 2013 | 95,720 | 29 |
-| 2014 | 95,916 | 27 |
-| 2015 | 96,141 | 25 |
-| 2016 | 96,077 | 20 |
-| 2017 | 96,282 | 19 |
-| 2018 | 96,518 | 20 |
-| 2019 | 97,060 | 19 |
-| 2020 | 97,380 | 17 |
-| 2021 | 97,426 | 15 |
-| 2022 | 97,158 | 17 |
-| 2023 | 97,493 | 15 |
-| 2024 | 97,866 | 12 |
+| 2000 | 88,474 | 69 |
+| 2001 | 89,385 | 66 |
+| 2002 | 90,484 | 56 |
+| 2003 | 91,072 | 60 |
+| 2004 | 91,778 | 51 |
+| 2005 | 92,423 | 52 |
+| 2006 | 93,157 | 41 |
+| 2007 | 93,606 | 39 |
+| 2008 | 94,310 | 39 |
+| 2009 | 95,128 | 34 |
+| 2010 | 95,511 | 33 |
+| 2011 | 95,846 | 29 |
+| 2012 | 96,225 | 27 |
+| 2013 | 96,520 | 27 |
+| 2014 | 96,716 | 25 |
+| 2015 | 96,941 | 23 |
+| 2016 | 96,877 | 18 |
+| 2017 | 97,082 | 17 |
+| 2018 | 97,318 | 18 |
+| 2019 | 97,860 | 17 |
+| 2020 | 98,180 | 15 |
+| 2021 | 98,226 | 13 |
+| 2022 | 97,958 | 15 |
+| 2023 | 98,293 | 13 |
+| 2024 | 98,666 | 10 |
 
 ## Subfield-Year Coverage Summary
 
@@ -71,12 +79,11 @@ The corpus is organized by OpenAlex primary-topic subfield. For each subfield-ye
 |---|---:|
 | Diagnostic subfield-year rows | 6,300 |
 | Cells with planned sample greater than zero | 6,298 |
-| Cells reaching annual target of 400 works | 5,443 |
-| Cells below annual target of 400 works | 857 |
-| Retained-subfield cells below target | 807 |
-| Cells with downloaded works below planned sample | 855 |
-| Cells with zero downloaded works | 52 |
-| Total work shortfall | 73,267 |
+| Cells reaching annual target of 400 works | 5,493 |
+| Cells below annual target of 400 works | 807 |
+| Cells with downloaded works below planned sample | 805 |
+| Cells with zero downloaded works | 2 |
+| Total work shortfall | 53,267 |
 
 ## Cells Below Target
 
@@ -84,20 +91,16 @@ The corpus is organized by OpenAlex primary-topic subfield. For each subfield-ye
 |---|---:|---:|---:|---:|
 | Full 400-work target with local/download shortfall | 330 | 132,000 | 113,570 | 18,430 |
 | Sparse planned cell with fewer than 400 available works | 475 | 102,103 | 67,266 | 34,837 |
-| Planned subfield not retained in validation snapshot | 50 | 20,000 | 0 | 20,000 |
 | No eligible works available | 2 | 0 | 0 | 0 |
-| **Total cells below target** | **857** | **254,103** | **180,836** | **73,267** |
-
-The 50 planned cells not retained in the validation snapshot correspond to two planned Health Professions subfields: Radiological and Ultrasound Technology, and Speech and Hearing.
+| **Total cells below target** | **807** | **234,103** | **180,836** | **53,267** |
 
 ## Validation Warnings
 
-- The validation report itself did not fail. It reports zero duplicate work IDs, zero rows outside 2000-2024, zero rows in 2025 or 2026, zero missing subfield/field/domain IDs, zero missing primary topic IDs, zero missing title or abstract fields, zero short titles or abstracts, zero non-English rows, and zero disallowed work-type rows.
-- Two planned subfields have zero downloaded works in the validation diagnostics: Radiological and Ultrasound Technology, and Speech and Hearing. Together these account for 50 below-target cells and 20,000 works of shortfall.
-- The validation-backed outputs and current Parquet files disagree. `data/processed/works_text_2000_2024_400py.parquet` currently contains 2,378,036 works and 252 subfields, while the validation summary reports 2,358,036 works and 250 subfields. `data/interim/download_manifest_2000_2024_400py.parquet` contains 6,300 rows and includes the two Health Professions subfields, while the validated manifest table used by the report contains 6,250 rows.
-- Because of this mismatch, Chapter 3 prose should not be updated with final counts until the corpus files and validation outputs are synchronized.
+- The validation report did not fail.
+- Critical checks are clean: zero duplicate work IDs, zero rows outside 2000-2024, zero rows in 2025 or 2026, zero missing subfield/field/domain IDs, zero missing primary topic IDs, zero missing title or abstract fields, zero short titles or abstracts, zero non-English rows, and zero disallowed work-type rows.
+- The remaining sampling limitation is coverage, not validation failure: 807 subfield-year cells are below the 400-work annual target, mostly because some cells contain fewer than 400 eligible works or because local filtering/backfill did not fully recover the target.
 
-## Local Files Read
+## Local Files Read or Reconciled
 
 - `outputs/01_corpus_construction/validation/validation_summary_2000_2024_400py.json`
 - `outputs/01_corpus_construction/validation/validation_report_2000_2024_400py.md`
@@ -106,14 +109,18 @@ The 50 planned cells not retained in the validation snapshot correspond to two p
 - `outputs/01_corpus_construction/diagnostics/openalex_extraction_2000_2024_400py/subfield_year_download_coverage.csv`
 - `outputs/01_corpus_construction/diagnostics/openalex_extraction_2000_2024_400py/year_coverage_summary.csv`
 - `data/processed/works_text_2000_2024_400py.parquet`
+- `data/processed/embedding_index.parquet`
+- `data/processed/analysis_embedding_index.parquet`
 - `data/processed/analysis_subfields_2000_2024_400py.parquet`
+- `data/processed/subfield_embedding_space_metrics.parquet`
+- `data/processed/temporal/`
 - `data/interim/corpus_plan_2000_2024_400py.parquet`
 - `data/interim/sample_plan_2000_2024_400py.parquet`
 - `data/interim/download_manifest_2000_2024_400py.parquet`
-- `data/interim/domains.parquet`
-- `data/interim/fields.parquet`
-- `data/interim/subfields.parquet`
-- `data/interim/domain_year_counts_2000_2024_400py.parquet`
-- `data/interim/field_year_counts_2000_2024_400py.parquet`
-- `data/interim/subfield_year_counts_2000_2024_400py.parquet`
-- `warehouse/tfm_openalex.duckdb` (read-only reconciliation check of versioned corpus tables)
+- `embeddings/specter2_v1_2000_2024_400py/`
+- `outputs/03_embedding_metrics/`
+- `outputs/04_reduced_metric_core/`
+- `outputs/05_static_comparison/`
+- `outputs/06_temporal_evolution/`
+- `outputs/07_morphological_similarity/`
+- `warehouse/tfm_openalex.duckdb`

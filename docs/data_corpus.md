@@ -8,6 +8,8 @@ Design:
 - Aggregation: fields and domains for downstream summaries.
 - Period: 2000-2024.
 - Target: 400 valid title-plus-abstract works per year per subfield.
+- Synchronized corpus snapshot: 2,378,036 retained works across 252 subfields.
+- Downstream analysis subset: 2,344,927 embedded works across 241 analysis subfields.
 - Filters: English, valid title and abstract, supported work types, no
   retracted/paratype records.
 - Storage: DuckDB plus Parquet files under ignored `data/` folders.

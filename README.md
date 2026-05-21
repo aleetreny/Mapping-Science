@@ -37,13 +37,16 @@ OpenAlex corpus
 - Current extraction target: `2000_2024_400py`.
 - Period: 2000-2024 inclusive.
 - Sampling: balanced annual target of 400 valid works per year per subfield.
+- Active corpus snapshot: 2,378,036 retained works across 252 subfields.
+- Main analysis subset: 2,344,927 embedded works across 241 analysis subfields.
 - Text source: title plus abstract.
 - Embedding model: SPECTER2.
 - Storage: DuckDB and Parquet under ignored local data folders.
 - Main local embedding directory: `embeddings/specter2_v1_2000_2024_400py`.
 
-The older unversioned 2010-2025 artifacts have been moved to
-`data/archive_or_legacy/legacy_canonical_2010_2025/` when present locally.
+The obsolete unversioned first SPECTER2 embedding set is not part of the active
+thesis path. When present locally, it is archived under
+`archive/legacy_embeddings/specter2_v1_legacy_700k/`.
 
 ## Reduced Metric Core
 

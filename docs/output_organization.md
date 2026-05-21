@@ -20,6 +20,8 @@ outputs/
 
 - `outputs/02_embedding_matrix/` contains only lightweight summary and row-alignment validation diagnostics (`.json`), not the large matrix itself.
 - `outputs/archive_or_legacy/` contains generated artifacts from the older UMAP metric, metric-family comparison, clustering, dimensionality-reduction, and semantic-distance experiments.
+- Active SPECTER2 embeddings live outside Git under `embeddings/specter2_v1_2000_2024_400py/`.
+- The obsolete first embedding set, when present locally, is archived under `archive/legacy_embeddings/specter2_v1_legacy_700k/` and is not used by active scripts.
 
 Ignored data archives live under:
 

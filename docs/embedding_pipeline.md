@@ -3,6 +3,11 @@
 The embedding pipeline validates SPECTER2 shards and builds the row-aligned
 analysis matrix used by all active metric scripts.
 
+The active embedding source is
+`embeddings/specter2_v1_2000_2024_400py/`: 119 shards containing 2,378,036
+embedded corpus works. The row-aligned analysis matrix contains the eligible
+metric-analysis subset: 2,344,927 rows across 241 subfields.
+
 Run:
 
 ```powershell

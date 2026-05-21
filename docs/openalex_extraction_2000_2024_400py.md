@@ -1,14 +1,16 @@
 # OpenAlex Extraction 2000-2024 400py
 
 This is a versioned OpenAlex text-corpus extraction for later embedding work.
-It does not overwrite the canonical checkpoint files and does not generate
-embeddings, UMAP maps, metrics, or clusters.
+It is the active thesis corpus snapshot. The synchronized local DuckDB
+canonical tables and versioned tables both point to this extraction.
 
 ```text
 dataset_version: 2000_2024_400py
 years: 2000-2024 inclusive
 target: 400 valid papers per year per OpenAlex subfield
 full-period target: 10,000 papers per subfield
+retained corpus snapshot: 2,378,036 works across 252 subfields
+analysis embedding subset: 2,344,927 works across 241 subfields
 natural future windows: 2000-2004, 2005-2009, 2010-2014, 2015-2019, 2020-2024
 ```
 

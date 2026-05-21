@@ -3,6 +3,9 @@
 `scripts/11_compute_embedding_space_metrics.py` computes structural metrics
 directly from the row-aligned SPECTER2 matrix.
 
+The active metric snapshot uses 2,344,927 analysis-matrix rows across 241
+eligible subfields, derived from the synchronized 2,378,036-work corpus.
+
 Inputs:
 
 ```text
