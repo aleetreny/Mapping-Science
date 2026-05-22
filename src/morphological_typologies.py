@@ -9,6 +9,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -1062,6 +1063,32 @@ def _short_name(value: str, max_chars: int = 28) -> str:
     return value[: max_chars - 1].rstrip() + "."
 
 
+def _name_key(value: object) -> str:
+    return " ".join(str(value).casefold().strip().split())
+
+
+def _select_unique_display_names(
+    frame: pd.DataFrame,
+    *,
+    sort_by: str,
+    ascending: bool,
+    max_items: int,
+    used_names: set[str],
+    max_chars: int,
+) -> list[str]:
+    selected: list[str] = []
+    for row in frame.sort_values(sort_by, ascending=ascending, kind="mergesort").itertuples():
+        name = str(row.subfield_display_name)
+        key = _name_key(name)
+        if key in used_names:
+            continue
+        selected.append(_short_name(name, max_chars=max_chars))
+        used_names.add(key)
+        if len(selected) >= max_items:
+            break
+    return selected
+
+
 def plot_pca_map(
     pca_frame: pd.DataFrame,
     *,
@@ -1069,7 +1096,7 @@ def plot_pca_map(
     output_dir: Path,
     figure_dir: Path,
 ) -> None:
-    fig, ax = plt.subplots(figsize=(9.2, 6.3))
+    fig, ax = plt.subplots(figsize=(10.2, 6.4))
     for typology_id, label in TYPOLOGY_ORDER:
         subset = pca_frame.loc[pca_frame["typology_id"] == typology_id]
         ax.scatter(
@@ -1087,31 +1114,94 @@ def plot_pca_map(
         .groupby("typology_id", sort=True)
         .head(1)
     )
-    for row in prototypes.itertuples():
+    prototype_ids = set(prototypes["subfield_id"].astype(str))
+    outliers = (
+        pca_frame.loc[~pca_frame["subfield_id"].astype(str).isin(prototype_ids)]
+        .sort_values("distance_to_typology_centroid", ascending=False, kind="mergesort")
+        .head(3)
+    )
+    label_rows = pd.concat([prototypes.assign(label_role="prototype"), outliers.assign(label_role="outlier")])
+    x_min, x_max = -3.1, 6.35
+    y_min, y_max = -4.25, 4.15
+    offsets = {
+        "Pharmacology": (10, 8),
+        "Space and Planetary Science": (8, 10),
+        "Occupational Therapy": (10, -4),
+        "Health Information Management": (10, 8),
+        "Fluid Flow and Transfer Processes": (10, 10),
+        "Computational Mathematics": (-90, -2),
+        "Philosophy": (10, 8),
+        "Human Factors and Ergonomics": (-105, 170),
+    }
+    for row in label_rows.itertuples():
+        edgecolor = "black" if row.label_role == "prototype" else "#333333"
+        linewidth = 1.25 if row.label_role == "prototype" else 1.0
+        visible_x = min(max(float(row.pca_1), x_min), x_max)
+        visible_y = min(max(float(row.pca_2), y_min), y_max)
         ax.scatter(
-            [row.pca_1],
-            [row.pca_2],
-            s=92,
+            [visible_x],
+            [visible_y],
+            s=94 if row.label_role == "prototype" else 76,
             facecolors="none",
-            edgecolors="black",
-            linewidth=1.2,
+            edgecolors=edgecolor,
+            linewidth=linewidth,
             zorder=5,
         )
+        label = _short_name(row.subfield_display_name, max_chars=30)
+        if str(row.subfield_display_name) == "Human Factors and Ergonomics":
+            label = "Human Factors\n(off-scale)"
+        elif float(row.pca_1) > x_max:
+            label = f"{label} (off-scale)"
+        xy = (visible_x, visible_y)
+        offset = offsets.get(str(row.subfield_display_name), (7, 6))
         ax.annotate(
-            _short_name(row.subfield_display_name),
-            xy=(row.pca_1, row.pca_2),
-            xytext=(6, 5),
+            label,
+            xy=xy,
+            xytext=offset,
             textcoords="offset points",
-            fontsize=8,
+            fontsize=7.7,
             color="#222222",
+            arrowprops=(
+                {"arrowstyle": "-", "color": "#555555", "linewidth": 0.7, "shrinkA": 2, "shrinkB": 2}
+                if row.label_role == "outlier" or float(row.pca_1) > x_max
+                else None
+            ),
         )
     ax.axhline(0, color="#dddddd", linewidth=0.8)
     ax.axvline(0, color="#dddddd", linewidth=0.8)
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
     ax.set_xlabel(f"PCA 1 ({pca.explained_variance_ratio_[0] * 100:.1f}% variance)", fontsize=10)
     ax.set_ylabel(f"PCA 2 ({pca.explained_variance_ratio_[1] * 100:.1f}% variance)", fontsize=10)
-    ax.set_title("Subfields in metric-profile PCA space", fontsize=12)
+    ax.set_title("Subfields in metric-profile PCA space (zoomed main view)", fontsize=12)
     ax.grid(True, alpha=0.18)
-    ax.legend(fontsize=7.1, frameon=False, loc="best", ncol=1)
+    ax.legend(fontsize=7.1, frameon=False, loc="upper right", ncol=1)
+
+    inset = ax.inset_axes([0.72, 0.08, 0.25, 0.25])
+    for typology_id, _label in TYPOLOGY_ORDER:
+        subset = pca_frame.loc[pca_frame["typology_id"] == typology_id]
+        inset.scatter(
+            subset["pca_1"],
+            subset["pca_2"],
+            s=8,
+            c=TYPOLOGY_COLORS[typology_id],
+            alpha=0.70,
+            linewidth=0,
+        )
+    zoom_box = patches.Rectangle(
+        (x_min, y_min),
+        x_max - x_min,
+        y_max - y_min,
+        fill=False,
+        edgecolor="#222222",
+        linewidth=0.8,
+    )
+    inset.add_patch(zoom_box)
+    inset.set_title("full extent", fontsize=7)
+    inset.set_xticks([])
+    inset.set_yticks([])
+    for spine in inset.spines.values():
+        spine.set_linewidth(0.6)
     fig.tight_layout()
     _save_figure(fig, "fig_09_typology_pca_map", output_dir=output_dir, figure_dir=figure_dir)
 
@@ -1259,14 +1349,18 @@ def write_typology_summary_table(
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     rows: list[str] = []
+    used_representative_names: set[str] = set()
     for row in profile_summary.itertuples():
         subset = assignments.loc[assignments["typology_id"] == row.typology_id]
-        representatives = _compact_list(
-            subset.sort_values("distance_to_typology_centroid", kind="mergesort")[
-                "subfield_display_name"
-            ].tolist(),
-            max_items=3,
-            max_chars=31,
+        representatives = "; ".join(
+            _select_unique_display_names(
+                subset,
+                sort_by="distance_to_typology_centroid",
+                ascending=True,
+                max_items=3,
+                used_names=used_representative_names,
+                max_chars=31,
+            )
         )
         top_domains = (
             subset["domain_display_name"].value_counts().head(2).items()
@@ -1303,7 +1397,7 @@ def write_typology_summary_table(
             r"\end{tabular}",
             r"\endgroup",
             r"\par\vspace{0.15cm}",
-            r"\footnotesize\textit{Note.} Typologies are obtained from Ward clustering of robust-scaled eleven-metric subfield profiles. Representative subfields are closest to each typology centroid in the standardized metric space.",
+            r"\footnotesize\textit{Note.} Typologies are obtained from Ward clustering of robust-scaled eleven-metric subfield profiles. Representative subfields are the closest non-repeated display names to each typology centroid in the standardized metric space.",
             r"\end{table}",
         ]
     )
@@ -1316,26 +1410,36 @@ def write_typology_examples_table(path: str | Path, assignments: pd.DataFrame) -
     rows: list[str] = []
     for typology_id, label in TYPOLOGY_ORDER:
         subset = assignments.loc[assignments["typology_id"] == typology_id]
-        prototypes = _compact_list(
-            subset.sort_values("distance_to_typology_centroid", kind="mergesort")[
-                "subfield_display_name"
-            ].tolist(),
-            max_items=3,
-            max_chars=34,
+        used_names: set[str] = set()
+        prototypes = "; ".join(
+            _select_unique_display_names(
+                subset,
+                sort_by="distance_to_typology_centroid",
+                ascending=True,
+                max_items=3,
+                used_names=used_names,
+                max_chars=34,
+            )
         )
-        borderline = _compact_list(
-            subset.sort_values("border_margin", kind="mergesort")[
-                "subfield_display_name"
-            ].tolist(),
-            max_items=3,
-            max_chars=34,
+        borderline = "; ".join(
+            _select_unique_display_names(
+                subset,
+                sort_by="border_margin",
+                ascending=True,
+                max_items=3,
+                used_names=used_names,
+                max_chars=34,
+            )
         )
-        distant = _compact_list(
-            subset.sort_values("distance_to_typology_centroid", ascending=False, kind="mergesort")[
-                "subfield_display_name"
-            ].tolist(),
-            max_items=2,
-            max_chars=34,
+        distant = "; ".join(
+            _select_unique_display_names(
+                subset,
+                sort_by="distance_to_typology_centroid",
+                ascending=False,
+                max_items=2,
+                used_names=used_names,
+                max_chars=34,
+            )
         )
         rows.append(
             " & ".join(
