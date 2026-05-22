@@ -564,6 +564,47 @@ def plot_global_paths(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig, ax = plt.subplots(figsize=(10.5, 8), dpi=240)
     xlim, ylim = _path_plot_limits(projections, x_col=x_col, y_col=y_col)
+    
+    # Check if this is the top 10 PCA subfields highlight case
+    is_top_10_pca_highlight = (
+        projection == "pca"
+        and len(highlighted_ids) == 10
+        and label_final_points
+    )
+
+    if is_top_10_pca_highlight:
+        # Pre-build top_ids to get their ranks (from 1 to 10)
+        top_ids = _top_subfield_ids(path_metrics, value_column="total_path_length", top_n=10)
+        rank_by_id = {str(subfield_id): rank for rank, subfield_id in enumerate(top_ids, start=1)}
+        
+        # Mappings of subfield_id to custom text label
+        CUSTOM_LABELS = {
+            "2611": "2611 Modeling and Simulation",
+            "2302": "2302 Ecological Modeling",
+            "3307": "3307 Human Factors",
+            "2102": "2102 Energy Engineering",
+            "3500": "3500 General Dentistry",
+            "2725": "2725 Infectious Diseases",
+            "1707": "1707 Computer Vision",
+            "1711": "1711 Signal Processing",
+            "1702": "1702 Artificial Intelligence",
+            "1705": "1705 Computer Networks",
+        }
+        
+        # Absolute coordinates for custom annotation placement
+        CUSTOM_OFFSETS = {
+            "2611": {"xytext": (-0.035, -0.015), "ha": "right", "va": "center"},
+            "2302": {"xytext": (0.065, -0.020), "ha": "left", "va": "center"},
+            "3307": {"xytext": (0.125, 0.068), "ha": "right", "va": "center"},
+            "2102": {"xytext": (0.050, -0.178), "ha": "left", "va": "center"},
+            "3500": {"xytext": (0.042, 0.086), "ha": "left", "va": "center"},
+            "2725": {"xytext": (-0.075, 0.085), "ha": "left", "va": "center"},
+            "1702": {"xytext": (0.072, -0.048), "ha": "left", "va": "center"},
+            "1711": {"xytext": (0.068, -0.072), "ha": "left", "va": "center"},
+            "1707": {"xytext": (0.068, -0.096), "ha": "left", "va": "center"},
+            "1705": {"xytext": (0.045, -0.132), "ha": "left", "va": "center"},
+        }
+
     for subfield_id, group in projections.groupby("subfield_id", sort=False):
         group = (
             group.sort_values("window_start", kind="mergesort")
@@ -596,45 +637,156 @@ def plot_global_paths(
         )
         first = group.iloc[0]
         last = group.iloc[-1]
+        
         if is_highlighted or highlight_top_n == 0:
-            ax.scatter(
-                [first[x_col]],
-                [first[y_col]],
-                s=26 if is_highlighted else 12,
-                marker="o",
-                facecolors="white",
-                edgecolors=color,
-                linewidths=0.8 if is_highlighted else 0.45,
-                alpha=0.95,
-                zorder=zorder + 2,
-            )
-            ax.scatter(
-                [last[x_col]],
-                [last[y_col]],
-                s=32 if is_highlighted else 14,
-                marker="s",
-                color=color,
-                linewidths=0,
-                alpha=0.95,
-                zorder=zorder + 2,
-            )
+            if is_top_10_pca_highlight:
+                # Custom starting circle: size 75, lw 1.6
+                ax.scatter(
+                    [first[x_col]],
+                    [first[y_col]],
+                    s=75,
+                    marker="o",
+                    facecolors="white",
+                    edgecolors=color,
+                    linewidths=1.6,
+                    alpha=0.95,
+                    zorder=zorder + 2,
+                )
+                # Custom ending square: size 100, solid color
+                ax.scatter(
+                    [last[x_col]],
+                    [last[y_col]],
+                    s=100,
+                    marker="s",
+                    color=color,
+                    alpha=0.95,
+                    zorder=zorder + 2,
+                )
+                # Centered white rank number
+                rank = rank_by_id[str(subfield_id)]
+                ax.text(
+                    last[x_col],
+                    last[y_col],
+                    str(rank),
+                    color="white",
+                    fontsize=6,
+                    fontweight="bold",
+                    ha="center",
+                    va="center",
+                    zorder=zorder + 3,
+                )
+            else:
+                # Default behavior
+                ax.scatter(
+                    [first[x_col]],
+                    [first[y_col]],
+                    s=26 if is_highlighted else 12,
+                    marker="o",
+                    facecolors="white",
+                    edgecolors=color,
+                    linewidths=0.8 if is_highlighted else 0.45,
+                    alpha=0.95,
+                    zorder=zorder + 2,
+                )
+                ax.scatter(
+                    [last[x_col]],
+                    [last[y_col]],
+                    s=32 if is_highlighted else 14,
+                    marker="s",
+                    color=color,
+                    linewidths=0,
+                    alpha=0.95,
+                    zorder=zorder + 2,
+                )
+                
         if is_highlighted and label_final_points:
-            label = last.get("subfield_label_short", last.get("subfield_display_name", subfield_id))
-            ax.text(
-                last[x_col],
-                last[y_col],
-                _short_text(label, width=46),
-                fontsize=5.4,
-                color=color,
-                alpha=0.95,
-                ha="left",
-                va="center",
-                zorder=zorder + 3,
-            )
+            if is_top_10_pca_highlight:
+                label = CUSTOM_LABELS.get(str(subfield_id), str(subfield_id))
+                offset_info = CUSTOM_OFFSETS.get(str(subfield_id), {"xytext": (0.01, 0.0), "ha": "left", "va": "center"})
+                xytext = offset_info["xytext"]
+                ha = offset_info["ha"]
+                va = offset_info["va"]
+                
+                ax.annotate(
+                    text=label,
+                    xy=(last[x_col], last[y_col]),
+                    xytext=xytext,
+                    textcoords="data",
+                    arrowprops=dict(
+                        arrowstyle="-",
+                        color=color,
+                        alpha=0.55,
+                        lw=0.7,
+                        shrinkA=0,
+                        shrinkB=4,
+                    ),
+                    fontsize=7,
+                    fontweight="normal",
+                    color=color,
+                    ha=ha,
+                    va=va,
+                    zorder=zorder + 3,
+                )
+            else:
+                label = last.get("subfield_label_short", last.get("subfield_display_name", subfield_id))
+                ax.text(
+                    last[x_col],
+                    last[y_col],
+                    _short_text(label, width=46),
+                    fontsize=5.4,
+                    color=color,
+                    alpha=0.95,
+                    ha="left",
+                    va="center",
+                    zorder=zorder + 3,
+                )
+
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
     ax.set_xlabel(f"{projection.upper()} 1")
     ax.set_ylabel(f"{projection.upper()} 2")
+    
+    # Custom Legend (2000-2004 open circle, 2020-2024 filled square, other windows light grey dot)
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D(
+            [0], [0],
+            marker="o",
+            color="w",
+            markerfacecolor="white",
+            markeredgecolor="#555555",
+            markeredgewidth=1.2,
+            markersize=7,
+            label="2000-2004",
+        ),
+        Line2D(
+            [0], [0],
+            marker="s",
+            color="w",
+            markerfacecolor="#333333",
+            markeredgecolor="none",
+            markersize=7,
+            label="2020-2024",
+        ),
+        Line2D(
+            [0], [0],
+            marker="o",
+            color="w",
+            markerfacecolor="#e0e0e0",
+            markeredgecolor="none",
+            markersize=4,
+            label="other windows",
+        ),
+    ]
+    ax.legend(
+        handles=legend_elements,
+        loc="lower left",
+        fontsize=8,
+        framealpha=0.9,
+        facecolor="white",
+        edgecolor="#dddddd",
+    )
+
     if experimental:
         title = (
             f"Experimental {projection.upper()} projection of subfield centroids; "
@@ -650,7 +802,12 @@ def plot_global_paths(
             "PCA projection of subfield centroids; "
             "distances measured in embedding space"
         )
-    ax.set_title(title, fontsize=12)
+        
+    # Conditionally omit title for thesis-ready (clean/fig_07) versions
+    is_thesis_fig = any(k in str(output_path).lower() for k in ["clean", "fig_07"])
+    if not is_thesis_fig:
+        ax.set_title(title, fontsize=12)
+        
     ax.grid(True, color="#dddddd", linewidth=0.4, alpha=0.55)
     fig.tight_layout()
     fig.savefig(output_path)
