@@ -16,18 +16,18 @@ The static field-level distance matrix gives a compact view of profile-space str
 \centering
 \caption[Pairwise field morphological distances]{Pairwise morphological distance between fields. Distances are computed from robust-scaled eleven-metric profiles; lower values indicate more similar embedding-space morphology, not topical or citation similarity. Rows and columns are ordered by domain, with colored strips marking the OpenAlex domain of each field.}
 \label{fig:field_static_distance_heatmap}
-\includegraphics[width=\textwidth]{figures/fig_08_field_static_distance_heatmap.png}
+\includegraphics[width=\textwidth]{figures/fig_08_field_static_distance_heatmap.pdf}
 \end{figure}
 
 The closest Euclidean field pairs are not simply within-domain neighbors. Biochemistry, Genetics and Molecular Biology is closest to Medicine; Neuroscience is closest to Psychology; Chemical Engineering is close to Medicine; and Agricultural and Biological Sciences is close to Materials Science. These links do not imply shared content. They mean that the fields have similar standardized levels of compactness, dispersion, hubness, spectral structure, and temporal indicators.
 
-Figure~\ref{fig:within_cross_distance_distribution} summarizes the same point more quantitatively. Within-domain field pairs have a lower median distance than cross-domain pairs, \(1.90\) versus \(2.20\), but the distributions strongly overlap. At field level, 18 of 26 fields have their nearest morphological neighbor outside their own broad domain. The taxonomy therefore captures part of the morphology, but not all of it.
+Figure~\ref{fig:domain_pair_distance_structure} replaces the binary within--cross contrast with a domain-pair view. Within-domain field pairs still have a lower overall median distance than cross-domain pairs, \(1.90\) versus \(2.20\), but the domain cells show where that average comes from. Social Sciences are the most internally coherent domain, while the closest cross-domain relation is between Life Sciences and Health Sciences. At field level, nearest-neighbor relations often cross the broad taxonomy: 18 of 26 fields have their nearest morphological neighbor outside their own domain. The taxonomy therefore captures part of the morphology, but not all of it.
 
 \begin{figure}[H]
 \centering
-\caption[Within-domain and cross-domain field distances]{Within-domain and cross-domain field-pair distances. Boxes and points summarize all field pairs under the static eleven-metric profile representation. The overlap shows that broad taxonomy and morphological similarity are related but not equivalent.}
-\label{fig:within_cross_distance_distribution}
-\includegraphics[width=0.86\textwidth]{figures/fig_08_within_cross_distance_distribution.png}
+\caption[Domain-pair morphological distance structure]{Domain-pair morphological distance structure. Panel A reports median field-pair Euclidean distances for each pair of OpenAlex domains; diagonal cells are within-domain distances and off-diagonal cells are cross-domain distances. Panel B counts fields whose nearest morphological neighbor lies inside or outside their own domain. Distances are computed from robust-scaled eleven-metric field profiles; lower values mean more similar morphology, not topical similarity.}
+\label{fig:domain_pair_distance_structure}
+\includegraphics[width=\textwidth]{figures/fig_08_domain_pair_distance_structure.pdf}
 \end{figure}
 
 \section{Convergence and Divergence Over Time}

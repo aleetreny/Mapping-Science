@@ -5,11 +5,11 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {6.1}{\ignorespaces Standardized domain-level morphological profiles. Values are z-scores computed across the four domain profiles for each metric; positive values indicate domains above the cross-domain average on that metric. Metrics are grouped by semantic dispersion, local density and hubness, spectral structure, and temporal movement.}}{15}{figure.caption.11}%
-\contentsline {figure}{\numberline {6.2}{\ignorespaces Field-level standardized morphological profiles. Rows are fields, ordered by domain and by a compact profile score within domain; the colored strip marks the parent domain. The figure shows that field-level morphology varies substantially inside broad domains, especially for dispersion, local density, hubness, and temporal movement.}}{16}{figure.caption.13}%
-\contentsline {figure}{\numberline {6.3}{\ignorespaces Subfield-level metric distributions by domain. Values are z-scores across the 241 eligible subfields for five representative metrics. The distributions show that domain averages hide substantial within-domain heterogeneity, especially for recent novelty, hubness, and spectral structure.}}{17}{figure.caption.14}%
-\contentsline {figure}{\numberline {6.4}{\ignorespaces Exploratory PCA map of subfield metric profiles. Points are subfields represented by their eleven standardized morphological metrics, not by paper-level embeddings. The map is used as a visual summary of profile similarity; it is not evidence of discrete discipline categories. Selected labels mark the most atypical profiles.}}{19}{figure.caption.16}%
-\contentsline {figure}{\numberline {6.5}{\ignorespaces Most atypical subfield profiles. Outlyingness is the Euclidean distance from the average standardized profile across the eleven metrics. The ranking identifies subfields whose overall morphology is unusual, without assigning them to groups or treating the ranking as a typology.}}{20}{figure.caption.17}%
+\contentsline {figure}{\numberline {6.1}{\ignorespaces Domain-level morphological profiles}}{15}{figure.caption.11}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces Field-level morphological profiles}}{16}{figure.caption.13}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces Subfield metric distributions by domain}}{17}{figure.caption.14}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces Subfield profile PCA map}}{19}{figure.caption.16}%
+\contentsline {figure}{\numberline {6.5}{\ignorespaces Most atypical subfield profiles}}{20}{figure.caption.17}%
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {7.1}{\ignorespaces Domain-level temporal trajectories}}{22}{figure.caption.18}%
 \contentsline {figure}{\numberline {7.2}{\ignorespaces Top subfield centroid paths}}{23}{figure.caption.19}%
@@ -19,7 +19,7 @@
 \contentsline {figure}{\numberline {7.6}{\ignorespaces Contrasting subfield trajectory profiles}}{27}{figure.caption.24}%
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {8.1}{\ignorespaces Pairwise field morphological distances}}{30}{figure.caption.25}%
-\contentsline {figure}{\numberline {8.2}{\ignorespaces Within-domain and cross-domain field distances}}{31}{figure.caption.26}%
+\contentsline {figure}{\numberline {8.2}{\ignorespaces Domain-pair morphological distance structure}}{31}{figure.caption.26}%
 \contentsline {figure}{\numberline {8.3}{\ignorespaces Temporal field-pair distance trajectories}}{32}{figure.caption.27}%
 \contentsline {figure}{\numberline {8.4}{\ignorespaces Strongest field convergence and divergence}}{33}{figure.caption.28}%
 \addvspace {10\p@ }

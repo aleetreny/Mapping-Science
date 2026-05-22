@@ -35,6 +35,8 @@ research/__pycache__/
 
 # Large document/content outputs
 *.pdf
+!memory/figures/fig_08_field_static_distance_heatmap.pdf
+!memory/figures/fig_08_domain_pair_distance_structure.pdf
 *.grobid-xml
 logs/
 outputs/
