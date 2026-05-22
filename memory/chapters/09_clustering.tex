@@ -1,18 +1,82 @@
 % Chapter 9: Exploratory Morphological Typologies
-% Focus: Clustering scientific disciplines into descriptive typologies based on the 11 core embedding-space metrics.
-% Document Feeds: docs/TFM_summary.md, docs/reduced_metric_core.md
-% Outputs: outputs/04_reduced_metric_core/ (for the 11 metrics), potential clustering tables/plots.
-% Citations: Reminders to cite unsupervised clustering methods (e.g. Hierarchical Clustering, K-Means) and typological philosophy.
-% IMPORTANT constraints:
-%   - Clustering is strictly exploratory and must be based ONLY on the reduced 11 embedding-space metrics, NOT UMAP coordinates.
-%   - The clusters must be interpreted as descriptive typologies (conceptual guides), NOT as natural or objective categories of science.
-%   - There is NO standalone visualization chapter; UMAP projections and visual density maps are integrated inside the relevant chapters as interpretive support.
-% TODO: Run exploratory clustering on the 11-metric profiles and export the resulting cluster members and dendrograms.
 
-\noindent This chapter presents an exploratory clustering analysis of scientific disciplines. Using the eleven core high-dimensional morphological metrics, we group subfields with structurally similar profiles to build descriptive typologies. This unsupervised typology provides a heuristic framework to understand the shared morphological features of modern scientific research.
+\section{From Similarity to Exploratory Typologies}
 
-% TODO: Outline the clustering methodology (e.g., Hierarchical Agglomerative Clustering or K-Means on the 11-metric profiles).
-% TODO: Justify clustering directly in the original 768-D derived metric space (excluding UMAP coordinates to prevent distortion).
-% TODO: Present the descriptive typologies, analyzing the key morphological traits that define each cluster.
-% TODO: Emphasize the epistemological status of clusters as descriptive typologies rather than absolute, objective boundaries.
-% TODO: Integrate interpretive UMAP visualizations and density plots directly here to illustrate cluster coherence in 2D.
+The previous chapters showed the same empirical object from three angles: static profile variation, temporal movement, and pairwise morphological similarity. This chapter compresses those relations into a small set of exploratory typologies. The goal is not to discover natural categories of science. Clustering is used here as a descriptive device: it groups subfields whose eleven-metric morphology is similar enough to make repeated profile patterns easier to name, compare, and question.
+
+The unit clustered is the 241 eligible OpenAlex subfields. Each subfield is represented by the reduced eleven-metric core from Chapter~5: dispersion around the centroid, local density and hubness, spectral structure, and the three full-period temporal indicators. These metrics were computed from the original SPECTER2 embedding space; no paper-level clusters, taxonomy labels, UMAP coordinates, or PCA coordinates enter the clustering. Projections appear below only as visual summaries of the resulting metric-profile space.
+
+Before clustering, each metric is centered by the cross-subfield median and scaled by the interquartile range. Robust scaling is used because several metrics have visible tails and because the typology should not be driven by a small number of extreme subfields. Domain and field labels are retained only as metadata for interpretation. They are not used as features, targets, or constraints.
+
+\section{Exploring Candidate Typology Models}
+
+The exploration compared hierarchical clustering, \(k\)-means, Gaussian mixture models, and distance variants across \(k=3,\ldots,10\). The main hierarchical family used Ward linkage on Euclidean distances in standardized profile space, with both robust and z-score scaling. Average linkage was tested with Euclidean and correlation distances. \(k\)-means was included as a centroid-based comparison; Gaussian mixtures were used only diagnostically because their covariance assumptions are harder to defend in this small, eleven-dimensional profile space. Density-based HDBSCAN was not retained because it was not available in the active environment and no density model was forced as thesis evidence.
+
+Figure~\ref{fig:typology_quality_by_k} summarizes the diagnostic result. Separation is modest. The selected Ward solution at \(k=5\) has a silhouette score of \(0.133\), which is not evidence of strong natural clusters. Some alternatives obtain higher silhouette scores, but for reasons that make them less useful as typologies. Average-link Euclidean clustering, for example, reaches \(0.361\) at \(k=5\) by producing one cluster of 230 subfields plus tiny fragments. Correlation linkage separates profile shapes more sharply, but it downweights absolute level differences that are substantively important here: compactness, dispersion, hubness, and novelty are not just relative patterns across metrics.
+
+\begin{figure}[H]
+\centering
+\caption[Typology quality and stability diagnostics]{Typology quality and stability diagnostics. Panel A reports silhouette scores across candidate values of \(k\) for selected algorithms and preprocessing choices; the dashed line marks the selected \(k=5\) Ward solution. Panel B compares selected-solution assignments with plausible alternatives using adjusted Rand index (ARI) and adjusted mutual information (AMI). The dotted line reports mean ARI over 100 random 80 percent subfield subsamples.}
+\label{fig:typology_quality_by_k}
+\includegraphics[width=\textwidth]{figures/fig_09_cluster_quality_by_k.png}
+\end{figure}
+
+The selected solution is therefore conservative rather than optimal in a single-score sense. It avoids singleton clusters at \(k=5\), whereas the same robust Ward family begins peeling off singletons at higher \(k\). It also gives interpretable profile contrasts without collapsing the space into one giant group. The stability checks qualify the result. Z-score Ward agrees only moderately with the selected solution (ARI \(=0.306\), AMI \(=0.409\)); excluding the three temporal metrics gives a related but different static-only solution (ARI \(=0.372\), AMI \(=0.405\)); and family-balanced robust Ward agrees more strongly (ARI \(=0.548\), AMI \(=0.561\)) but creates a singleton. Across 100 random 80 percent subsamples, mean ARI is \(0.355\) and mean AMI is \(0.444\). These values support a weak typology: useful anchors, fuzzy boundaries.
+
+\section{Selected Morphological Typology}
+
+The final typology uses Ward hierarchical clustering with \(k=5\) on robust-scaled eleven-metric subfield profiles. The five groups are named by their mean standardized profiles rather than by domain composition or prestige. Table~\ref{tab:typology_summary} gives the compact version, and Figure~\ref{fig:typology_profile_heatmap} shows the full profile signature.
+
+\input{tables/tab_09_typology_summary}
+
+\begin{figure}[H]
+\centering
+\caption[Selected typology profile heatmap]{Selected typology mean profiles. Rows are exploratory typologies; columns are the eleven reduced morphology metrics grouped by dispersion, local density and hubness, spectral structure, and temporal movement. Values are mean robust-scaled metric levels within each typology. Red indicates above-median morphology on that metric, blue below-median morphology.}
+\label{fig:typology_profile_heatmap}
+\includegraphics[width=\textwidth]{figures/fig_09_typology_profile_heatmap.png}
+\end{figure}
+
+The largest type, T1 Broad sparse profiles, contains 89 subfields. Its signature is high median kNN distance, high centroid distance, and relatively low local variability and hub concentration. It is a broad-territory profile: subfields in this group tend to occupy more extended semantic regions and have farther nearest neighbors, but their local neighborhoods are not especially uneven.
+
+T2 Compact low-dispersion profiles contains 49 subfields. It has low centroid dispersion and low median kNN distance, while retaining comparatively high PCA dimensionality and hub Gini. This is not simply a low-complexity group. It is compact in distance terms, but its variation still requires several spectral directions and may concentrate around local hubs.
+
+T3 Low-dimensional locally uneven profiles contains 67 subfields. Its profile is below average on PCA dimensionality and spectral entropy, while kNN distance variability and centroid drift are above average. These subfields are not the broadest regions in the map, but their local neighborhoods are uneven and their full-period positions have moved more than the median subfield.
+
+T4 Temporal novelty profiles contains 26 subfields and is the most temporally distinctive type. It has very high centroid drift and recent novelty, positive radial slope, and low spectral entropy. The label does not mean that these subfields are intellectually new in a sociological sense. It means their recent papers are farther from the early semantic core and their centroids move strongly under the full-period SPECTER2 representation.
+
+T5 Uneven dispersion outliers is small, with 10 subfields. It is defined by very high centroid IQR and kNN distance variability, plus elevated hub Gini and low spectral entropy. This type is best read as an outlier profile family rather than a stable large class: its members share an unusual combination of internal spread and local unevenness.
+
+\section{Typologies Across Domains and Border Cases}
+
+The typologies partly align with OpenAlex domains, but none is a pure domain proxy. Figure~\ref{fig:typology_domain_composition} makes this visible. T1 and T4 are dominated by Physical Sciences, with 51 of 89 and 17 of 26 subfields respectively, but both include subfields from all four domains. T2 is split mainly between Social Sciences and Health Sciences, with Physical Sciences still present. T3 is strongest in Health Sciences and Social Sciences but also includes Life Sciences. T5 is evenly divided between Life Sciences and Health Sciences at the top, with one Social Sciences and one Physical Sciences member.
+
+\begin{figure}[H]
+\centering
+\caption[Domain composition of morphological typologies]{Domain composition of the selected morphological typologies. Bars show the share of subfields from each OpenAlex domain inside each typology. Domains are used only as interpretive metadata; the clustering itself uses the eleven morphology metrics and does not optimize domain purity.}
+\label{fig:typology_domain_composition}
+\includegraphics[width=\textwidth]{figures/fig_09_typology_domain_composition.png}
+\end{figure}
+
+The PCA map in Figure~\ref{fig:typology_pca_map} gives a visual check on the same claim. It projects the robust-scaled eleven-metric profiles into two dimensions after clustering. The first two principal components explain 32.0 percent and 24.1 percent of the profile variance, enough to orient the reader but not enough to define the clustering geometry. The map shows broad regions rather than clean islands. T4 stretches toward a high-drift, high-novelty side of the space; T5 contains several distant profiles; and T1, T2, and T3 overlap around the middle.
+
+\begin{figure}[H]
+\centering
+\caption[Subfield typologies in profile PCA space]{Subfield typologies in metric-profile PCA space. Points are subfields colored by selected typology; circled points label the closest subfield to each typology centroid. PCA is used only for visualization of the robust-scaled eleven-metric profiles and is not used to assign typology membership.}
+\label{fig:typology_pca_map}
+\includegraphics[width=\textwidth]{figures/fig_09_typology_pca_map.png}
+\end{figure}
+
+The border cases are as important as the prototypes. Table~\ref{tab:typology_examples} lists the closest subfields to each typology centroid, the smallest-margin cases, and internally distant members. Because Ward clustering does not assign points by nearest centroid, a few border cases sit closer to an adjacent typology centroid than to their own. That is not a failure of the method; it is a useful warning that the partition is a hierarchical cut through continuous profile space.
+
+\input{tables/tab_09_typology_examples}
+
+The examples also prevent the labels from becoming too smooth. Human Factors and Ergonomics is a distant member of the temporal novelty type rather than a generic representative. Philosophy sits inside the uneven-dispersion outlier group but is not interchangeable with Toxicology or Fluid Flow and Transfer Processes. These cases are reminders that the typology compresses profile relations; it does not replace individual subfield interpretation.
+
+\section{Interpretive Limits of Clustering}
+
+The clustering evidence is weak in the precise sense that the profile space does not break into clean, separated groups. This matters. The typologies should not be read as objective disciplinary boundaries, natural kinds, quality rankings, causal mechanisms, or replacements for the OpenAlex hierarchy. They are labels for recurrent combinations of dispersion, local density, hubness, spectral structure, and temporal movement.
+
+No single clustering criterion can settle this interpretation problem. Different reasonable algorithms reward different geometry: Ward favors compact Euclidean groups, correlation linkage favors profile shape, \(k\)-means favors centroid separation, and mixture models favor distributional fit. That is why the chapter uses diagnostics and sensitivity checks rather than treating a single score as decisive \parencite{kleinberg2002clustering}. The selected solution is defensible because it is interpretable, avoids obvious singleton artifacts at \(k=5\), retains the temporal metrics while surviving a static-only comparison, and helps synthesize the empirical chapters. It is not strong evidence that science has five morphological types.
+
+The useful conclusion is more modest. Scientific subfields occupy a continuous morphology space, but that space has repeated profile patterns. Some subfields are broad and sparse, some compact, some locally uneven, some temporally novel, and a small set unusually dispersed or irregular. Those patterns cut across domains while still carrying domain tendencies. Chapter~9 therefore closes the empirical arc by turning many pairwise and metric-level observations into a cautious typological vocabulary: not a taxonomy of science, but a map legend for reading morphology.
+

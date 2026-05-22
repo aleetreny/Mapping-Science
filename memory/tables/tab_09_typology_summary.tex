@@ -1,0 +1,22 @@
+\begin{table}[H]
+\centering
+\caption[Morphological typology summary]{Selected exploratory morphological typology}
+\label{tab:typology_summary}
+\scriptsize
+\begingroup
+\setlength{\tabcolsep}{2.4pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedleft\arraybackslash}p{0.06\textwidth} >{\raggedright\arraybackslash}p{0.29\textwidth} >{\raggedright\arraybackslash}p{0.26\textwidth} >{\raggedright\arraybackslash}p{0.14\textwidth}@{}}
+\hline
+\textbf{Typology} & \textbf{$n$} & \textbf{Dominant profile traits} & \textbf{Representative subfields} & \textbf{Largest domains} \\
+\hline
+T1 Broad sparse profiles & 89 & high kNN median, centroid median; low kNN CV, hub Gini & Pharmacology; Environmental Engineering; Cell Biology & Physical Sciences 51; Life Sciences 16 \\
+T2 Compact low-dispersion profiles & 49 & high PCA D80, hub Gini; low centroid P90, centroid median & Space and Planetary Science; General Decision Sciences; Visual Arts and Performing Arts & Social Sciences 17; Health Sciences 16 \\
+T3 Low-dimensional locally uneven profiles & 67 & high kNN CV, centroid drift; low PCA entropy, PCA D80 & Occupational Therapy; Neurology; Conservation & Health Sciences 26; Social Sciences 22 \\
+T4 Temporal novelty profiles & 26 & high centroid drift, recent novelty; low PCA entropy, PCA D80 & Health Information Management; Computer Science Applications; Neurology & Physical Sciences 17; Social Sciences 5 \\
+T5 Uneven dispersion outliers & 10 & high centroid IQR, kNN CV; low PCA entropy, kNN median & Fluid Flow and Transfer Proces.; Toxicology; Complementary and Manual Thera. & Life Sciences 4; Health Sciences 4 \\
+\hline
+\end{tabular}
+\endgroup
+\par\vspace{0.15cm}
+\footnotesize\textit{Note.} Typologies are obtained from Ward clustering of robust-scaled eleven-metric subfield profiles. Representative subfields are closest to each typology centroid in the standardized metric space.
+\end{table}
