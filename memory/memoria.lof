@@ -23,15 +23,15 @@
 \contentsline {figure}{\numberline {8.3}{\ignorespaces Temporal field-pair distance trajectories}}{32}{figure.caption.27}%
 \contentsline {figure}{\numberline {8.4}{\ignorespaces Strongest field convergence and divergence}}{33}{figure.caption.28}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {9.1}{\ignorespaces Typology quality and stability diagnostics}}{36}{figure.caption.30}%
-\contentsline {figure}{\numberline {9.2}{\ignorespaces Selected typology profile heatmap}}{37}{figure.caption.32}%
-\contentsline {figure}{\numberline {9.3}{\ignorespaces Domain composition of morphological typologies}}{39}{figure.caption.33}%
-\contentsline {figure}{\numberline {9.4}{\ignorespaces Subfield typologies in profile PCA space}}{40}{figure.caption.34}%
+\contentsline {figure}{\numberline {9.1}{\ignorespaces Static and dynamic clustering diagnostics}}{36}{figure.caption.30}%
+\contentsline {figure}{\numberline {9.2}{\ignorespaces Static typology profile heatmap}}{37}{figure.caption.32}%
+\contentsline {figure}{\numberline {9.3}{\ignorespaces Dynamic temporal typology profile heatmap}}{39}{figure.caption.34}%
+\contentsline {figure}{\numberline {9.4}{\ignorespaces Static and dynamic typologies under alternative projections}}{40}{figure.caption.35}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {C.1}{\ignorespaces Centroid-embedding clustering sensitivity}}{49}{figure.caption.37}%
-\contentsline {figure}{\numberline {C.2}{\ignorespaces Temporal and hybrid clustering sensitivity}}{50}{figure.caption.38}%
+\contentsline {figure}{\numberline {C.1}{\ignorespaces Centroid-embedding clustering sensitivity}}{48}{figure.caption.37}%
+\contentsline {figure}{\numberline {C.2}{\ignorespaces Domain composition of static and dynamic typologies}}{49}{figure.caption.38}%
 \contentsfinish 

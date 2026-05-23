@@ -1,11 +1,8 @@
-% Appendix C: Additional Figures and Diagnostic Plots
-% Focus: Placeholders for supplemental tables and figures (e.g. Pearson/Spearman heatmaps, full distributions, UMAPs).
-% Document Feeds: docs/reduced_metric_core.md, docs/visualization.md
-% TODO: Embed secondary plots that do not fit in the main chapters.
+% Appendix C - Additional Figures and Diagnostic Plots
 
 \label{app:additional-figures}
 
-\noindent This appendix compiles supplemental diagnostic plots, secondary correlation matrices, and granular subfield UMAP maps that provide deeper contextual verification of the results discussed in the main body.
+\noindent This appendix compiles supplemental clustering diagnostics that support the typological comparisons in the main body without replacing the morphology-based interpretation.
 
 \section{Centroid-Embedding Clustering Sensitivity}
 
@@ -26,23 +23,21 @@ The result does not overturn the Chapter~9 interpretation. It indicates that sem
 \includegraphics[width=\textwidth]{figures/fig_09_centroid_embedding_clustering_sensitivity.png}
 \end{figure}
 
-\section{Temporal-Trajectory and Hybrid Clustering Sensitivity}
+\section{Hybrid Centroid--Morphology Sensitivity}
 
-Two further sensitivity checks ask whether the weak morphology typology changes when the representation is altered. The temporal-trajectory check clusters subfields by change in the eight windowed structural metrics across the five thesis windows. Because one subfield lacks a completed 2000--2004 window, this check uses 240 complete trajectories. Four representations were tested: first--last change vectors, linear slope vectors, full window-by-metric trajectories, and a dynamic summary combining changes, slopes, volatility, and centroid-path movement.
+Chapter~9 moves the temporal-trajectory result into the main text, so the remaining sensitivity question here is what happens when morphology is combined with semantic location. The hybrid check tested two representation families: concatenating balanced morphology profiles with reduced centroid principal components, and weighted distance matrices \(D_{\mathrm{hybrid}}=\alpha D_{\mathrm{centroid}}+(1-\alpha)D_{\mathrm{morphology}}\) for \(\alpha\in\{0.25,0.50,0.75\}\).
 
-The best balanced temporal solution uses average-link hierarchical clustering on correlation distances between the eight-metric slope vectors, with \(k=4\), silhouette \(=0.396\), and cluster sizes \(93\), \(58\), \(54\), and \(35\). Its mean subsample ARI is \(0.725\), so this dynamic partition is more stable than the full-period morphology typology. It is not, however, the same object: agreement with the Chapter~9 morphology typology is low (AMI \(=0.048\)), and agreement with OpenAlex domains is also low (AMI \(=0.093\)). The groups are better read as dynamic tendencies: one cluster becomes more compact and locally denser; another expands in centroid and nearest-neighbor distance while hubness falls; a third loosens local neighborhoods while local unevenness declines; and a smaller group gains dimensionality and hub concentration.
+The best balanced hybrid solution uses spectral clustering on the \(\alpha=0.75\) hybrid distance matrix, with \(k=3\), silhouette \(=0.247\), and cluster sizes \(91\), \(77\), and \(73\). It is highly stable under subsampling (mean ARI \(=0.951\)), but it aligns much more with centroid/domain structure than with morphology: AMI is \(0.591\) against OpenAlex domains, \(0.505\) against centroid clusters, and only \(0.092\) against the morphology typology.
 
-The hybrid check combines semantic location with morphology. Two families were tested: concatenating balanced morphology profiles with reduced centroid principal components, and weighted distance matrices \(D_{\mathrm{hybrid}}=\alpha D_{\mathrm{centroid}}+(1-\alpha)D_{\mathrm{morphology}}\) for \(\alpha\in\{0.25,0.50,0.75\}\). The best balanced hybrid solution uses spectral clustering on the \(\alpha=0.75\) hybrid distance matrix, with \(k=3\), silhouette \(=0.247\), and cluster sizes \(91\), \(77\), and \(73\). It is highly stable under subsampling (mean ARI \(=0.951\)), but it aligns much more with centroid/domain structure than with morphology: AMI is \(0.591\) against OpenAlex domains, \(0.505\) against centroid clusters, and only \(0.092\) against the morphology typology. The hybrid result therefore confirms that semantic location dominates once it receives substantial weight.
+The hybrid result therefore clarifies the boundary of the Chapter~9 claim. Stability improves when semantic location receives substantial weight, but the resulting partition is no longer a morphology-only typology. It is useful as a diagnostic contrast, not as a replacement for either the static morphology typology or the temporal trajectory typology.
 
-These checks add nuance rather than a replacement typology. Temporal trajectories are useful for Chapter~7-style questions about how morphology changes; hybrid clusters are useful for showing how quickly semantic location reconstructs broad disciplinary structure. The Chapter~9 typology remains the appropriate summary for full-period morphology profiles.
+\section{Static and Dynamic Domain Composition}
+
+The domain-composition diagnostic is retained here as supporting context rather than as a main Chapter~9 figure. It shows that both static and dynamic morphology typologies carry domain tendencies, but neither is optimized to reproduce OpenAlex domains.
 
 \begin{figure}[H]
 \centering
-\caption[Temporal and hybrid clustering sensitivity]{Temporal and hybrid clustering sensitivity. Panel A projects the selected temporal slope-vector solution into PCA space and colors subfields by dynamic cluster. Panel B shows the OpenAlex domain composition of the selected hybrid centroid--morphology solution. The temporal projection is for visualization only; clustering uses standardized slope vectors. The hybrid solution uses a weighted distance matrix, not PCA or UMAP coordinates.}
-\label{fig:temporal_hybrid_clustering_sensitivity}
-\includegraphics[width=\textwidth]{figures/fig_c_temporal_hybrid_clustering_sensitivity.png}
+\caption[Domain composition of static and dynamic typologies]{Domain composition of static and dynamic morphology typologies. Bars show the OpenAlex domain share within each typology. Domains are used only as interpretive metadata; neither the static nor the dynamic clustering optimizes domain purity.}
+\label{fig:appendix_static_dynamic_domain_composition}
+\includegraphics[width=\textwidth]{figures/fig_c_static_dynamic_domain_composition.png}
 \end{figure}
-
-% TODO: Include Spearman and Pearson metric correlation heatmaps.
-% TODO: Include metric distribution histograms across all subfields.
-% TODO: Include granular smooth density UMAP subfield panels for inspection.
