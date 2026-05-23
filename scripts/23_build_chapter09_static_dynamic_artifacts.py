@@ -719,7 +719,8 @@ def build_domain_composition(output_dir: Path, figure_dir: Path) -> None:
     static_pivot = _composition_pivot(static_comp, "typology_id", static_labels)
     dynamic_pivot = _composition_pivot(dynamic_comp, "trajectory_cluster_id", dynamic_labels)
 
-    fig, axes = plt.subplots(2, 1, figsize=(10.8, 6.8), constrained_layout=True, sharex=True)
+    fig, axes = plt.subplots(2, 1, figsize=(10.8, 6.8), sharex=True)
+    fig.subplots_adjust(top=0.86, bottom=0.10, left=0.08, right=0.96, hspace=0.28)
     for ax, pivot, title in [
         (axes[0], static_pivot, "A. Static morphology typologies"),
         (axes[1], dynamic_pivot, "B. Temporal trajectory typologies"),
@@ -752,7 +753,7 @@ def build_domain_composition(output_dir: Path, figure_dir: Path) -> None:
         frameon=False,
         ncol=4,
         loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
+        bbox_to_anchor=(0.5, 0.96),
     )
     axes[1].set_xlabel("Typology (subfield count)")
     _save_figure(fig, "fig_c_static_dynamic_domain_composition", output_dir, figure_dir)
