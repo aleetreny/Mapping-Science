@@ -200,6 +200,7 @@ hmargin=3cm
 
 \addbibresource{referencias.bib} % The references.bib file in which the bibliography used should be
 \AtEveryBibitem{\clearfield{note}}
+\AtBeginBibliography{\raggedright\sloppy}
 
 \renewbibmacro*{cite:plabelyear+extradate}{%
 		\iffieldundef{labelyear}
