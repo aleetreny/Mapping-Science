@@ -6,7 +6,7 @@ The previous chapters described scientific morphology as a set of continuous rel
 
 Three axes are kept distinct. Static morphological shape clusters the 241 analysis subfields by their eleven robust-scaled full-period morphology metrics: centroid dispersion, local density and hubness, spectral structure, centroid drift, radial expansion, and recent novelty. Dynamic morphological change clusters subfields by how their windowed structural metrics move over time. Semantic-location clustering, reported mainly in Appendix~C, clusters subfield centroid embeddings and hybrid centroid--morphology representations as sensitivity checks. These three representations answer different questions. Static shape asks what a subfield's full-period morphology looks like; temporal trajectories ask how that morphology changes; semantic location asks where the subfield sits in embedding space.
 
-The clustering inputs remain metric profiles or trajectory features derived from the original SPECTER2 space. Neither OpenAlex labels nor projection coordinates are used to assign clusters. PCA appears below only as a visual summary of the resulting spaces. This distinction matters because a visually tidy projection can be persuasive without being the clustering geometry.
+The clustering inputs remain metric profiles or trajectory features derived from the original SPECTER2 space. Neither OpenAlex labels nor projection coordinates are used to assign clusters. PCA, PCoA, and UMAP appear below only as visual summaries; none of them is used to assign clusters. This distinction matters because a visually tidy projection can be persuasive without being the clustering geometry.
 
 \section{Static Morphological Typologies}
 
@@ -53,7 +53,7 @@ The temporal clustering therefore strengthens the chapter without turning it int
 
 \section{Static, Dynamic, and Semantic-Location Structure Compared}
 
-The static and dynamic typologies organize different aspects of the same subfield universe. To check whether the visual contrast depends on one projection method, Figure~\ref{fig:static_dynamic_projection_comparison} projects both spaces with PCA, PCoA, and UMAP. The static panels use robust-scaled eleven-metric profiles; the dynamic panels use standardized temporal slope vectors. PCoA uses the distance geometry closest to the selected clustering in each case: Euclidean distance for static morphology and correlation distance for temporal trajectories.
+The static and dynamic typologies organize different aspects of the same subfield universe. To check whether the visual contrast depends on one projection method, Figure~\ref{fig:static_dynamic_projection_comparison} projects both spaces with principal component analysis (PCA), principal coordinates analysis (PCoA), and UMAP. The static panels use robust-scaled eleven-metric profiles; the dynamic panels use standardized temporal slope vectors. PCoA uses the distance geometry closest to the selected clustering in each case: Euclidean distance for static morphology and correlation distance for temporal trajectories.
 
 \begin{figure}[H]
 \centering

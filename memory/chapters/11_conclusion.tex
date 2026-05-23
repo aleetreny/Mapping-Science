@@ -1,11 +1,27 @@
 % Chapter 11: Conclusion
-% Focus: Final summary of the research contributions, key takeaways, and avenues for future research.
-% Document Feeds: docs/TFM_summary.md
-% Outputs: None directly.
-% TODO: Summarize the final descriptive findings and map out futures of dense embedding-space scientometrics.
 
-\noindent This chapter concludes the dissertation. It summarizes the research contributions, details key takeaways from the morphological analysis of disciplines, and proposes promising avenues for future research in dense semantic mapping of science.
+\section{Summary of Contributions}
 
-% TODO: Provide a concise summary of empirical and methodological contributions.
-% TODO: Highlight the primary takeaways regarding the stability vs. evolution of science in the 21st century.
-% TODO: Detail future work (e.g. extending to citation-hybrid models, multilingual embeddings, and fine-grained subfield networks).
+This thesis set out to measure the morphology of scientific fields in a dense scientific embedding space. It did not aim to discover the true map of science or to replace existing taxonomies. Its goal was more specific: to ask how OpenAlex subfields, represented by their SPECTER2-embedded title--abstract records, occupy semantic space as distributions of papers.
+
+The empirical pipeline built a balanced OpenAlex corpus covering 2000--2024, linked each retained work to a row-aligned SPECTER2 vector, and measured subfields through embedding-space morphology. The final metric core summarized dispersion, local density, hubness, spectral structure, and temporal movement. Those metrics were computed in the original SPECTER2 space, while low-dimensional projections were used only for visualization. This separation between measurement and display is one of the central methodological commitments of the thesis.
+
+The thesis also separated four analytical dimensions that are often blended in science maps: static shape, temporal change, morphological similarity, and semantic location. Static shape describes full-period field morphology. Temporal change describes how structural metrics move across publication windows. Similarity compares profile distances between scientific units. Semantic location describes where subfield centroids sit in embedding space. Keeping these dimensions apart made it possible to show that they do not tell the same story.
+
+\section{Main Empirical Takeaways}
+
+The first empirical takeaway is that broad domains have morphological tendencies, but they do not determine morphology. Physical Sciences are generally more dispersed and spectrally extended; Health Sciences are more locally dense and hub-concentrated. Yet field and subfield variation inside domains is large, and outlying subfields are extreme for different reasons. Taxonomy gives orientation, not a complete account of shape.
+
+The second takeaway is that scientific morphology changes over time in structured but heterogeneous ways. Across the corpus, several metrics move toward closer neighborhoods and lower spectral dimensionality, but local unevenness and hubness do not follow one universal pattern. The most dynamic subfields differ in the drivers of their movement. Temporal morphology is therefore not uniform convergence, maturation, or simplification. It is a profile of multiple simultaneous changes.
+
+The third takeaway is relational. Morphological similarity cuts across taxonomy, and temporal convergence is selective rather than global. Field-level profile space becomes more separated on average between 2000--2004 and 2020--2024, even as some field pairs move substantially closer. A low morphological distance means structural resemblance under the metric profile, not shared topic, causal influence, or institutional convergence.
+
+The fourth takeaway concerns typologies. Static morphology is weakly clustered and continuous, so its clusters are best read as typological anchors. Temporal trajectories form a clearer and more stable dynamic typology, which means that subfields are easier to group by how their morphology changes than by their full-period shape. Centroid and hybrid clustering show a different pattern: semantic location aligns more strongly with OpenAlex domains than morphology does. This confirms that topic-location structure and shape structure are distinct.
+
+\section{Final Remarks}
+
+The central result is not a new taxonomy of science, but a way to measure why no single taxonomy is enough. Scientific fields have positions, shapes, trajectories, and relationships. A domain label captures only part of that organization. A centroid captures location but not dispersion. A static profile captures shape but not change. A trajectory captures movement but not necessarily topic. A cluster can summarize a region of the space, but it should not be mistaken for a natural kind.
+
+This is the value of embedding-space morphology. It makes scientific structure measurable without forcing it into one visual or categorical form. The thesis shows that science can be read as a landscape of distributions: some broad and sparse, some compact and dense, some hub-concentrated, some spectrally extended, some moving sharply through time. Those patterns cross taxonomic boundaries while still carrying domain tendencies.
+
+The final claim is therefore deliberately careful. The thesis does not say what science is in essence. It shows how one can measure the shape and movement of scientific fields under a transparent corpus, representation model, and metric framework. Treating static shape, temporal change, taxonomy, and semantic location as separate dimensions makes the structure of science more measurable, and also more resistant to simplistic maps.
