@@ -31,7 +31,7 @@ Z = (z_1, \ldots, z_n)^\top \in \mathbb{R}^{n \times 768},
 
 Each row corresponds to one embedded work and remains aligned with its OpenAlex metadata: work identifier, publication year, subfield, field, and domain. This row alignment is the contract between corpus construction and morphology measurement. If row \(i\) contains \(z_i\), the metadata row \(i\) must describe the same work. All later grouping by subfield, domain, or time window depends on this invariant.
 
-\section{Embedding Space as Analytical Geometry}
+\section{Measurement Space as Analytical Geometry}
 
 All quantitative morphology metrics are computed in the original SPECTER2 space, which has 768 dimensions. Distances, neighborhoods, densities, centroids, dispersion statistics, and temporal movements are measured before any transformation for visualization.
 
@@ -39,7 +39,7 @@ This choice avoids adding a second geometry between the representation model and
 
 The interpretation of these quantities is conditional on the representation. A small distance, dense neighborhood, or moving centroid has meaning only within the assumptions of the embedding model and the validated corpus. The thesis therefore treats the embedding space as a common analytical geometry for comparison, not as an objective map of scientific knowledge.
 
-\section{Visualization and Representational Limits}
+\section{Visual Display and Representational Limits}
 
 Dimensionality reduction is used only for visual inspection and communication. UMAP constructs low-dimensional representations that preserve selected aspects of local structure under its own assumptions \parencite{mcinnes2018umap}. Such projections can summarize broad patterns, but they do not preserve the full geometry of the original SPECTER2 space. Apparent separation, overlap, or cluster shape may depend on hyperparameters, sampling, density variation, and the projection objective. Similar cautions apply to nonlinear embeddings more generally \parencite{chari2023specious,wattenberg2016tsne}.
 
@@ -49,6 +49,6 @@ These limitations do not invalidate the analysis, but they constrain interpretat
 
 \section{Implications for Morphological Analysis}
 
-The output of this chapter is a row-aligned SPECTER2 matrix linked to validated OpenAlex metadata. This matrix makes it possible to treat each subfield as a distribution of papers in a shared semantic space and to compare those distributions using common geometric operations.
+The output is a row-aligned SPECTER2 matrix linked to validated OpenAlex metadata. This matrix makes it possible to treat each subfield as a distribution of papers in a shared semantic space and to compare those distributions using common geometric operations.
 
-The following chapters measure the morphology of these distributions: their spread, local density, internal organization, and temporal movement. The unit of comparison is therefore not a discipline in the abstract, but a set of title--abstract records embedded by SPECTER2 and grouped by the OpenAlex taxonomy.
+The following chapters measure the spread, local density, internal organization, and temporal movement of these distributions. The unit of comparison is not a discipline in the abstract, but a set of title--abstract records embedded by SPECTER2 and grouped by the OpenAlex taxonomy.

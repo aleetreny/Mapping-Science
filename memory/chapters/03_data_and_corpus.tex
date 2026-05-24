@@ -1,6 +1,6 @@
 % Chapter 3: Data and Corpus Construction
 
-\section{Data Source and Analytical Unit}
+\section{OpenAlex as Analytical Frame}
 
 This thesis uses OpenAlex as its primary bibliographic data source. OpenAlex is a fully open index of scholarly works, authors, venues, institutions, and research concepts, designed to support large-scale and reproducible analyses of scientific literature \parencite{priem2022openalex}. Its openness is methodologically important: the corpus can be documented, audited, and reconstructed without dependence on proprietary bibliographic infrastructures.
 
@@ -8,13 +8,20 @@ The main analytical unit is the OpenAlex \textit{subfield}. Subfields provide a 
 
 This taxonomy is used pragmatically. OpenAlex subfields are not treated as natural or definitive boundaries of scientific knowledge, but as a transparent reference system for comparing semantic organization across scientific regions. As with all large bibliographic databases, OpenAlex is affected by coverage differences, metadata incompleteness, classification uncertainty, and language bias. Comparative evidence shows that open databases can support broad science mapping while still varying by database, discipline, and document type \parencite{martinmartin2021google}; recent work also documents OpenAlex metadata limitations, including abstract coverage, despite broadly comparable reference coverage under cleaned comparisons with Web of Science and Scopus \parencite{culbert2025reference}. These limitations frame the corpus as a controlled analytical sample, not as a census of global scientific production.
 
-\section{Corpus Scope, Eligibility Criteria, and Sampling Design}
+\section{Sampling a Comparable Corpus}
 
 The empirical analyses are based on a synchronized OpenAlex title--abstract corpus covering publications from 2000 to 2024. The full corpus contains 2,378,036 text-eligible works distributed across 252 subfields, 26 fields, and 4 domains. The embedding-based analysis uses a row-aligned subset of 2,344,927 embedded works across 241 analysis subfields.
 
 \input{tables/tab_03_corpus_summary}
 
 Eligibility follows from the needs of semantic embedding. A retained work must contain enough text for document-level representation, and the embedding input is the concatenation of title and abstract. The extraction is restricted to English records, articles and preprints, valid metadata, and minimum title and abstract lengths.
+
+\begin{figure}[H]
+\centering
+\makebox[\textwidth][c]{\includegraphics[width=1.16\textwidth]{figures/fig_03_openalex_corpus_pipeline.pdf}}
+\caption[OpenAlex filtering and corpus construction pipeline]{OpenAlex filtering and corpus construction pipeline. The first five stages are broad OpenAlex API filters, queried on 25 May 2026; the final three are frozen TFM pipeline counts for dataset version \texttt{2000\_2024\_400py}. Bar heights are figurative, while box labels report counts. Local checks include token thresholds, paratext exclusion, balanced sampling, validation, and embedding alignment.}
+\label{fig:openalex-corpus-pipeline}
+\end{figure}
 
 \input{tables/tab_03_corpus_filters}
 
@@ -30,7 +37,7 @@ where \(N_{s,t}^{eligible}\) is the number of works satisfying the eligibility f
 
 Capacity from sparse cells is not redistributed to denser cells. When a subfield-year cell contains fewer than 400 eligible works, the missing observations are recorded as shortfall. This preserves the temporal structure of the corpus and prevents large or recent fields from dominating later measures only because they produce more eligible records.
 
-\section{Corpus Composition and Validation}
+\section{Validation and Coverage}
 
 The synchronized corpus covers all four OpenAlex domains. Physical Sciences contributes the largest number of retained works, followed by Health Sciences, Social Sciences, and Life Sciences.
 
@@ -50,8 +57,8 @@ The embedding stage converts this validated corpus into a row-aligned analysis m
 
 The distinction between the full corpus and the analysis subset is therefore methodological. The full corpus describes the validated text extraction; the analysis subset defines the observations that enter the embedding-space morphology metrics.
 
-\section{Implications for Empirical Interpretation}
+\section{What the Corpus Can Support}
 
-The corpus supports comparative measurement of semantic morphology, not claims about total scientific production, research funding, institutional capacity, citation impact, or causal scientific development. Its design serves three purposes: cross-disciplinary comparability through annual caps, temporal comparability through a stable 2000--2024 sampling structure, and textual consistency through title--abstract eligibility.
+The corpus is built for comparative measurement of semantic morphology. It is not a basis for claims about total scientific production, research funding, institutional capacity, citation impact, or causal scientific development. Its design serves three purposes: cross-disciplinary comparability through annual caps, temporal comparability through a stable 2000--2024 sampling structure, and textual consistency through title--abstract eligibility.
 
-The later results should be interpreted as measurements of a balanced OpenAlex title--abstract corpus represented in a shared embedding space. They are reproducible indicators of how retained scientific works are distributed under a specific data source, taxonomy, sampling design, and text representation. They are not objective maps of science itself.
+The later results are therefore measurements of a balanced OpenAlex title--abstract corpus represented in a shared embedding space. They are reproducible indicators of how retained scientific works are distributed under a specific data source, taxonomy, sampling design, and text representation.

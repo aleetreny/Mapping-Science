@@ -1,10 +1,17 @@
 % Chapter 7: Temporal Evolution of Scientific Morphology
 
-\section{Temporal Morphology as Windowed Evolution}
+\section{Following Shape Through Time}
 
 This chapter treats temporal morphology as a sequence of comparable subfield profiles. The corpus is divided into five fixed windows: 2000--2004, 2005--2009, 2010--2014, 2015--2019, and 2020--2024. Within each window, the eight non-temporal structural metrics from the reduced core are recomputed in the original SPECTER2 embedding space. Dispersion, local density, hubness, and spectral structure are therefore observed repeatedly, rather than inferred from a single full-period profile.
 
 The remaining three metrics in the eleven-metric core play a different role. Centroid drift, radial expansion slope, and recent novelty score already summarize movement over the full period. They are used as complementary temporal indicators, not as windowed trajectories. This separation keeps two forms of time distinct: between-window change in structural morphology, and full-period movement relative to an earlier semantic configuration.
+
+\begin{figure}[H]
+\centering
+\caption[Schematic modes of temporal morphology]{Schematic modes of temporal morphology. Early and late windows can differ through centroid drift, radial expansion, or densification. These modes are not mutually exclusive; empirical subfields can combine relocation, changing dispersion, and changing local packing.}
+\label{fig:temporal_modes_schematic}
+\includegraphics[width=\textwidth]{figures/fig_07_temporal_modes_schematic.pdf}
+\end{figure}
 
 For comparability, the windowed plots use metric-level z-scores computed across all completed subfield-window observations. These values are relative positions within the observed temporal distribution, not inferential statistics. The temporal stage is nearly complete: 1,204 of 1,205 expected subfield-window rows were computed. The only unavailable row is Computational Mathematics in 2000--2004, which had fewer than the minimum number of papers for that window and is excluded from first--last subfield change rankings.
 
@@ -82,8 +89,8 @@ The drivers behind these cases are deliberately mixed. Philosophy is dominated b
 
 The trajectory panels make those differences concrete. Philosophy changes sharply after the first window and then stabilizes. Molecular Medicine becomes locally denser while remaining high in kNN distance variability. General Dentistry becomes more locally compact and spectrally simpler, but its distance variability rises late in the period. Signal Processing moves differently again: dispersion and kNN CV rise while PCA D80 falls. These examples are not meant as a typology; they show why temporal morphology should be read as a profile of coordinated and uncoordinated movements across metric families.
 
-\section{Interpretive Limits of Temporal Comparison}
+\section{What Temporal Profiles Can Say}
 
-This chapter describes temporal evolution in embedded semantic structure. It does not explain why the changes occurred. A decline in median kNN distance means that papers within a subfield-window have closer nearest neighbors under SPECTER2; it does not imply that the field became intellectually simpler, more mature, or more productive. A decline in PCA D80 means that less dimensional variation is needed to account for 80 percent of the embedding variance; it does not by itself identify a mechanism.
+Temporal morphology describes how embedded structure changes; it does not explain why the changes occurred. A decline in median kNN distance means that papers within a subfield-window have closer nearest neighbors under SPECTER2. A decline in PCA D80 means that less dimensional variation is needed to account for 80 percent of the embedding variance. Neither statement, by itself, implies simplicity, maturity, productivity, or mechanism.
 
-Five-year windows also smooth episodic movement. They reduce annual noise and keep sample sizes usable, but they can hide shorter shocks or transitions inside each period. Standardized plots help compare metrics with different units, but they are relative to the observed subfield-window distribution. The safest reading is therefore comparative and descriptive: scientific morphology over 2000--2024 changes both as a population of subfields and as a set of field- and domain-level summaries, with the strongest movement concentrated in particular scientific regions rather than distributed evenly across the hierarchy.
+Five-year windows reduce annual noise and keep sample sizes usable, but they can hide shorter shocks or transitions inside each period. Standardized plots compare metrics with different units, but they are relative to the observed subfield-window distribution. The central reading is comparative and descriptive: morphology changes across the 2000--2024 subfield population, with the strongest movement concentrated in particular scientific regions rather than distributed evenly across the hierarchy.

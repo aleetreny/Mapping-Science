@@ -37,6 +37,9 @@ research/__pycache__/
 *.pdf
 !memory/figures/fig_08_field_static_distance_heatmap.pdf
 !memory/figures/fig_08_domain_pair_distance_structure.pdf
+!memory/figures/fig_02_citation_semantic_contrast.pdf
+!memory/figures/fig_07_temporal_modes_schematic.pdf
+!memory/figures/fig_03_openalex_corpus_pipeline.pdf
 *.grobid-xml
 logs/
 outputs/

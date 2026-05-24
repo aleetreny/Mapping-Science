@@ -6,15 +6,22 @@ Scientific fields are usually named before they are measured. Taxonomies tell us
 
 Maps of science exist because scientific knowledge is too large and heterogeneous to understand one paper, journal, or category at a time. They help summarize cognitive structure, identify regions of proximity, and compare scientific areas. Yet a map is never just a map. It is a representation of a chosen relation: citation, co-citation, bibliographic coupling, vocabulary, journal category, collaboration, or semantic similarity. Different relations reveal different aspects of science, and none of them should be mistaken for science itself.
 
-This thesis focuses on one particular relation: the geometry of scientific documents in a dense embedding space. Rather than treating a field as a label, a publication count, a citation community, or a point on a two-dimensional visualization, the thesis treats it as a distribution of papers represented by SPECTER2 document embeddings. The object of interest is the morphology of that distribution: its dispersion, local density, hubness, spectral structure, temporal movement, similarity to other fields, and typological patterning.
+This thesis focuses on one relation that is often present but rarely measured directly: the geometry of scientific documents in a dense embedding space. Rather than treating a field as a label, a publication count, a citation community, or a point on a two-dimensional visualization, it treats the field as a distribution of papers represented by SPECTER2 document embeddings. The object of interest is the morphology of that distribution: its dispersion, local density, hubness, spectral structure, temporal movement, similarity to other fields, and typological patterning.
 
 \section{Research Gap}
 
 The study of scientific structure has a long tradition of spatial representation. Classical science maps use citation relations, co-word relations, journal categories, and overlay techniques to turn scientific activity into interpretable spatial structure \parencite{borner2003visualizing,vaneck2010vosviewer,leydesdorff2013global}. These approaches remain valuable because they capture intellectual, social, and institutional traces of scientific work. They also have limits for the question asked here. They usually emphasize relations among bibliographic objects, membership in predefined categories, or the position of entities in a map.
 
-Scientific document embeddings open another possibility. They place papers in a shared numerical representation, making it possible to compare scientific works through model-defined semantic proximity. SPECTER and SPECTER2 are especially relevant because they represent scientific documents rather than isolated words or generic sentences, and because their training connects text with scholarly relatedness \parencite{cohan2020specter,singh2023scirepeval}. This geometry can support retrieval, classification, clustering, and visualization. However, those uses do not exhaust what embeddings can offer for science mapping.
+Scientific document embeddings open another possibility. They place papers in a shared numerical representation, making it possible to compare scientific works through model-defined semantic proximity. SPECTER and SPECTER2 are especially relevant because they represent scientific documents rather than isolated words or generic sentences, and because their training connects text with scholarly relatedness \parencite{cohan2020specter,singh2023scirepeval}. Retrieval, classification, clustering, and visualization are natural uses of this geometry, but they are not the only ones.
 
 Less attention has been given to fields as distributions in this space. A centroid can locate a field, but it hides how the field is internally arranged. Two fields can have centroids in different semantic regions while sharing a similar morphological profile; two nearby fields can differ strongly in dispersion, density, hubness, or temporal movement. This thesis addresses that gap by measuring embedding-space morphology directly. The aim is not to replace taxonomies, topic models, citation networks, or visual maps, but to measure dimensions that those representations cannot express alone.
+
+\begin{figure}[H]
+\centering
+\caption[Conceptual workflow of embedding-space morphology]{Conceptual workflow of embedding-space morphology. OpenAlex provides the grouping, SPECTER2 provides the document geometry, and morphology metrics describe the shape and movement of the resulting paper clouds.}
+\label{fig:conceptual_workflow}
+\includegraphics[width=\textwidth]{figures/fig_01_conceptual_workflow.png}
+\end{figure}
 
 \section{Objectives and Research Questions}
 
@@ -49,6 +56,6 @@ The resulting contribution is methodological and conceptual rather than classifi
 
 \section{Thesis Structure}
 
-Chapter 2 positions the thesis within science mapping, semantic representation, scientific document embeddings, and morphology. Chapter 3 defines the OpenAlex corpus, sampling design, and analytical units. Chapter 4 describes the SPECTER2 representation and the distinction between measurement space and visualization. Chapter 5 develops the embedding-space morphology metrics.
+The thesis moves from framing to measurement and then to empirical comparison. Chapters 2 to 5 define the intellectual and technical basis: science mapping, OpenAlex corpus construction, SPECTER2 representation, and the morphology metric core.
 
-The empirical chapters then apply the framework. Chapter 6 compares static morphology across domains, fields, and subfields. Chapter 7 studies temporal evolution across five-year windows. Chapter 8 analyzes morphological similarity, convergence, and divergence. Chapter 9 compresses the profiles into exploratory static and dynamic typologies while comparing them with semantic-location structure. Chapter 10 discusses the methodological contribution, limitations, and implications. Chapter 11 concludes by returning to the central claim: the thesis is not another map of science, but a framework for measuring dimensions that no single map can express alone.
+Chapters 6 to 9 apply the framework. They compare static shape, temporal movement, morphological similarity, and exploratory typologies, while keeping semantic location and visualization separate from measurement. Chapters 10 and 11 return to the larger claim: the contribution is not another map of science, but a framework for measuring dimensions that no single map can express alone.
