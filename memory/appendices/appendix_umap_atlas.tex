@@ -1,6 +1,4 @@
-% ------------------------------------------------------------------
-% Appendix D — Illustrative UMAP Atlas of Selected Subfields
-% ------------------------------------------------------------------
+% Appendix D: Illustrative UMAP Atlas of Selected Subfields
 
 This appendix provides an illustrative atlas of selected subfield-level UMAP projections.
 The panels are not used to compute morphology metrics, assign clusters, measure distances,
@@ -10,15 +8,27 @@ in the thesis remain based on metrics computed in the original SPECTER2 embeddin
 Because each panel is a separate subfield-specific UMAP projection, axes, distances, shapes,
 and density scales should not be compared across subfields.
 
+The atlas maps were generated separately for each selected subfield from the row-aligned
+SPECTER2 analysis matrix, using main-analysis records from 2000--2024 and at most
+10,000 papers per subfield. The per-subfield UMAP routine used cosine distance with
+\texttt{n\_neighbors = 30}, \texttt{min\_dist = 0.05}, \texttt{random\_state = 42}, and
+\texttt{low\_memory = true}. The density panel is a \texttt{smooth\_hist} rendering:
+a 150-by-150 two-dimensional histogram over the displayed UMAP coordinates, smoothed
+with a Gaussian filter of \(\sigma = 3.0\), clipped at the 99th percentile of positive
+density values, and drawn with \texttt{viridis}. The atlas-generation script reads the
+stored SPECTER2 matrix directly; no additional vector-normalization step is exposed in
+that plotting routine. These settings are reported for reproducibility only, and the
+resulting coordinates are not used for quantitative measurement.
+
 The selected cases are not the visually prettiest maps in isolation. They are chosen because
 they connect to recurring empirical themes in the thesis: atypical profiles, dispersed
 physical-science structure, compact or separated local organization, computer-science novelty,
 and broad material-science morphology. These figures are intended as visual companions to the
-metric-based interpretation in Chapters 6--9.
+metric-based interpretation in Chapters 6--9. The six cases cover an atypical social-science
+profile, a dispersed physical-science cloud, a compact life-science structure with a separated
+component, two computer-science novelty cases, and a broad material-science morphology.
 
-% ------------------------------------------------------------------
-% Figure 1 — Human Factors and Ergonomics
-% ------------------------------------------------------------------
+% Figure 1: Human Factors and Ergonomics
 \begin{figure}[p]
     \centering
     \includegraphics[width=\textwidth]{figures/umap_atlas/fig_d_umap_human_factors_ergonomics.png}
@@ -30,9 +40,7 @@ metric-based interpretation in Chapters 6--9.
     \label{fig:umap_atlas_human_factors}
 \end{figure}
 
-% ------------------------------------------------------------------
-% Figure 2 — Nuclear and High Energy Physics
-% ------------------------------------------------------------------
+% Figure 2: Nuclear and High Energy Physics
 \begin{figure}[p]
     \centering
     \includegraphics[width=\textwidth]{figures/umap_atlas/fig_d_umap_nuclear_high_energy_physics.png}
@@ -44,9 +52,7 @@ metric-based interpretation in Chapters 6--9.
     \label{fig:umap_atlas_nuclear_physics}
 \end{figure}
 
-% ------------------------------------------------------------------
-% Figure 3 — Applied Microbiology and Biotechnology
-% ------------------------------------------------------------------
+% Figure 3: Applied Microbiology and Biotechnology
 \begin{figure}[p]
     \centering
     \includegraphics[width=\textwidth]{figures/umap_atlas/fig_d_umap_applied_microbiology_biotechnology.png}
@@ -58,9 +64,7 @@ metric-based interpretation in Chapters 6--9.
     \label{fig:umap_atlas_applied_microbiology}
 \end{figure}
 
-% ------------------------------------------------------------------
-% Figure 4 — Computer Vision and Pattern Recognition
-% ------------------------------------------------------------------
+% Figure 4: Computer Vision and Pattern Recognition
 \begin{figure}[p]
     \centering
     \includegraphics[width=\textwidth]{figures/umap_atlas/fig_d_umap_computer_vision_pattern_recognition.png}
@@ -72,9 +76,7 @@ metric-based interpretation in Chapters 6--9.
     \label{fig:umap_atlas_computer_vision}
 \end{figure}
 
-% ------------------------------------------------------------------
-% Figure 5 — Signal Processing
-% ------------------------------------------------------------------
+% Figure 5: Signal Processing
 \begin{figure}[p]
     \centering
     \includegraphics[width=\textwidth]{figures/umap_atlas/fig_d_umap_signal_processing.png}
@@ -86,9 +88,7 @@ metric-based interpretation in Chapters 6--9.
     \label{fig:umap_atlas_signal_processing}
 \end{figure}
 
-% ------------------------------------------------------------------
-% Figure 6 — General Materials Science
-% ------------------------------------------------------------------
+% Figure 6: General Materials Science
 \begin{figure}[p]
     \centering
     \includegraphics[width=\textwidth]{figures/umap_atlas/fig_d_umap_general_materials_science.png}

@@ -1,15 +1,15 @@
-%----------
+%==========
 %   WARNING
-%----------
+%==========
 
 % This Guide contains Library recommendations based mainly on APA and IEEE styles, but you must always follow the guidelines of your TFG Tutor and the TFG regulations for your degree.
 
 % THIS TEMPLATE IS BASED ON THE APA STYLE 
 
 
-%----------
+%==========
 % DOCUMENT SETTINGS
-%----------
+%==========
 
 \documentclass[12pt]{report} % font: 12pt
 
@@ -303,16 +303,16 @@ hmargin=3cm
 	{\usebibmacro{textcite:postnote}}
 
 
-%-------------
+%=============
 %	DOCUMENT
-%-------------
+%=============
 
 \begin{document}
-\pagenumbering{roman} % Roman numerals are used in the numbering of the pages preceding the body of the work.
+\pagenumbering{gobble} % The title page has no visible page number.
 	
-%----------
+%==========
 %	COVER
-%----------	
+%==========	
 \begin{titlepage}
 	\begin{sffamily}
 	\color{azulUC3M}
@@ -343,7 +343,7 @@ hmargin=3cm
 	\vfill
 	\color{black}
 	\fbox{
-	\begin{minipage}{\linewidth}
+	\begin{minipage}{0.96\linewidth}
     	\textbf{AVOID PLAGIARISM}\\
     	\footnotesize{The University uses the \textbf{Turnitin Feedback Studio} for the delivery of student work. This program compares the originality of the work delivered by each student with millions of electronic resources and detects those parts of the text that are copied and pasted. Plagiarizing in a TFM is considered a  \textbf{\underline{Serious Misconduct}}, and may result in permanent expulsion from the University.}\end{minipage}}
 
@@ -354,17 +354,15 @@ hmargin=3cm
 	\end{sffamily}
 \end{titlepage}
 
-\newpage % blank page
-\thispagestyle{empty}
-\mbox{}
+\pagenumbering{roman} % Roman numerals are used in the front matter.
 
-%----------
+%==========
 %	ABSTRACT AND KEYWORDS 
-%----------	
-\renewcommand\abstractname{\large\bfseries\filcenter\uppercase{Summary}}
-\begin{abstract}
+%==========	
 \thispagestyle{plain}
-\setcounter{page}{3}
+\begin{center}
+{\large\bfseries\uppercase{Summary}}
+\end{center}
 
 This thesis develops a reproducible framework for measuring the morphology of scientific fields in a dense scientific embedding space. Rather than treating fields only as labels, citation communities, topics, or positions on a two-dimensional map, it represents OpenAlex subfields as distributions of SPECTER2-embedded title--abstract records. The empirical corpus covers 2000--2024 and contains 2,378,036 text-eligible works across 252 subfields, with a row-aligned embedding analysis subset of 2,344,927 works across 241 analysis subfields.
 
@@ -374,69 +372,45 @@ The results show that broad scientific domains have morphological tendencies, bu
 
 The typological analysis reinforces this layered interpretation. Static morphology is weakly clustered and is best read as a set of descriptive anchors rather than natural categories. Temporal trajectories form clearer and more stable dynamic typologies, indicating that subfields are easier to group by how their morphology changes than by their full-period shape. Centroid and hybrid clustering show that semantic location aligns more strongly with OpenAlex domains than morphology does. The central contribution is therefore not a new taxonomy of science, but a framework for separating and measuring static shape, temporal change, semantic location, taxonomy, and visualization as distinct readings of scientific structure.
 
+\begingroup\sloppy
 \textbf{Keywords:} science mapping; scientometrics; scientific document embeddings; SPECTER2; OpenAlex; embedding-space morphology; semantic space; temporal evolution; morphological clustering; research fields
+\par\endgroup
 
 \vfill
-\end{abstract}
-	\newpage % Blank page
-	\thispagestyle{empty}
-	\mbox{}
+\clearpage
 
-
-%----------
-%	Dedication
-%----------	
-\chapter*{Dedication}
-
-\setcounter{page}{5}
-	
-	% Write here	
-		
-	\vfill
-	
-	\newpage % blank page
-	\thispagestyle{empty}
-	\mbox{}
-	
-
-%----------
+%==========
 %	TOC
-%----------	
+%==========	
 
-%--
+%==
 % TOC
-%-
+%=
 \tableofcontents
 \thispagestyle{fancy}
 
-\newpage % blank page
-\thispagestyle{empty}
-\mbox{}
+\clearpage
 
-%--
+%==
 % List of figures. If they are not included, comment the following lines
-%-
+%=
 \listoffigures
 \thispagestyle{fancy}
 
-\newpage % blank page
-\thispagestyle{empty}
-\mbox{}
+\clearpage
 
-%--
+%==
 % List of tables. If they are not included, comment the following lines
-%-
+%=
 \listoftables
 \thispagestyle{fancy}
 
-\newpage % blankpage
-\thispagestyle{empty}
-\mbox{}
+\clearpage
 
 
-%----------
+%==========
 %	THESIS
-%----------	
+%==========	
 \clearpage
 \pagenumbering{arabic} % numbering with Arabic numerals for the rest of the document.	
 
@@ -473,18 +447,18 @@ The typological analysis reinforces this layered interpretation. Static morpholo
 \chapter{Conclusion}
 \input{chapters/11_conclusion}
 
-%----------
+%==========
 %	Bibliography
-%----------	
+%==========	
 
 \clearpage
 \addcontentsline{toc}{chapter}{Bibliography}
 
 \printbibliography
 
-%----------
+%==========
 %	Appendix
-%----------	
+%==========	
 
 \appendix
 
@@ -494,7 +468,7 @@ The typological analysis reinforces this layered interpretation. Static morpholo
 \chapter{Embedding-Space Metric Formulations}
 \input{appendices/appendix_metric_definitions}
 
-\chapter{Additional Figures and Diagnostic Plots}
+\chapter{Supplemental Typology Diagnostics}
 \input{appendices/appendix_additional_figures}
 
 \chapter{Illustrative UMAP Atlas of Selected Subfields}

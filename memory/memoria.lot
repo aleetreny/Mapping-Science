@@ -2,26 +2,27 @@
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {3.1}{\ignorespaces Synchronized corpus summary}}{10}{table.caption.6}%
-\contentsline {table}{\numberline {3.2}{\ignorespaces Corpus eligibility filters and sampling design}}{10}{table.caption.7}%
-\contentsline {table}{\numberline {3.3}{\ignorespaces Retained works by OpenAlex domain}}{11}{table.caption.8}%
+\contentsline {table}{\numberline {3.1}{\ignorespaces Synchronized corpus summary}}{10}{table.caption.5}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Corpus eligibility filters and sampling design}}{10}{table.caption.6}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Retained works by OpenAlex domain}}{11}{table.caption.7}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {4.1}{\ignorespaces Semantic representation snapshot}}{13}{table.caption.9}%
+\contentsline {table}{\numberline {4.1}{\ignorespaces Semantic representation snapshot}}{13}{table.caption.8}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {5.1}{\ignorespaces Reduced embedding-space metric core}}{17}{table.caption.10}%
+\contentsline {table}{\numberline {5.1}{\ignorespaces Reduced embedding-space metric core}}{17}{table.caption.9}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {6.1}{\ignorespaces Domain-level static morphology summary}}{21}{table.caption.12}%
-\contentsline {table}{\numberline {6.2}{\ignorespaces Selected subfield extremes in the static metric profiles}}{24}{table.caption.15}%
+\contentsline {table}{\numberline {6.1}{\ignorespaces Domain-level static morphology summary}}{21}{table.caption.11}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces Selected subfield extremes in the static metric profiles}}{24}{table.caption.14}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {7.1}{\ignorespaces Most dynamic subfields}}{32}{table.caption.23}%
+\contentsline {table}{\numberline {7.1}{\ignorespaces Most dynamic subfields}}{32}{table.caption.22}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {8.1}{\ignorespaces Field convergence and divergence drivers}}{39}{table.caption.29}%
+\contentsline {table}{\numberline {8.1}{\ignorespaces Field convergence and divergence drivers}}{39}{table.caption.28}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {9.1}{\ignorespaces Morphological typology summary}}{42}{table.caption.31}%
-\contentsline {table}{\numberline {9.2}{\ignorespaces Dynamic temporal typology summary}}{44}{table.caption.33}%
+\contentsline {table}{\numberline {9.1}{\ignorespaces Morphological typology summary}}{42}{table.caption.30}%
+\contentsline {table}{\numberline {9.2}{\ignorespaces Dynamic temporal typology summary}}{44}{table.caption.32}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
+\contentsline {table}{\numberline {A.1}{\ignorespaces Reproducibility pipeline stages}}{58}{table.caption.36}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
