@@ -34,7 +34,8 @@ COLORS = {
 
 plt.rcParams.update(
     {
-        "font.family": "DejaVu Sans",
+        "font.family": "sans-serif",
+        "font.sans-serif": ["DejaVu Sans", "Arial", "Helvetica"],
         "font.size": 9.0,
         "axes.titlesize": 11.0,
         "axes.labelsize": 9.0,
@@ -125,7 +126,8 @@ def draw_step(ax, x, w, y_mid, h, step):
         ha="center",
         va="top",
         color=COLORS["muted"],
-        fontsize=6.7,
+        fontsize=6.6,
+        linespacing=1.05,
     )
 
     rect = Rectangle(
@@ -140,7 +142,7 @@ def draw_step(ax, x, w, y_mid, h, step):
     ax.add_patch(rect)
     ax.text(
         x + w / 2,
-        y_mid - min(h * 0.25, 0.065),
+        y_mid,
         fmt_count(step["count"]),
         ha="center",
         va="center",
@@ -167,7 +169,7 @@ def main() -> None:
 
     raw_steps = [
         ("OpenAlex\nworks", "current global\nWorks index", api["OpenAlex works"], "api"),
-        ("2000-2024", "publication-date window", api["Published 2000-2024"], "api"),
+        ("2000-2024", "publication-date\nwindow", api["Published 2000-2024"], "api"),
         ("article or\npreprint", "document-type filter", api["Article or preprint"], "api"),
         ("English\nrecords", "language filter", api["English records"], "api"),
         ("abstract,\nnot retracted", "broad API\ntext pool", api_pool, "api"),
@@ -211,8 +213,8 @@ def main() -> None:
         ha="center",
         va="center",
         color=COLORS["ink"],
-        fontsize=10.8,
-        fontweight="bold",
+        fontsize=12.2,
+        fontweight="normal",
     )
     ax.text(
         0.5,

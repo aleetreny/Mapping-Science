@@ -1,14 +1,14 @@
 % Appendix A: Pipeline Details and Execution Commands
 
-\noindent This appendix compiles the technical commands and operational parameters used to run the data collection, embedding generation, metrics calculation, and visualization stages of the thesis pipeline.
+\noindent This appendix records the commands and operational parameters used for data collection, embedding generation, metric calculation, and visualization.
 
 \medskip
 
-The thesis snapshot is the processed text corpus, paired with the active SPECTER2 embedding set. These implementation-level names are kept here so that the main chapters can remain focused on methodology rather than repository layout.
+The thesis snapshot is the processed text corpus paired with the active SPECTER2 embedding set. Implementation-level names are kept here so the main chapters can remain methodological.
 
 \medskip
 
-Table~\ref{tab:pipeline_stages} summarizes the sequential pipeline stages, the main scripts that execute each stage, and the primary outputs used by downstream analysis. All scripts are located in the repository \texttt{scripts/} directory and are designed to run in order. Configuration parameters such as sampling targets, year ranges, and metric hyperparameters are set in \texttt{config.yaml}.
+Table~\ref{tab:pipeline_stages} summarizes the sequential pipeline stages, main scripts, and primary outputs. All scripts are in \texttt{scripts/}; sampling targets, year ranges, and metric hyperparameters are set in \texttt{config.yaml}.
 
 \begin{table}[H]
 \centering
@@ -34,5 +34,5 @@ Typology & \path{18_explore_morphological_typologies.py} to \path{23_build_chapt
 \hline
 \end{tabular}
 \par\vspace{0.15cm}
-\footnotesize\textit{Note.} Script names refer to files in the \texttt{scripts/} directory. UMAP visualization scripts (09, 10, 10b, 10c) run between stages 5 and 6 but produce outputs not used for quantitative analysis.
+\footnotesize\textit{Note.} UMAP visualization scripts (09, 10, 10b, 10c) run between stages 5 and 6 but produce display outputs only.
 \end{table}

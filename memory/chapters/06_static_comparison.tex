@@ -2,79 +2,75 @@
 
 \section{Reading Shape in One Cross-Section}
 
-This chapter begins the empirical analysis by comparing disciplines as static morphological profiles. Each subfield is represented by the eleven metrics defined in Chapter~5, computed in the original 768-dimensional SPECTER2 embedding space. The comparison is static in the sense that each unit receives one full-period profile: the temporal indicators summarize movement over the 2000--2024 window, but the chapter does not yet model trajectories year by year.
+Static comparison gives each subfield one full-period morphology profile using the eleven metrics defined in Chapter~5. Temporal indicators are included as full-period movement summaries, but trajectories are not modeled window by window until Chapter~7.
 
-The analysis uses the OpenAlex hierarchy at three levels: 241 eligible subfields, 26 fields, and 4 domains. Subfield profiles are the direct unit of measurement. Field and domain profiles are averages over their constituent subfields, which makes them useful summaries but not substitutes for the underlying heterogeneity. For visual comparison, each metric is standardized within the level being plotted. A red cell or point therefore means above-average values for that metric at that level, and a blue one means below-average values. The colors compare morphology across metrics; they do not change the raw metric definitions.
+The analysis uses the OpenAlex hierarchy at three levels: 241 eligible subfields, 26 fields, and 4 domains. Subfield profiles are the direct unit of measurement; field and domain profiles are averages over constituent subfields. For visual comparison, each metric is standardized within the level being plotted. A red cell or point means above-average values for that metric at that level, and a blue one means below-average values. The colors compare morphology across metrics; they do not change the raw metric definitions.
 
-This framing keeps three distinctions explicit. Size is not morphology: a domain may contain many works or many subfields without being semantically dispersed. Dispersion is not local density: papers can occupy a broad territory while still forming tight local neighborhoods. Static morphology is not causality: the profiles describe geometric organization under a representation model, not why a discipline came to have that shape.
+Size is not morphology, dispersion is not local density, and static shape is not causality. Those distinctions frame the chapter; the empirical question is how far the OpenAlex hierarchy aligns with measured field shape.
 
 \section{Domain-Level Morphological Patterns}
 
-At the broadest scale, the four domains do differ, but the differences are uneven rather than cleanly taxonomic. Physical Sciences stand out as the most dispersed domain profile: median centroid distance, 90th-percentile centroid distance, median kNN distance, PCA dimensionality, centroid drift, and recent novelty are all above the domain average. The profile is consistent with a domain whose subfields occupy broader semantic territory and require more principal directions to summarize variation. Because domain-level z-scores are computed across only four domains, they are used as relative visual contrasts rather than inferential statistics.
+At the broadest scale, the four domains differ, but not in a cleanly taxonomic way. Physical Sciences stand out as the most dispersed domain profile: median centroid distance, 90th-percentile centroid distance, median kNN distance, PCA dimensionality, centroid drift, and recent novelty are all above the domain average. Because domain-level z-scores are computed across only four domains, they are used as relative visual contrasts rather than inferential statistics.
 
 \begin{figure}[H]
 \centering
-\caption[Domain-level morphological profiles]{Standardized domain-level morphological profiles. Values are z-scores computed across the four domain profiles for each metric; positive values indicate domains above the cross-domain average on that metric. Metrics are grouped by semantic dispersion, local density and hubness, spectral structure, and temporal movement.}
+\caption[Domain-level morphological profiles]{Standardized domain-level morphological profiles. Positive z-scores indicate domains above the cross-domain average for each metric.}
 \label{fig:domain_metric_profile_heatmap}
 \includegraphics[width=\textwidth]{figures/fig_06_domain_metric_profile_heatmap.png}
 \end{figure}
 
-Health Sciences show the opposite pattern on several dimensions. They have the lowest median kNN distance, which indicates tight local neighborhoods, and the highest kNN in-degree Gini, which indicates stronger concentration around neighborhood hubs. Their PCA dimensionality and spectral entropy are below the domain average. Under this representation, the health profile is therefore not simply compact; it is locally dense and more hub-dominated.
+Health Sciences show the opposite pattern on several dimensions. They have the lowest median kNN distance, indicating tight local neighborhoods, and the highest kNN in-degree Gini, indicating stronger concentration around neighborhood hubs. Their PCA dimensionality and spectral entropy are below the domain average. Under this representation, the health profile is therefore locally dense and more hub-dominated, not simply compact.
 
 \input{tables/tab_06_static_summary_by_domain}
 
-Social Sciences are comparatively compact at the domain level, with lower centroid dispersion and lower hub concentration. Life Sciences sit closer to the center of most static metrics but show stronger negative recent novelty and radial contraction summaries. These domain averages are useful first signals, but their small number and broad aggregation make them blunt instruments. The next level shows why.
+Social Sciences are comparatively compact at the domain level, with lower centroid dispersion and lower hub concentration. Life Sciences sit closer to the center of most static metrics but show stronger negative recent novelty and radial contraction summaries. These domain averages are useful first signals, but they are blunt instruments.
 
 \section{Field and Subfield Variation}
 
-Field-level profiles reveal that much of the static morphology is not explained by domain membership alone. Physical Sciences contain highly dispersed fields such as Physics and Astronomy, Computer Science, Engineering, and Environmental Science, but they also contain more compact fields such as Energy and Mathematics. Health Sciences include dense fields such as Dentistry and Nursing, while Medicine sits closer to the center of the field distribution. The field heatmap therefore turns the domain pattern into a more textured empirical claim: broad domains have tendencies, not uniform morphologies.
+Field-level profiles show why domain summaries are insufficient. Physical Sciences contain highly dispersed fields such as Physics and Astronomy, Computer Science, Engineering, and Environmental Science, but also more compact fields such as Energy and Mathematics. Health Sciences include dense fields such as Dentistry and Nursing, while Medicine sits closer to the center of the field distribution. Broad domains have tendencies, not uniform morphologies.
 
 \begin{figure}[H]
 \centering
-\caption[Field-level morphological profiles]{Field-level standardized morphological profiles. Rows are fields, ordered by domain and by a compact profile score within domain; the colored strip marks the parent domain. The figure shows that field-level morphology varies substantially inside broad domains, especially for dispersion, local density, hubness, and temporal movement.}
+\caption[Field-level morphological profiles]{Field-level standardized morphological profiles. Rows are fields; the colored strip marks the parent domain.}
 \label{fig:field_metric_profile_heatmap}
 \includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{figures/fig_06_field_metric_profile_heatmap.png}
 \end{figure}
 
-The most visible field contrast is between physical and health-oriented local structure. Chemistry, Physics and Astronomy, Materials Science, Engineering, and Environmental Science have high median kNN distances, meaning that even near neighbors tend to be farther away in the embedding space. Dentistry, Nursing, Immunology and Microbiology, Veterinary, and Health Professions have lower median kNN distances. This does not mean that the latter fields are narrower in every sense; it means their papers are packed into closer local neighborhoods under the SPECTER2 geometry.
+The most visible contrast is local structure. Chemistry, Physics and Astronomy, Materials Science, Engineering, and Environmental Science have high median kNN distances, meaning that even near neighbors tend to be farther away. Dentistry, Nursing, Immunology and Microbiology, Veterinary, and Health Professions have lower median kNN distances. This does not mean that the latter fields are narrower in every sense; their papers are packed into closer local neighborhoods under the SPECTER2 geometry.
 
-Within-domain variation is even clearer at the subfield level. The boxplots in Figure~\ref{fig:subfield_metric_distributions_by_domain} show that domain medians are accompanied by wide distributions and outliers. Physical Sciences have the highest median subfield dispersion and kNN distance, but some physical subfields are compact. Health Sciences have lower local distances on average, but hubness varies widely. Social Sciences contain both compact applied areas and highly atypical humanities subfields. Domain labels help orient the comparison, but they do not determine the metric profile.
+At subfield level, the boxplots in Figure~\ref{fig:subfield_metric_distributions_by_domain} show wide distributions and outliers around the domain medians. Physical Sciences have the highest median subfield dispersion and kNN distance, but some physical subfields are compact. Health Sciences have lower local distances on average, but hubness varies widely. Social Sciences contain both compact applied areas and highly atypical humanities subfields.
 
 \begin{figure}[H]
 \centering
-\caption[Subfield metric distributions by domain]{Subfield-level metric distributions by domain. Values are z-scores across the 241 eligible subfields for five representative metrics. The distributions show that domain averages hide substantial within-domain heterogeneity, especially for recent novelty, hubness, and spectral structure.}
+\caption[Subfield metric distributions by domain]{Subfield-level metric distributions by domain for five representative standardized metrics.}
 \label{fig:subfield_metric_distributions_by_domain}
 \includegraphics[width=\textwidth]{figures/fig_06_subfield_metric_distributions_by_domain.png}
 \end{figure}
 
 \section{Morphological Extremes and Profile Space}
 
-The clearest empirical evidence comes from the extremes. Nuclear and High Energy Physics, Artificial Intelligence, and Electrical and Electronic Engineering have the highest median centroid distances, indicating unusually broad semantic territories. Applied Microbiology and Biotechnology, General Energy, and Research and Theory sit at the compact end of the same metric. For local density, Molecular Biology and Materials Chemistry have sparse nearest-neighbor structure, whereas Applied Microbiology and Biotechnology and Internal Medicine are among the tightest local neighborhoods.
+The clearest evidence comes from the extremes. Nuclear and High Energy Physics, Artificial Intelligence, and Electrical and Electronic Engineering have the highest median centroid distances, indicating unusually broad semantic territories. Applied Microbiology and Biotechnology, General Energy, and Research and Theory sit at the compact end of the same metric. For local density, Molecular Biology and Materials Chemistry have sparse nearest-neighbor structure, whereas Applied Microbiology and Biotechnology and Internal Medicine are among the tightest local neighborhoods.
 
 \input{tables/tab_06_extreme_subfields}
 
-Hubness cuts across those patterns. General Materials Science, Electrochemistry, and Internal Medicine have high kNN in-degree Gini values, meaning their local neighborhoods concentrate around a smaller set of papers. Artificial Intelligence and Computer Vision and Pattern Recognition, despite being highly dispersed and temporally novel, sit at the low-hubness end. This distinction matters: a subfield can be broad without being hub-dominated, and a compact subfield can still be organized around strong local hubs.
+Hubness cuts across those patterns. General Materials Science, Electrochemistry, and Internal Medicine have high kNN in-degree Gini values, meaning their local neighborhoods concentrate around a smaller set of papers. Artificial Intelligence and Computer Vision and Pattern Recognition, despite being highly dispersed and temporally novel, sit at the low-hubness end. A subfield can be broad without being hub-dominated, and a compact subfield can still be organized around strong local hubs.
 
-The exploratory profile map in Figure~\ref{fig:metric_profile_pca_map} summarizes the eleven standardized metrics into two principal components. This is a visualization of metric profiles, not of paper-level semantic space. The first two axes explain 30.9 percent and 28.3 percent of the standardized profile variance, respectively. The map shows no clean domain partition. Instead, domains overlap in the middle, while specific subfields form the most informative extremes.
+The exploratory profile map in Figure~\ref{fig:metric_profile_pca_map} summarizes the eleven standardized metrics into two principal components. It is a visualization of metric profiles, not paper-level semantic space. The first two axes explain 30.9 percent and 28.3 percent of the standardized profile variance. Domains overlap in the middle, while specific subfields form the most informative extremes.
 
 \begin{figure}[H]
 \centering
-\caption[Subfield profile PCA map]{Exploratory PCA map of subfield metric profiles. Points are subfields represented by their eleven standardized morphological metrics, not by paper-level embeddings. The map is used as a visual summary of profile similarity; it is not evidence of discrete discipline categories. Selected labels mark the most atypical profiles.}
+\caption[Subfield profile PCA map]{Exploratory PCA map of subfield metric profiles. Points are subfields represented by their eleven standardized morphology metrics.}
 \label{fig:metric_profile_pca_map}
 \includegraphics[width=\textwidth]{figures/fig_06_metric_profile_pca_map.png}
 \end{figure}
 
-The outlier ranking makes the same point more directly. Human Factors and Ergonomics is the most distant profile from the average standardized subfield profile, followed by Computational Mathematics, Applied Microbiology and Biotechnology, Computer Vision and Pattern Recognition, Molecular Medicine, Artificial Intelligence, and Signal Processing. These are not outliers for the same reason. Some are temporally novel, some are unusually compact or sparse, and some combine extreme spectral and neighborhood structure.
+The outlier ranking makes the same point more directly. Human Factors and Ergonomics is the most distant profile from the average standardized subfield profile, followed by Computational Mathematics, Applied Microbiology and Biotechnology, Computer Vision and Pattern Recognition, Molecular Medicine, Artificial Intelligence, and Signal Processing. These are not outliers for the same reason: some are temporally novel, some are unusually compact or sparse, and some combine extreme spectral and neighborhood structure.
 
 \begin{figure}[H]
 \centering
-\caption[Most atypical subfield profiles]{Most atypical subfield profiles. Outlyingness is the Euclidean distance from the average standardized profile across the eleven metrics. The ranking identifies subfields whose overall morphology is unusual, without assigning them to groups or treating the ranking as a typology.}
+\caption[Most atypical subfield profiles]{Most atypical subfield profiles by Euclidean distance from the average standardized eleven-metric profile.}
 \label{fig:morphological_outlier_ranking}
 \includegraphics[width=0.92\textwidth]{figures/fig_06_morphological_outlier_ranking.png}
 \end{figure}
 
-\section{What Static Profiles Establish}
-
-Static profiles are strongest for comparison and weakest for explanation. They show that Physical Sciences are generally more dispersed and spectrally extended, Health Sciences are more locally dense and hub-concentrated, and field-level variation is large enough to prevent simple domain stories. They also make the analysis concrete by identifying subfields that occupy extreme positions in dispersion, density, hubness, spectral structure, or recent movement.
-
-These findings should be read as morphology under a fixed semantic representation. High dispersion, low kNN distance, or high recent novelty are structural descriptions, not rankings of quality, maturity, simplicity, or causal change. The chapter establishes the cross-sectional landscape; later chapters ask how those profiles evolve, relate to one another, and support exploratory typologies.
+Static profiles are strongest for comparison and weakest for explanation. They show that Physical Sciences are generally more dispersed and spectrally extended, Health Sciences are more locally dense and hub-concentrated, and field-level variation prevents simple domain stories. High dispersion, low kNN distance, or high recent novelty are structural descriptions, not rankings of quality, maturity, simplicity, or causal change.

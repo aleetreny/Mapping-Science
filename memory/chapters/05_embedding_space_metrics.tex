@@ -1,10 +1,10 @@
 % Chapter 5: Embedding-Space Morphological Metrics
 
-\section{From Embedded Papers to Morphological Indicators}
+\section{From Papers to Indicators}
 
-The previous chapter defined the semantic representation used in this thesis: a row-aligned matrix of SPECTER2 document embeddings linked to OpenAlex metadata. Chapter 5 turns that matrix into morphological indicators. The central move is to treat each subfield not only as a list of papers, but as a distribution of papers in a shared semantic geometry. A compact field and a fragmented field may contain the same number of papers; their difference lies in how those papers occupy embedding space.
+The row-aligned SPECTER2 matrix becomes analytically useful when each subfield is treated as a distribution of papers in a shared semantic geometry. A compact field and a fragmented field may contain the same number of papers; their difference lies in how those papers occupy embedding space.
 
-Metric computation uses the original SPECTER2 coordinate system, with 768 dimensions. Non-zero vectors are L2-normalized, and distances are cosine distances. This fixes vector scale while preserving the original embedding dimensions; no UMAP projection or other low-dimensional map enters the quantitative metrics.
+Metric computation uses the original 768-dimensional SPECTER2 coordinate system. Non-zero vectors are L2-normalized, and distances are cosine distances. This fixes vector scale while preserving the original embedding dimensions; no UMAP projection or other low-dimensional map enters the quantitative metrics.
 
 Let \(Z_s = \{z_i : i \in s\}\) denote the set of normalized embeddings for subfield \(s\), with \(n_s = |Z_s|\). The subfield centroid is
 
@@ -18,26 +18,26 @@ Distances to this centroid are computed as cosine distances to the centroid dire
 r_i = d(z_i, c_s),
 \]
 
-where \(d(\cdot,\cdot)\) denotes cosine distance. The metrics below summarize the distribution of these distances, the structure of local neighborhoods, the spread of variance across principal directions, and temporal movement across the 2000--2024 period.
+where \(d(\cdot,\cdot)\) denotes cosine distance. The metrics summarize the distribution of these distances, local neighborhoods, the spread of variance across principal directions, and temporal movement across 2000--2024.
 
-\section{Metric Families and Geometric Interpretation}
+\section{Metric Families}
 
-The reduced core contains eleven indicators organized into four families. The grouping is conceptual rather than decorative: each family answers a different morphological question. Dispersion asks how broad the semantic territory is. Local density and hubness ask how tightly papers are packed and whether some papers dominate neighborhood structure. Spectral structure asks whether variation is concentrated along a few directions or spread across many. Temporal movement asks whether the semantic position or radius of the subfield changes over time.
+The reduced core contains eleven indicators organized into four families. Dispersion asks how broad the semantic territory is. Local density and hubness ask how tightly papers are packed and whether some papers dominate neighborhood structure. Spectral structure asks whether variation is concentrated along a few directions or spread across many. Temporal movement asks whether the semantic position or radius of the subfield changes over time.
 
 \begin{figure}[H]
 \centering
-\caption[Metric families as field-shape grammar]{Metric families as a grammar of field shape. The eleven-metric core separates five questions about a subfield's paper cloud so that dispersion, local density, hubness, spectral structure, and temporal movement are not collapsed into one score.}
+\caption[Metric families as field-shape grammar]{Metric families as a grammar of field shape. The eleven metrics keep dispersion, local density, hubness, spectral structure, and temporal movement separate.}
 \label{fig:metric_family_schematic}
 \includegraphics[width=\textwidth]{figures/fig_05_metric_family_schematic.png}
 \end{figure}
 
 \input{tables/tab_05_metric_core}
 
-Together these metrics turn geometry into interpretable morphology. They do not assign a substantive label to a discipline, and they do not decide whether a field is intellectually better or worse. They describe how the papers in a subfield are arranged under a fixed representation model.
+Together these metrics turn geometry into interpretable morphology. They describe how the papers in a subfield are arranged under a fixed representation model; they do not assign a discipline a substantive label or rank its intellectual value.
 
 \section{Operational Definitions}
 
-The compact notation in this section states the implemented definitions; Appendix~\ref{app:metric-formulations} records the full formula set. Semantic dispersion is measured from the centroid-distance distribution \(\{r_i : i \in s\}\). The median distance describes the typical radial position of papers around the subfield center. The interquartile range describes heterogeneity in the middle of the distribution. The 90th percentile captures the outer semantic periphery. A field can therefore be compact at the center while still having a long tail of distant papers.
+The compact notation below states the implemented definitions; Appendix~\ref{app:metric-formulations} records the full formula set. Semantic dispersion is measured from the centroid-distance distribution \(\{r_i : i \in s\}\). The median distance describes the typical radial position of papers around the subfield center, the interquartile range describes middle-spread heterogeneity, and the 90th percentile captures the outer semantic periphery.
 
 Local density is computed from within-subfield nearest-neighbor distances. Let \(N_k(i)\) be the \(k\)-nearest-neighbor set of paper \(i\), with \(k = 15\) unless fewer non-self neighbors are available. The median kNN distance measures typical local packing; smaller values indicate tighter neighborhoods. The coefficient of variation of all directed kNN distances measures unevenness in local density. Hubness is captured by the Gini coefficient of the in-degree counts \(h_j = \sum_{i \in s}\mathbf{1}\{j \in N_k(i)\}\). High \(\texttt{knn\_indegree\_gini}\) values indicate that a small subset of papers appears disproportionately often as nearest neighbors, a known issue in high-dimensional spaces \parencite{radovanovic2010hubness}.
 
@@ -61,18 +61,12 @@ R(s) &= \widetilde{d}_{late\to early} - \widetilde{d}_{early\to early}.
 \end{aligned}
 \]
 
-Centroid drift is \(\Delta_c(s)\), the cosine distance between early and late centroids. Radial expansion is the fitted \(\hat{\beta}_1\), where \(a_{s,t}\) is the annual median distance to the full-period centroid; positive values indicate expansion away from the period center and negative values indicate contraction toward it. In the recent-novelty score \(R(s)\), the two tilded terms are median late-period and early-period distances to the early centroid. A positive value means that recent papers are farther from the early-period centroid than early papers were. These temporal metrics describe movement and radial change; they do not identify causes.
+Centroid drift is \(\Delta_c(s)\), the cosine distance between early and late centroids. Radial expansion is the fitted \(\hat{\beta}_1\), where \(a_{s,t}\) is the annual median distance to the full-period centroid. In the recent-novelty score \(R(s)\), the two tilded terms are median late-period and early-period distances to the early centroid. These temporal metrics describe movement and radial change; they do not identify causes.
 
-\section{Reduction to an Interpretable Metric Core}
+\section{Interpreting the Core}
 
-The full metric computation produces more diagnostic quantities than are used in the main thesis analysis. The reduced core keeps eleven indicators because they cover four distinct aspects of morphology while avoiding a long list of near-duplicate summaries. The aim is not to maximize the number of features, but to preserve interpretability across subfields.
+The full computation produces more diagnostic quantities than the main analysis uses. The reduced eleven-metric core keeps enough variation to distinguish global radius, local packing, hub concentration, spectral complexity, and temporal movement while avoiding near-duplicate summaries. A larger inventory would look richer while often repeating the same information.
 
-The retained dispersion metrics describe the global radius of a subfield. The retained kNN metrics describe local packing and hub concentration. The retained PCA metrics describe spectral complexity. The retained temporal metrics describe movement, expansion, and recent departure from earlier structure. Other computed quantities are useful for diagnostics and sensitivity checks, but they are not part of the main morphological profile.
+Metric values are comparative. A high centroid-distance median indicates greater semantic dispersion relative to other subfields measured in the same embedding geometry. A high kNN median distance indicates sparse local neighborhoods. A high kNN in-degree Gini indicates concentration of neighborhood attention around fewer papers. A high \(D_{80}\) or spectral entropy indicates that variation is spread across more directions. Positive radial expansion and recent novelty indicate movement away from earlier or full-period semantic structure.
 
-This reduction also protects the empirical chapters from false precision. A larger metric inventory can make results appear richer while mostly repeating the same information. The eleven-metric core is deliberately small enough to interpret and broad enough to distinguish compactness, heterogeneity, dimensionality, and temporal change.
-
-\section{Interpretation and Limits of the Metrics}
-
-Metric values are comparative. A high centroid-distance median indicates greater semantic dispersion relative to other subfields measured in the same embedding geometry. A high kNN median distance indicates sparse local neighborhoods. A high kNN in-degree Gini indicates concentration of neighborhood attention around a smaller set of papers. A high \(D_{80}\) or spectral entropy indicates that variation is spread across more directions. Positive radial expansion and recent novelty indicate movement away from earlier or full-period semantic structure.
-
-These interpretations remain conditional on the corpus and representation. The metrics do not measure field size, publication volume, citation impact, research quality, or institutional importance. They also do not reveal the essence of a discipline. They describe reproducible structure in a model-defined semantic space.
+These interpretations remain conditional on the corpus and representation. The metrics do not measure field size, publication volume, citation impact, research quality, or institutional importance. They describe reproducible structure in a model-defined semantic space.

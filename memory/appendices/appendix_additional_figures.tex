@@ -2,34 +2,34 @@
 
 \label{app:additional-figures}
 
-\noindent This appendix compiles supplemental clustering diagnostics that support the typological comparisons in the main body without replacing the morphology-based interpretation.
+\noindent This appendix collects supplemental clustering diagnostics for the typological comparisons in Chapter~9.
 
 \section{Centroid-Embedding Clustering Sensitivity}
 
-Chapter~9 clusters subfields by morphology: the eleven robust-scaled profile metrics derived from original SPECTER2 space. As a sensitivity check, the analysis was repeated with a different representation. For each analysis subfield \(s\), a semantic-location centroid was computed as
+Chapter~9 clusters subfields by morphology. As a sensitivity check, the analysis was repeated with semantic-location centroids. For each analysis subfield \(s\), the centroid was computed as
 \[
 \bar{z}_s=\frac{1}{n_s}\sum_{i\in s}z_i,
 \]
-where paper embeddings \(z_i\) were L2-normalized before averaging and each resulting centroid \(\bar{z}_s\) was L2-normalized again before clustering. This check therefore asks whether subfields separate more clearly by semantic location than by morphology.
+where paper embeddings \(z_i\) were L2-normalized before averaging and each centroid \(\bar{z}_s\) was L2-normalized again before clustering.
 
 The centroid exploration covered Ward hierarchical clustering, average-link hierarchical clustering, \(k\)-means, and nearest-neighbor spectral clustering for \(k=3,\ldots,10\). HDBSCAN was not available in the active environment and was not forced. The best balanced centroid solution used average linkage with cosine distance at \(k=3\), with silhouette \(=0.236\) and cluster sizes \(157\), \(60\), and \(24\). Agreement with the selected morphology typology was low (ARI \(=0.085\), AMI \(=0.084\)), while alignment with OpenAlex domains was higher (ARI \(=0.279\), AMI \(=0.471\)). A directly comparable Ward \(k=5\) centroid solution had silhouette \(=0.156\), AMI \(=0.095\) against the morphology typology, and AMI \(=0.569\) against domains.
 
-The result does not overturn the Chapter~9 interpretation. It indicates that semantic location carries a stronger domain/topic structure than morphology, but it does not turn either representation into a sharply partitioned space. The low agreement between centroid clusters and morphology typologies is useful: the five typologies in Chapter~9 describe recurrent shape profiles, not hidden topic clusters or replacements for the OpenAlex hierarchy.
+The result supports the Chapter~9 interpretation: semantic location carries stronger domain/topic structure than morphology, while agreement between centroid clusters and morphology typologies remains low.
 
 \begin{figure}[H]
 \centering
-\caption[Centroid-embedding clustering sensitivity]{Centroid-embedding clustering sensitivity. Panel A repeats the selected Ward \(k=5\) morphology typology in robust-scaled eleven-metric PCA space. Panel B projects L2-normalized subfield centroid embeddings into PCA space and colors the selected balanced average-link cosine solution at \(k=3\). Centroids are computed from L2-normalized paper-level SPECTER2 vectors; distances express semantic location rather than morphology. PCA is used only for visualization and is not used to assign either morphology typologies or centroid clusters.}
+\caption[Centroid-embedding clustering sensitivity]{Centroid-embedding clustering sensitivity. Panel A shows the Ward \(k=5\) morphology typology; Panel B shows the selected balanced average-link cosine centroid solution at \(k=3\).}
 \label{fig:centroid_embedding_clustering_sensitivity}
 \includegraphics[width=\textwidth]{figures/fig_09_centroid_embedding_clustering_sensitivity.png}
 \end{figure}
 
 \section{Hybrid Centroid--Morphology Sensitivity}
 
-Chapter~9 moves the temporal-trajectory result into the main text, so the remaining sensitivity question here is what happens when morphology is combined with semantic location. The hybrid check tested two representation families: concatenating balanced morphology profiles with reduced centroid principal components, and weighted distance matrices \(D_{\mathrm{hybrid}}=\alpha D_{\mathrm{centroid}}+(1-\alpha)D_{\mathrm{morphology}}\) for \(\alpha\in\{0.25,0.50,0.75\}\).
+The hybrid check asks what happens when morphology is combined with semantic location. It tested two representation families: concatenating balanced morphology profiles with reduced centroid principal components, and weighted distance matrices \(D_{\mathrm{hybrid}}=\alpha D_{\mathrm{centroid}}+(1-\alpha)D_{\mathrm{morphology}}\) for \(\alpha\in\{0.25,0.50,0.75\}\).
 
 The best balanced hybrid solution uses spectral clustering on the \(\alpha=0.75\) hybrid distance matrix, with \(k=3\), silhouette \(=0.247\), and cluster sizes \(91\), \(77\), and \(73\). It is highly stable under subsampling (mean ARI \(=0.951\)), but it aligns much more with centroid/domain structure than with morphology: AMI is \(0.591\) against OpenAlex domains, \(0.505\) against centroid clusters, and only \(0.092\) against the morphology typology.
 
-The hybrid result therefore clarifies the boundary of the Chapter~9 claim. Stability improves when semantic location receives substantial weight, but the resulting partition is no longer a morphology-only typology. It is useful as a diagnostic contrast, not as a replacement for either the static morphology typology or the temporal trajectory typology.
+The hybrid result clarifies the boundary of the Chapter~9 claim. Stability improves when semantic location receives substantial weight, but the partition is no longer a morphology typology on its own.
 
 \section{Static and Dynamic Domain Composition}
 

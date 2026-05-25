@@ -2,13 +2,11 @@
 
 \section{Following Shape Through Time}
 
-This chapter treats temporal morphology as a sequence of comparable subfield profiles. The corpus is divided into five fixed windows: 2000--2004, 2005--2009, 2010--2014, 2015--2019, and 2020--2024. Within each window, the eight non-temporal structural metrics from the reduced core are recomputed in the original SPECTER2 embedding space. Dispersion, local density, hubness, and spectral structure are therefore observed repeatedly, rather than inferred from a single full-period profile.
-
-The remaining three metrics in the eleven-metric core play a different role. Centroid drift, radial expansion slope, and recent novelty score already summarize movement over the full period. They are used as complementary temporal indicators, not as windowed trajectories. This separation keeps two forms of time distinct: between-window change in structural morphology, and full-period movement relative to an earlier semantic configuration.
+Temporal morphology is measured through five fixed windows: 2000--2004, 2005--2009, 2010--2014, 2015--2019, and 2020--2024. Within each window, the eight non-temporal structural metrics from the reduced core are recomputed in the original SPECTER2 embedding space. Centroid drift, radial expansion slope, and recent novelty remain full-period indicators because they already summarize movement over time.
 
 \begin{figure}[H]
 \centering
-\caption[Schematic modes of temporal morphology]{Schematic modes of temporal morphology. Early and late windows can differ through centroid drift, radial expansion, or densification. These modes are not mutually exclusive; empirical subfields can combine relocation, changing dispersion, and changing local packing.}
+\caption[Schematic modes of temporal morphology]{Schematic modes of temporal morphology. Early and late windows can differ through centroid drift, radial expansion, or densification.}
 \label{fig:temporal_modes_schematic}
 \includegraphics[width=\textwidth]{figures/fig_07_temporal_modes_schematic.pdf}
 \end{figure}
@@ -17,50 +15,46 @@ For comparability, the windowed plots use metric-level z-scores computed across 
 
 \section{Domain-Level Temporal Trajectories}
 
-The domain view gives the chapter its broad orientation, but it is only the first layer. Across all subfields, mean median centroid distance declines from 0.0858 in 2000--2004 to 0.0750 in 2020--2024, mean median kNN distance declines from 0.0923 to 0.0756, and PCA D80 falls from 81.3 to 71.1. At the same time, kNN distance variability rises. The large-scale pattern is therefore not simply contraction; it is a move toward closer neighborhoods with more uneven local distance structure.
+The domain view gives the broad orientation. Across all subfields, mean median centroid distance declines from 0.0858 in 2000--2004 to 0.0750 in 2020--2024, mean median kNN distance declines from 0.0923 to 0.0756, and PCA D80 falls from 81.3 to 71.1. At the same time, kNN distance variability rises. The large-scale pattern is therefore not simple contraction; it is movement toward closer neighborhoods with more uneven local distance structure.
 
 \begin{figure}[H]
 \centering
-\caption[Domain-level temporal trajectories]{Domain-level temporal trajectories across five-year windows. Values are mean standardized subfield-window metrics within each domain. The panels show the broad temporal orientation of the chapter: declining dispersion, declining local distance, declining spectral dimensionality, and increasing local unevenness.}
+\caption[Domain-level temporal trajectories]{Domain-level temporal trajectories across five-year windows. Values are mean standardized subfield-window metrics within each domain.}
 \label{fig:domain_temporal_trajectories}
 \includegraphics[width=\textwidth]{figures/fig_07_domain_temporal_trajectories.png}
 \end{figure}
 
-Physical Sciences remain the most dispersed domain for most of the period and retain the highest average spectral dimensionality. Health Sciences move furthest downward in local distance and PCA D80, ending the period with the tightest local neighborhoods and the lowest average dimensionality. Life Sciences follow the same direction but with a clearer rise in kNN distance variability. Social Sciences are less extreme in the domain averages. These are broad signatures; the more interesting temporal structure appears when subfields, rather than domains, become the unit of view.
+Physical Sciences remain the most dispersed domain for most of the period and retain the highest average spectral dimensionality. Health Sciences move furthest downward in local distance and PCA D80, ending with the tightest local neighborhoods and the lowest average dimensionality. Life Sciences follow the same direction but with a clearer rise in kNN distance variability. Social Sciences are less extreme in the domain averages.
 
-\section{Subfields as Moving Semantic Paths}
+\section{Subfields and Fields in Motion}
 
-A second subfield-level view changes the question again. Instead of summarizing each window by a structural metric, Figure~\ref{fig:top10_centroid_paths_pca} follows the centroid of each subfield through the five windows. The ranking is based on accumulated centroid movement measured in the original 768-dimensional SPECTER2 space; PCA is used only to place those paths on a readable two-dimensional page. The result is not another version of the domain averages, but a map of where the largest semantic displacements occur.
+Figure~\ref{fig:top10_centroid_paths_pca} follows the centroid of each subfield through the five windows. The ranking is based on accumulated centroid movement measured in the original 768-dimensional SPECTER2 space; PCA only places those paths on a readable page. The result is a map of where the largest semantic displacements occur, not another version of the domain averages.
 
 \begin{figure}[H]
 \centering
-\caption[Top subfield centroid paths]{Top ten subfield centroid paths in PCA space. Grey points show all subfield-window centroids as visual context. Colored paths show the ten subfields with the largest accumulated centroid movement in the original SPECTER2 space; open circles mark 2000--2004 and filled squares mark 2020--2024. PCA is used only for visualization, not for ranking the paths.}
+\caption[Top subfield centroid paths]{Top ten subfield centroid paths in PCA space. Grey points show all subfield-window centroids; colored paths show the ten largest accumulated centroid movements measured in the original SPECTER2 space.}
 \label{fig:top10_centroid_paths_pca}
 \includegraphics[width=\textwidth]{figures/fig_07_top10_centroid_paths_pca.png}
 \end{figure}
 
-The figure makes two points that are not visible in domain averages. First, the largest paths are not concentrated in a single disciplinary neighborhood. Human Factors and Ergonomics is spatially distant from the group of high-movement computational subfields, while Infectious Diseases and General Dentistry occupy a separate upper-left to central band. Second, large movement can have different geometries. Modeling and Simulation and Ecological Modeling show long, directional paths; Energy Engineering and Power Technology moves strongly but stays in a lower region of the map; the computer-science paths are closer together and mark a shared region of repeated movement.
+The largest paths are not concentrated in a single disciplinary neighborhood. Human Factors and Ergonomics is spatially distant from the high-movement computational subfields, while Infectious Diseases and General Dentistry occupy a separate upper-left to central band. Large movement also has different geometries: Modeling and Simulation and Ecological Modeling show long directional paths; Energy Engineering and Power Technology moves strongly but stays in a lower region; the computer-science paths cluster closer together.
 
-This perspective therefore separates semantic relocation from structural change. A subfield can move far in centroid space without having the same metric-profile change as another far-moving subfield. For that reason, the centroid-path map is read alongside the windowed metric rankings below, rather than replacing them.
-
-\section{Field-Level Departures and Full-Period Signals}
-
-Fields summarize subfields, but they do not erase their heterogeneity. The first--last field heatmap in Figure~\ref{fig:field_temporal_delta_heatmap} shows that many fields share the same broad movement, while still diverging on the dimensions that matter most for interpretation. Pharmacology, Toxicology and Pharmaceutics, Dentistry, Chemical Engineering, Medicine, and Energy show especially strong declines in median centroid distance. Dentistry, Energy, Immunology and Microbiology, Medicine, and Chemistry show large declines in median kNN distance. These are related but not interchangeable changes.
+Field summaries add another layer. Figure~\ref{fig:field_temporal_delta_heatmap} shows that Pharmacology, Toxicology and Pharmaceutics, Dentistry, Chemical Engineering, Medicine, and Energy have especially strong declines in median centroid distance. Dentistry, Energy, Immunology and Microbiology, Medicine, and Chemistry show large declines in median kNN distance. These are related but not interchangeable changes.
 
 \begin{figure}[H]
 \centering
-\caption[Field-level temporal change heatmap]{Field-level temporal change from 2000--2004 to 2020--2024. Cells are final-minus-initial standardized values, ordered by domain and by overall change magnitude within domain. Blue cells indicate lower final-window values, red cells higher final-window values. The heatmap highlights field-level departures from the domain summaries, especially in hubness and kNN distance variability.}
+\caption[Field-level temporal change heatmap]{Field-level temporal change from 2000--2004 to 2020--2024. Cells are final-minus-initial standardized values, ordered by domain and change magnitude.}
 \label{fig:field_temporal_delta_heatmap}
 \includegraphics[width=\textwidth,height=0.80\textheight,keepaspectratio]{figures/fig_07_field_temporal_delta_heatmap.png}
 \end{figure}
 
-Hubness is the clearest departure from a simple contraction story. Energy and Immunology and Microbiology move upward in hub concentration, while Computer Science, Engineering, Psychology, and Health Professions move downward. Computer Science also has one of the largest drops in PCA D80, but its hubness trajectory differs from fields that become more locally centralized. The temporal profile of a field is therefore a bundle of changes, not a single axis.
+Hubness is the clearest departure from a simple contraction story. Energy and Immunology and Microbiology move upward in hub concentration, while Computer Science, Engineering, Psychology, and Health Professions move downward. Computer Science also has one of the largest drops in PCA D80, but its hubness trajectory differs from fields that become more locally centralized.
 
-The full-period temporal indicators add another angle because they summarize movement relative to earlier configurations rather than first--last structural differences. Figure~\ref{fig:full_period_temporal_indicators_by_domain} shows that every domain contains both ordinary and extreme movement. Social Sciences contain the strongest centroid-drift outlier, Human Factors and Ergonomics. Physical Sciences contain many high-novelty and positive radial-expansion subfields, including Computer Vision and Pattern Recognition and Signal Processing. Health Sciences are lower on recent novelty as a domain, but several medical subfields still appear among the most dynamic windowed profiles.
+The full-period temporal indicators summarize movement relative to earlier configurations. Figure~\ref{fig:full_period_temporal_indicators_by_domain} shows that every domain contains both ordinary and extreme movement. Social Sciences contain the strongest centroid-drift outlier, Human Factors and Ergonomics. Physical Sciences contain many high-novelty and positive radial-expansion subfields, including Computer Vision and Pattern Recognition and Signal Processing. Health Sciences are lower on recent novelty as a domain, but several medical subfields still appear among the most dynamic windowed profiles.
 
 \begin{figure}[H]
 \centering
-\caption[Full-period temporal indicators by domain]{Full-period temporal indicators by domain at the subfield level. Values are standardized across the 241 eligible subfields. The panels separate three temporal concepts: centroid movement, radial expansion, and novelty relative to the early semantic core.}
+\caption[Full-period temporal indicators by domain]{Full-period temporal indicators by domain at the subfield level: centroid movement, radial expansion, and novelty relative to the early semantic core.}
 \label{fig:full_period_temporal_indicators_by_domain}
 \includegraphics[width=\textwidth]{figures/fig_07_full_period_temporal_indicators_by_domain.png}
 \end{figure}
@@ -71,26 +65,22 @@ The strongest first--last profile changes are concentrated in a small set of sub
 
 \begin{figure}[H]
 \centering
-\caption[Most dynamic subfields]{Most dynamic subfields across windowed structural metrics. Outlying temporal movement is distributed across Social Sciences, Health Sciences, Life Sciences, and Physical Sciences. The ranking measures total first--last profile displacement, not improvement, impact, or causal transformation.}
+\caption[Most dynamic subfields]{Most dynamic subfields across windowed structural metrics. The ranking measures total first--last profile displacement.}
 \label{fig:most_dynamic_subfields}
 \includegraphics[width=0.93\textwidth]{figures/fig_07_most_dynamic_subfields.png}
 \end{figure}
 
 \input{tables/tab_07_dynamic_subfields}
 
-The drivers behind these cases are deliberately mixed. Philosophy is dominated by a sharp decrease in centroid IQR, while Molecular Medicine moves in the opposite direction on that same metric. General Dentistry is driven by a decline in PCA spectral entropy. General Psychology changes primarily through reduced kNN distance variability, whereas Immunology and Allergy and Virology change through increases in that metric. The ranking therefore identifies strong temporal movement, but the table prevents that movement from being mistaken for one common pattern.
+The drivers behind these cases are deliberately mixed. Philosophy is dominated by a sharp decrease in centroid IQR, while Molecular Medicine moves in the opposite direction on that same metric. General Dentistry is driven by a decline in PCA spectral entropy. General Psychology changes primarily through reduced kNN distance variability, whereas Immunology and Allergy and Virology change through increases in that metric. The ranking therefore identifies strong temporal movement, not one common pattern.
 
 \begin{figure}[H]
 \centering
-\caption[Contrasting subfield trajectory profiles]{Contrasting subfield trajectory profiles. Each panel tracks four standardized windowed metrics for a dynamic subfield. The examples show different temporal shapes: sharp early adjustment, gradual densification, increasing local unevenness, and directional novelty-like movement are visually distinct profiles rather than one common trajectory.}
+\caption[Contrasting subfield trajectory profiles]{Contrasting subfield trajectory profiles. Each panel tracks four standardized windowed metrics for a dynamic subfield.}
 \label{fig:selected_subfield_trajectories}
 \includegraphics[width=\textwidth]{figures/fig_07_selected_subfield_trajectories.png}
 \end{figure}
 
-The trajectory panels make those differences concrete. Philosophy changes sharply after the first window and then stabilizes. Molecular Medicine becomes locally denser while remaining high in kNN distance variability. General Dentistry becomes more locally compact and spectrally simpler, but its distance variability rises late in the period. Signal Processing moves differently again: dispersion and kNN CV rise while PCA D80 falls. These examples are not meant as a typology; they show why temporal morphology should be read as a profile of coordinated and uncoordinated movements across metric families.
+The trajectory panels make those differences concrete. Philosophy changes sharply after the first window and then stabilizes. Molecular Medicine becomes locally denser while remaining high in kNN distance variability. General Dentistry becomes more locally compact and spectrally simpler, but its distance variability rises late. Signal Processing moves differently again: dispersion and kNN CV rise while PCA D80 falls.
 
-\section{What Temporal Profiles Can Say}
-
-Temporal morphology describes how embedded structure changes; it does not explain why the changes occurred. A decline in median kNN distance means that papers within a subfield-window have closer nearest neighbors under SPECTER2. A decline in PCA D80 means that less dimensional variation is needed to account for 80 percent of the embedding variance. Neither statement, by itself, implies simplicity, maturity, productivity, or mechanism.
-
-Five-year windows reduce annual noise and keep sample sizes usable, but they can hide shorter shocks or transitions inside each period. Standardized plots compare metrics with different units, but they are relative to the observed subfield-window distribution. The central reading is comparative and descriptive: morphology changes across the 2000--2024 subfield population, with the strongest movement concentrated in particular scientific regions rather than distributed evenly across the hierarchy.
+Temporal morphology describes how embedded structure changes; it does not explain why the changes occurred. Five-year windows reduce annual noise and keep sample sizes usable, but they can hide shorter shocks or transitions. The central reading is comparative: morphology changes across the 2000--2024 subfield population, with the strongest movement concentrated in particular scientific regions rather than distributed evenly across the hierarchy.
