@@ -51,6 +51,13 @@ models/
 embeddings/
 archive/legacy_embeddings/
 
+# Local scratch and generated previews
+frontend/
+scratch/
+tmp_shape_stability_exploration/
+tmp_visual_exploration/
+tmp_visual_preview/
+
 # LaTeX build artifacts for memory/
 memory/*.aux
 memory/*.log
