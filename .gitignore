@@ -53,6 +53,7 @@ archive/legacy_embeddings/
 
 # Local scratch and generated previews
 frontend/
+docs/site-assets/figures/
 scratch/
 tmp_shape_stability_exploration/
 tmp_visual_exploration/
