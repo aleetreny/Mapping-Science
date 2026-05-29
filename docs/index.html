@@ -575,9 +575,15 @@
         }
 
         @media (max-width: 640px) {
+            html {
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+
             body {
                 background: #ffffff;
                 line-height: 1.5;
+                max-width: 100%;
                 overflow-x: hidden;
                 padding: 0;
             }
@@ -586,6 +592,7 @@
                 width: 100%;
                 max-width: none;
                 min-height: 100vh;
+                overflow-x: hidden;
                 border: 0;
                 box-shadow: none;
                 padding: 1rem 0.85rem 1.25rem;
@@ -608,15 +615,22 @@
 
             .workspace-grid {
                 gap: 1rem;
+                min-width: 0;
+                max-width: 100%;
             }
 
             .controls-panel {
                 gap: 0.75rem;
+                min-width: 0;
+                max-width: 100%;
+                overflow: hidden;
                 padding: 0.75rem;
             }
 
             .control-group {
                 gap: 0.3rem;
+                min-width: 0;
+                max-width: 100%;
             }
 
             .control-group label {
@@ -629,7 +643,16 @@
             .custom-select-button {
                 height: 46px;
                 font-size: 0.78rem;
+                min-width: 0;
+                max-width: 100%;
                 padding: 0.5rem 2rem 0.5rem 0.65rem;
+                width: 100%;
+            }
+
+            .custom-select,
+            .custom-select-value {
+                min-width: 0;
+                max-width: 100%;
             }
 
             .custom-select-menu {
@@ -648,6 +671,9 @@
             }
 
             .viewer-card {
+                min-width: 0;
+                max-width: 100%;
+                overflow: hidden;
                 padding: 0.55rem;
             }
 
@@ -655,6 +681,9 @@
                 font-size: 0.72rem;
                 line-height: 1.4;
                 margin-bottom: 0.6rem;
+                min-width: 0;
+                max-width: 100%;
+                overflow-wrap: anywhere;
                 padding: 0.45rem 0.55rem;
             }
 
@@ -665,13 +694,24 @@
 
             .map-image-container {
                 min-height: 220px;
+                min-width: 0;
+                max-width: 100%;
                 overflow: hidden;
                 padding: 0.35rem;
+            }
+
+            .map-image-container img {
+                min-width: 0;
+                max-width: 100%;
+                object-fit: contain;
             }
 
             .metrics-card {
                 border-width: 1px;
                 margin-top: 1rem;
+                min-width: 0;
+                max-width: 100%;
+                overflow: hidden;
             }
 
             .metrics-header {
