@@ -30,6 +30,17 @@ Figure~\ref{fig:domain_pair_distance_structure} replaces the binary within--cros
 \includegraphics[width=\textwidth]{figures/fig_08_domain_pair_distance_structure.pdf}
 \end{figure}
 
+Figure~\ref{fig:field_nearest_neighbor_ring} makes the same result more concrete by turning the distance matrix into a directed nearest-neighbor map. Each arrow starts in a field and points to the field with the closest full-period morphology profile; dark arrows cross OpenAlex domain boundaries and grey arrows remain inside the same domain. The circular layout preserves domain membership, so the figure should be read as a stress test of the taxonomy: if domain labels fully organized morphology, most arrows would stay within their own sector.
+
+\begin{figure}[H]
+\centering
+\caption[Directed field nearest-neighbor map]{Directed nearest-neighbor map between fields in morphology-profile space. Arrows point from each field to its nearest morphological neighbor under the robust-scaled eleven-metric distance; dark arrows indicate cross-domain nearest neighbors and grey arrows indicate within-domain nearest neighbors. Node size is proportional to the number of included subfields.}
+\label{fig:field_nearest_neighbor_ring}
+\includegraphics[width=\textwidth]{figures/fig_08_field_neighbor_variant_02_domain_ring.pdf}
+\end{figure}
+
+The map clarifies three aspects that are harder to see in the heatmap. First, cross-domain similarity is not a marginal exception but the dominant local relation: the dark chords are spread around the ring rather than concentrated in a single anomalous block. Second, several relations are reciprocal, including Medicine with Biochemistry, Genetics and Molecular Biology, Neuroscience with Psychology, Energy with Immunology and Microbiology, and Nursing with Veterinary. These reciprocal links identify local morphological pairs, not merely one-sided approximations. Third, some fields act as attractors for multiple neighbors. Materials Science receives links from Agricultural and Biological Sciences, Chemistry, and Earth and Planetary Sciences, while Neuroscience receives links from Business, Management and Accounting, Decision Sciences, and Social Sciences. The interpretation is therefore not that domains are irrelevant, but that domain membership is an incomplete predictor of field shape: morphology produces local affinities, bridges, and asymmetric pulls that the domain-level taxonomy smooths over.
+
 \section{Convergence and Divergence Over Time}
 
 The temporal picture is not global convergence. Across all 325 field pairs, mean Euclidean distance rises from \(1.44\) in 2000--2004 to \(1.81\) in 2020--2024. The same upward movement appears within domains, from \(1.39\) to \(1.70\), and across domains, from \(1.46\) to \(1.85\). Field-level morphology space becomes more separated on average, even though many individual pairs move closer. This supports the main argument because it separates average differentiation from selective convergence.
