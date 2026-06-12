@@ -1,49 +1,49 @@
 \babel@toc {english}{}\relax 
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {1.1}{\ignorespaces Conceptual workflow of embedding-space morphology}}{2}{figure.caption.5}%
+\contentsline {figure}{\numberline {1.1}{\ignorespaces Conceptual workflow of embedding-space morphology}}{3}{figure.caption.5}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {2.1}{\ignorespaces Citation topology and semantic geometry}}{5}{figure.caption.6}%
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Citation topology and embedding space}}{5}{figure.caption.6}%
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {3.1}{\ignorespaces OpenAlex filtering and corpus construction pipeline}}{9}{figure.caption.8}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {5.1}{\ignorespaces Metric families as field-shape grammar}}{16}{figure.caption.12}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {6.1}{\ignorespaces Domain-level morphological profiles}}{19}{figure.caption.14}%
-\contentsline {figure}{\numberline {6.2}{\ignorespaces Field-level morphological profiles}}{21}{figure.caption.16}%
-\contentsline {figure}{\numberline {6.3}{\ignorespaces Subfield metric distributions by domain}}{22}{figure.caption.17}%
-\contentsline {figure}{\numberline {6.4}{\ignorespaces Subfield profile PCA map}}{23}{figure.caption.19}%
-\contentsline {figure}{\numberline {6.5}{\ignorespaces Most atypical subfield profiles}}{24}{figure.caption.20}%
+\contentsline {figure}{\numberline {6.1}{\ignorespaces Domain-level morphological profiles}}{20}{figure.caption.14}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces Field-level morphological profiles}}{22}{figure.caption.16}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces Subfield metric distributions by domain}}{23}{figure.caption.17}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces Subfield profile PCA map}}{25}{figure.caption.19}%
+\contentsline {figure}{\numberline {6.5}{\ignorespaces Most atypical subfield profiles}}{26}{figure.caption.20}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {7.1}{\ignorespaces Schematic modes of temporal morphology}}{25}{figure.caption.21}%
-\contentsline {figure}{\numberline {7.2}{\ignorespaces Domain-level temporal trajectories}}{26}{figure.caption.22}%
-\contentsline {figure}{\numberline {7.3}{\ignorespaces Top subfield centroid paths}}{27}{figure.caption.23}%
-\contentsline {figure}{\numberline {7.4}{\ignorespaces Field-level temporal change heatmap}}{28}{figure.caption.24}%
-\contentsline {figure}{\numberline {7.5}{\ignorespaces Full-period temporal indicators by domain}}{29}{figure.caption.25}%
-\contentsline {figure}{\numberline {7.6}{\ignorespaces Most dynamic subfields}}{30}{figure.caption.26}%
-\contentsline {figure}{\numberline {7.7}{\ignorespaces Contrasting subfield trajectory profiles}}{31}{figure.caption.28}%
+\contentsline {figure}{\numberline {7.1}{\ignorespaces Schematic modes of temporal morphology}}{27}{figure.caption.21}%
+\contentsline {figure}{\numberline {7.2}{\ignorespaces Domain-level temporal trajectories}}{28}{figure.caption.22}%
+\contentsline {figure}{\numberline {7.3}{\ignorespaces Top subfield centroid paths}}{29}{figure.caption.23}%
+\contentsline {figure}{\numberline {7.4}{\ignorespaces Field-level temporal change heatmap}}{30}{figure.caption.24}%
+\contentsline {figure}{\numberline {7.5}{\ignorespaces Full-period temporal indicators by domain}}{31}{figure.caption.25}%
+\contentsline {figure}{\numberline {7.6}{\ignorespaces Most dynamic subfields}}{32}{figure.caption.26}%
+\contentsline {figure}{\numberline {7.7}{\ignorespaces Contrasting subfield trajectory profiles}}{33}{figure.caption.28}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {8.1}{\ignorespaces Pairwise field morphological distances}}{33}{figure.caption.29}%
-\contentsline {figure}{\numberline {8.2}{\ignorespaces Domain-pair morphological distance structure}}{34}{figure.caption.30}%
-\contentsline {figure}{\numberline {8.3}{\ignorespaces Temporal field-pair distance trajectories}}{35}{figure.caption.31}%
-\contentsline {figure}{\numberline {8.4}{\ignorespaces Strongest field convergence and divergence}}{35}{figure.caption.32}%
+\contentsline {figure}{\numberline {8.1}{\ignorespaces Pairwise field morphological distances}}{35}{figure.caption.29}%
+\contentsline {figure}{\numberline {8.2}{\ignorespaces Domain-pair morphological distance structure}}{36}{figure.caption.30}%
+\contentsline {figure}{\numberline {8.3}{\ignorespaces Temporal field-pair distance trajectories}}{37}{figure.caption.31}%
+\contentsline {figure}{\numberline {8.4}{\ignorespaces Strongest field convergence and divergence}}{37}{figure.caption.32}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {9.1}{\ignorespaces Static and dynamic clustering diagnostics}}{38}{figure.caption.34}%
-\contentsline {figure}{\numberline {9.2}{\ignorespaces Static typology profile heatmap}}{39}{figure.caption.36}%
-\contentsline {figure}{\numberline {9.3}{\ignorespaces Dynamic temporal typology profile heatmap}}{41}{figure.caption.38}%
-\contentsline {figure}{\numberline {9.4}{\ignorespaces Static and dynamic typologies under alternative projections}}{42}{figure.caption.39}%
-\addvspace {10\p@ }
-\addvspace {10\p@ }
+\contentsline {figure}{\numberline {9.1}{\ignorespaces Static and dynamic clustering diagnostics}}{40}{figure.caption.34}%
+\contentsline {figure}{\numberline {9.2}{\ignorespaces Static typology profile heatmap}}{41}{figure.caption.36}%
+\contentsline {figure}{\numberline {9.3}{\ignorespaces Dynamic temporal typology profile heatmap}}{43}{figure.caption.38}%
+\contentsline {figure}{\numberline {9.4}{\ignorespaces Static and dynamic typologies under alternative projections}}{44}{figure.caption.39}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {C.1}{\ignorespaces Centroid-embedding clustering sensitivity}}{54}{figure.caption.42}%
-\contentsline {figure}{\numberline {C.2}{\ignorespaces Domain composition of static and dynamic typologies}}{55}{figure.caption.43}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {D.1}{\ignorespaces Illustrative UMAP atlas: Human Factors and Ergonomics}}{57}{figure.caption.44}%
-\contentsline {figure}{\numberline {D.2}{\ignorespaces Illustrative UMAP atlas: Nuclear and High Energy Physics}}{57}{figure.caption.45}%
-\contentsline {figure}{\numberline {D.3}{\ignorespaces Illustrative UMAP atlas: Applied Microbiology and Biotechnology}}{57}{figure.caption.46}%
-\contentsline {figure}{\numberline {D.4}{\ignorespaces Illustrative UMAP atlas: Computer Vision and Pattern Recognition}}{58}{figure.caption.47}%
-\contentsline {figure}{\numberline {D.5}{\ignorespaces Illustrative UMAP atlas: Signal Processing}}{58}{figure.caption.48}%
-\contentsline {figure}{\numberline {D.6}{\ignorespaces Illustrative UMAP atlas: General Materials Science}}{58}{figure.caption.49}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {C.1}{\ignorespaces Centroid-embedding clustering sensitivity}}{55}{figure.caption.42}%
+\contentsline {figure}{\numberline {C.2}{\ignorespaces Domain composition of static and dynamic typologies}}{56}{figure.caption.43}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {D.1}{\ignorespaces Illustrative UMAP atlas: Human Factors and Ergonomics}}{58}{figure.caption.44}%
+\contentsline {figure}{\numberline {D.2}{\ignorespaces Illustrative UMAP atlas: Nuclear and High Energy Physics}}{58}{figure.caption.45}%
+\contentsline {figure}{\numberline {D.3}{\ignorespaces Illustrative UMAP atlas: Applied Microbiology and Biotechnology}}{58}{figure.caption.46}%
+\contentsline {figure}{\numberline {D.4}{\ignorespaces Illustrative UMAP atlas: Computer Vision and Pattern Recognition}}{59}{figure.caption.47}%
+\contentsline {figure}{\numberline {D.5}{\ignorespaces Illustrative UMAP atlas: Signal Processing}}{59}{figure.caption.48}%
+\contentsline {figure}{\numberline {D.6}{\ignorespaces Illustrative UMAP atlas: General Materials Science}}{59}{figure.caption.49}%
 \contentsfinish 

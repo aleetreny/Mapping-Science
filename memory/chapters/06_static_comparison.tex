@@ -23,7 +23,7 @@ Health Sciences show the opposite pattern on several dimensions. They have the l
 
 \input{tables/tab_06_static_summary_by_domain}
 
-Social Sciences are comparatively compact at the domain level, with lower centroid dispersion and lower hub concentration. Life Sciences sit closer to the center of most static metrics but show stronger negative recent novelty and radial contraction summaries. These domain averages are useful first signals, but they are blunt instruments.
+Social Sciences are comparatively compact at the domain level, with lower centroid dispersion and lower hub concentration. Life Sciences sit closer to the center of most static metrics but show stronger negative recent novelty and radial contraction summaries. These domain averages are useful first signals, but they are blunt instruments. This is important because the figure shows domain tendencies, while the rest of the chapter shows why those tendencies are not enough.
 
 \section{Field and Subfield Variation}
 
@@ -36,7 +36,7 @@ Field-level profiles show why domain summaries are insufficient. Physical Scienc
 \includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{figures/fig_06_field_metric_profile_heatmap.png}
 \end{figure}
 
-The most visible contrast is local structure. Chemistry, Physics and Astronomy, Materials Science, Engineering, and Environmental Science have high median kNN distances, meaning that even near neighbors tend to be farther away. Dentistry, Nursing, Immunology and Microbiology, Veterinary, and Health Professions have lower median kNN distances. This does not mean that the latter fields are narrower in every sense; their papers are packed into closer local neighborhoods under the SPECTER2 geometry.
+The most visible contrast is local structure. Chemistry, Physics and Astronomy, Materials Science, Engineering, and Environmental Science have high median kNN distances, meaning that even near neighbors tend to be farther away. Dentistry, Nursing, Immunology and Microbiology, Veterinary, and Health Professions have lower median kNN distances. This does not mean that the latter fields are narrower in every sense; their papers are packed into closer local neighborhoods under the SPECTER2 embedding space. The field-level view matters because it breaks the simple domain story without abandoning the domain comparison.
 
 At subfield level, the boxplots in Figure~\ref{fig:subfield_metric_distributions_by_domain} show wide distributions and outliers around the domain medians. Physical Sciences have the highest median subfield dispersion and kNN distance, but some physical subfields are compact. Health Sciences have lower local distances on average, but hubness varies widely. Social Sciences contain both compact applied areas and highly atypical humanities subfields.
 
@@ -55,7 +55,7 @@ The clearest evidence comes from the extremes. Nuclear and High Energy Physics, 
 
 Hubness cuts across those patterns. General Materials Science, Electrochemistry, and Internal Medicine have high kNN in-degree Gini values, meaning their local neighborhoods concentrate around a smaller set of papers. Artificial Intelligence and Computer Vision and Pattern Recognition, despite being highly dispersed and temporally novel, sit at the low-hubness end. A subfield can be broad without being hub-dominated, and a compact subfield can still be organized around strong local hubs.
 
-The exploratory profile map in Figure~\ref{fig:metric_profile_pca_map} summarizes the eleven standardized metrics into two principal components. It is a visualization of metric profiles, not paper-level semantic space. The first two axes explain 30.9 percent and 28.3 percent of the standardized profile variance. Domains overlap in the middle, while specific subfields form the most informative extremes.
+The exploratory profile map in Figure~\ref{fig:metric_profile_pca_map} summarizes the eleven standardized metrics into two principal components. It is a visualization of metric profiles, not paper-level semantic space. The first two axes explain 30.9 percent and 28.3 percent of the standardized profile variance. Domains overlap in the middle, while specific subfields form the most informative extremes. That overlap reinforces the main argument: morphology is related to taxonomy, but not reducible to it.
 
 \begin{figure}[H]
 \centering
@@ -74,3 +74,6 @@ The outlier ranking makes the same point more directly. Human Factors and Ergono
 \end{figure}
 
 Static profiles are strongest for comparison and weakest for explanation. They show that Physical Sciences are generally more dispersed and spectrally extended, Health Sciences are more locally dense and hub-concentrated, and field-level variation prevents simple domain stories. High dispersion, low kNN distance, or high recent novelty are structural descriptions, not rankings of quality, maturity, simplicity, or causal change.
+
+\paragraph{What this result means.}
+Broad domains have tendencies, but they do not determine morphology. Physical Sciences are often more dispersed, and Health Sciences are often more locally dense, but variation inside each domain is large. This matters because the shape of a field cannot be inferred from its domain label alone.

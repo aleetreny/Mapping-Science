@@ -1,20 +1,22 @@
 % Chapter 3: Data and Corpus Construction
 
-\section{OpenAlex as Analytical Frame}
+\section{Why OpenAlex Subfields?}
 
-OpenAlex is the primary bibliographic data source for the thesis: an open index of scholarly works, authors, venues, institutions, and research concepts designed for large-scale reproducible analysis \parencite{priem2022openalex}. Its openness is methodologically important because the corpus can be documented, audited, and reconstructed without proprietary infrastructure.
+OpenAlex is the primary bibliographic data source for the thesis: an open index of scholarly works, authors, venues, institutions, and research concepts designed for large-scale reproducible analysis \parencite{priem2022openalex}. Its openness matters because the corpus can be documented, audited, and reconstructed without proprietary infrastructure.
 
-The main analytical unit is the OpenAlex \textit{subfield}. Subfields are more granular than domains while remaining stable enough for comparative and temporal analysis. They are aggregated into \textit{fields} and \textit{domains} when broader summaries are required. Each work is assigned to a subfield through its primary-topic subfield, preserving a one-work--one-subfield structure for the main analysis.
+The main analytical unit is the OpenAlex \textit{subfield}. Subfields are granular enough to distinguish research areas, large enough to support distributional measurement, and stable enough for comparisons over time. They are aggregated into \textit{fields} and \textit{domains} when broader summaries are required. Each work is assigned to a subfield through its primary-topic subfield, preserving a one-work--one-subfield structure for the main analysis.
 
-This taxonomy is used pragmatically. OpenAlex subfields are transparent reference units, not definitive boundaries of scientific knowledge. Coverage differences, metadata incompleteness, classification uncertainty, and language bias remain part of the empirical object. Comparative evidence shows that open databases can support broad science mapping while varying by database, discipline, and document type \parencite{martinmartin2021google}; recent work also documents OpenAlex metadata limits, including abstract coverage, despite broadly comparable reference coverage under cleaned comparisons with Web of Science and Scopus \parencite{culbert2025reference}. The corpus is therefore a controlled analytical sample, not a census of global scientific production.
+OpenAlex subfields are used as practical units of comparison, not as natural boundaries of scientific knowledge. Coverage differences, metadata incompleteness, classification uncertainty, and language bias remain part of the corpus being studied. Comparative evidence shows that open databases can support broad science mapping while varying by database, discipline, and document type \parencite{martinmartin2021google}; recent work also documents OpenAlex metadata limits, including abstract coverage, despite broadly comparable reference coverage under cleaned comparisons with Web of Science and Scopus \parencite{culbert2025reference}. The corpus is therefore a controlled analytical sample, not a census of global scientific production.
 
-\section{Sampling a Comparable Corpus}
+\section{Why Title and Abstract?}
 
 The empirical analyses use a synchronized OpenAlex title--abstract corpus covering publications from 2000 to 2024. The full corpus contains 2,378,036 text-eligible works across 252 subfields, 26 fields, and 4 domains. The embedding-based analysis uses a row-aligned subset of 2,344,927 embedded works across 241 analysis subfields.
 
 \input{tables/tab_03_corpus_summary}
 
-Eligibility follows from the needs of semantic embedding. A retained work must contain enough title--abstract text for document-level representation. The extraction is restricted to English records, articles and preprints, valid metadata, and minimum title and abstract lengths.
+Full text would contain more information, but it is not consistently available at this scale and would introduce strong availability bias across publishers, fields, and years. Bibliographic metadata alone would be too limited for semantic morphology. Title--abstract records are a practical middle ground: they are available for a large corpus, comparable across fields, and rich enough to represent the central problem, method, and contribution of a paper.
+
+Eligibility follows from this design. A retained work must contain enough title--abstract text for document-level representation. The extraction is restricted to English records, articles and preprints, valid metadata, and minimum title and abstract lengths.
 
 \begin{figure}[H]
 \centering
@@ -25,7 +27,11 @@ Eligibility follows from the needs of semantic embedding. A retained work must c
 
 \input{tables/tab_03_corpus_filters}
 
-The corpus uses a balanced annual sampling design. For subfield \(s\) and year \(t\), the planned annual sample size is
+\section{Why a Balanced Corpus?}
+
+The corpus is balanced because the thesis measures shape, not publication volume. If raw publication volume dominated the analysis, large and text-rich fields could look broader simply because they contribute more papers. The annual cap reduces this risk and makes comparisons more about morphology than size.
+
+For subfield \(s\) and year \(t\), the planned annual sample size is
 
 \[
 n_{s,t}^{planned} = \min \left( N_{s,t}^{eligible}, 400 \right),
@@ -53,4 +59,5 @@ Corpus construction proceeds through taxonomy definition, annual count estimatio
 
 The embedding stage converts the validated corpus into a row-aligned analysis matrix. The analysis subset is smaller than the full corpus because metric computation requires valid embeddings, unambiguous metadata alignment, and sufficient observations per analytical unit. It contains 2,344,927 embedded works across 241 analysis subfields.
 
-The later results are measurements of a balanced OpenAlex title--abstract corpus represented in a shared embedding space. They support comparative claims about retained scientific works under a specific data source, taxonomy, sampling design, and text representation, not claims about total production, impact, funding, or causal scientific development.
+\paragraph{What this establishes.}
+The thesis does not compare raw publication volume. It compares balanced distributions of retained title--abstract records. This makes the later morphology metrics more comparable across fields and years, while keeping the corpus explicit: a controlled OpenAlex sample represented through scientific document embeddings.

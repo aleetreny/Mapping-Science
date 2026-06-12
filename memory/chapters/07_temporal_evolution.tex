@@ -24,7 +24,7 @@ The domain view gives the broad orientation. Across all subfields, mean median c
 \includegraphics[width=\textwidth]{figures/fig_07_domain_temporal_trajectories.png}
 \end{figure}
 
-Physical Sciences remain the most dispersed domain for most of the period and retain the highest average spectral dimensionality. Health Sciences move furthest downward in local distance and PCA D80, ending with the tightest local neighborhoods and the lowest average dimensionality. Life Sciences follow the same direction but with a clearer rise in kNN distance variability. Social Sciences are less extreme in the domain averages.
+Physical Sciences remain the most dispersed domain for most of the period and retain the highest average spectral dimensionality. Health Sciences move furthest downward in local distance and PCA D80, ending with the tightest local neighborhoods and the lowest average dimensionality. Life Sciences follow the same direction but with a clearer rise in kNN distance variability. Social Sciences are less extreme in the domain averages. The value of the figure is that it makes movement visible; static profiles alone would hide these different paths.
 
 \section{Subfields and Fields in Motion}
 
@@ -37,7 +37,7 @@ Figure~\ref{fig:top10_centroid_paths_pca} follows the centroid of each subfield 
 \includegraphics[width=\textwidth]{figures/fig_07_top10_centroid_paths_pca.png}
 \end{figure}
 
-The largest paths are not concentrated in a single disciplinary neighborhood. Human Factors and Ergonomics is spatially distant from the high-movement computational subfields, while Infectious Diseases and General Dentistry occupy a separate upper-left to central band. Large movement also has different geometries: Modeling and Simulation and Ecological Modeling show long directional paths; Energy Engineering and Power Technology moves strongly but stays in a lower region; the computer-science paths cluster closer together.
+The largest paths are not concentrated in a single disciplinary neighborhood. Human Factors and Ergonomics is spatially distant from the high-movement computational subfields, while Infectious Diseases and General Dentistry occupy a separate upper-left to central band. Large movement also has different paths: Modeling and Simulation and Ecological Modeling show long directional trajectories; Energy Engineering and Power Technology moves strongly but stays in a lower region; the computer-science paths cluster closer together. The key point is that centroid movement and morphology change are related but not interchangeable.
 
 Field summaries add another layer. Figure~\ref{fig:field_temporal_delta_heatmap} shows that Pharmacology, Toxicology and Pharmaceutics, Dentistry, Chemical Engineering, Medicine, and Energy have especially strong declines in median centroid distance. Dentistry, Energy, Immunology and Microbiology, Medicine, and Chemistry show large declines in median kNN distance. These are related but not interchangeable changes.
 
@@ -81,6 +81,9 @@ The drivers behind these cases are deliberately mixed. Philosophy is dominated b
 \includegraphics[width=\textwidth]{figures/fig_07_selected_subfield_trajectories.png}
 \end{figure}
 
-The trajectory panels make those differences concrete. Philosophy changes sharply after the first window and then stabilizes. Molecular Medicine becomes locally denser while remaining high in kNN distance variability. General Dentistry becomes more locally compact and spectrally simpler, but its distance variability rises late. Signal Processing moves differently again: dispersion and kNN CV rise while PCA D80 falls.
+The trajectory panels make those differences concrete. Philosophy changes sharply after the first window and then stabilizes. Molecular Medicine becomes locally denser while remaining high in kNN distance variability. General Dentistry becomes more locally compact and spectrally simpler, but its distance variability rises late. Signal Processing moves differently again: dispersion and kNN CV rise while PCA D80 falls. These cases show why temporal morphology cannot be reduced to one trend line.
 
-Temporal morphology describes how embedded structure changes; it does not explain why the changes occurred. Five-year windows reduce annual noise and keep sample sizes usable, but they can hide shorter shocks or transitions. The central reading is comparative: morphology changes across the 2000--2024 subfield population, with the strongest movement concentrated in particular scientific regions rather than distributed evenly across the hierarchy.
+Temporal morphology describes how embedded structure changes; it does not explain why the changes occurred. Five-year windows reduce annual noise and keep sample sizes usable, but they can hide shorter shocks or transitions. The comparison matters because morphology changes unevenly across the 2000--2024 subfield population, with the strongest movement concentrated in particular scientific regions rather than distributed evenly across the hierarchy.
+
+\paragraph{What this result means.}
+Scientific morphology changes over time, but not in one universal direction. Some fields become locally denser, some become more uneven, some move far from their earlier semantic center, and others remain comparatively stable. Temporal movement reveals structure that a full-period static profile hides.

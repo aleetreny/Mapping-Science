@@ -16,7 +16,7 @@ Text-based representations offer a complementary route. The vector-space traditi
 
 \begin{figure}[H]
 \centering
-\caption[Citation topology and semantic geometry]{Citation topology and semantic geometry. Citation maps organize observed links; document embeddings make retained papers comparable through coordinates, distances, and local density.}
+\caption[Citation topology and embedding space]{Citation topology and embedding space. Citation maps organize observed links; document embeddings make retained papers comparable through coordinates, distances, and local density.}
 \label{fig:citation_semantic_contrast}
 \includegraphics[width=\textwidth]{figures/fig_02_citation_semantic_contrast.pdf}
 \end{figure}
@@ -27,14 +27,17 @@ Scientific text is not generic text. Titles and abstracts contain specialized te
 
 Most uses of document embeddings begin with location: where is a paper, topic, or field in semantic space? Location is important, but incomplete. A centroid summarizes the average position of a field while discarding spread, local packing, hub concentration, spectral structure, and movement. The same field can be close in citation space, far in semantic location, and similar in morphology to another field.
 
-The idea has roots in work on diversity, distance, and novelty. Stirling's framework separates variety, balance, and disparity \parencite{stirling2007diversity}. Cognitive-distance research treats proximity and distance as conditions that shape learning and recombination \parencite{nooteboom2007cognitive}. Studies of scientific novelty show that unusual combinations can matter because they bridge distant regions of existing knowledge \parencite{uzzi2013atypical}. This thesis adapts that intuition to dense semantic geometry: fields are distributions, and their shape can be measured.
+The idea has roots in work on diversity, distance, and novelty. Stirling's framework separates variety, balance, and disparity \parencite{stirling2007diversity}. Cognitive-distance research treats proximity and distance as conditions that shape learning and recombination \parencite{nooteboom2007cognitive}. Studies of scientific novelty show that unusual combinations can matter because they bridge distant regions of existing knowledge \parencite{uzzi2013atypical}. This thesis adapts that intuition to embedding space: fields are distributions, and their shape can be measured.
 
 Embedding-space morphology is the operational form of that idea. Dispersion describes how far papers spread around the field centroid. Local density describes how tightly papers pack into neighborhoods. Hubness describes whether a small subset of papers becomes disproportionately central in nearest-neighbor relations, a known phenomenon in high-dimensional spaces \parencite{radovanovic2010hubness}. Spectral structure summarizes how many principal directions are needed to describe variation. Temporal movement asks how those structures change across publication windows.
 
 \section{Positioning of This Thesis}
 
-The gap addressed here lies between science mapping and scientific document representation. Existing maps often emphasize bibliometric topology, classification overlays, topic structure, or two-dimensional visualization. Scientific document embeddings make a shared semantic geometry available, but they are often used to retrieve papers, cluster documents, or draw maps. Here the geometry is used to measure field-level morphology.
+The gap addressed here lies between science mapping and scientific document representation. Existing maps often emphasize bibliometric topology, classification overlays, topic structure, or two-dimensional visualization. Scientific document embeddings make a shared measurement space available, but they are often used to retrieve papers, cluster documents, or draw maps. Here the embedding space is used to measure field-level morphology.
 
 OpenAlex provides the bibliographic infrastructure because it is open and auditable \parencite{priem2022openalex}. Its subfields are used as pragmatic analytical units, not natural boundaries. Large bibliographic databases vary by field, document type, language, and metadata completeness \parencite{martinmartin2021google}, and recent comparisons document both OpenAlex strengths and remaining metadata limits \parencite{culbert2025reference}.
 
-The contribution is a disciplined separation of location, shape, trajectory, and taxonomy. Semantic location is where a subfield's centroid sits. Static morphology is the full-period shape of its paper distribution. Temporal trajectories describe how morphology changes across windows. Morphological similarity compares profiles between units. Clustering compresses those profiles into typological anchors, while remaining exploratory because no clustering procedure supplies a uniquely objective partition of a data space \parencite{kleinberg2002clustering}.
+The contribution is a disciplined separation of location, shape, trajectory, and taxonomy. Semantic location is where a subfield's centroid sits. Static morphology is the full-period shape of its paper distribution. Temporal trajectories describe how morphology changes across windows. Morphological similarity compares profiles between units. Clustering compresses those profiles into reference profiles, while remaining exploratory because no clustering procedure supplies a uniquely objective partition of a data space \parencite{kleinberg2002clustering}.
+
+\paragraph{What this establishes.}
+Existing science maps are not wrong; they answer different questions. Citation maps show observed scholarly links, topic models summarize themes, taxonomies name fields, and visual maps project selected relations. The gap addressed here is narrower: how to measure the internal arrangement of fields once papers have coordinates in a scientific document space. That is the role of embedding-space morphology.
