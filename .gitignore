@@ -43,6 +43,7 @@ data/processed/subfield_morphology_metrics.parquet
 data/processed/subfield_morphology_metrics.csv
 models/
 embeddings/
+archive/
 archive/legacy_embeddings/
 
 # Local scratch and generated previews
