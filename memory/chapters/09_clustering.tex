@@ -10,7 +10,7 @@ Three representations remain distinct. Static morphology clusters the 241 analys
 
 \section{Static Morphology: Weak Groups in a Continuous Space}
 
-The static typology uses Ward hierarchical clustering, Euclidean distance, robust median/IQR scaling, and \(k=5\). Its silhouette is \(0.133\), so the result is read as a set of reference profiles in a continuous space rather than as separated classes.
+The static typology uses Ward hierarchical clustering \parencite{ward1963hierarchical}, Euclidean distance, robust median/IQR scaling, and \(k=5\). Its silhouette \parencite{rousseeuw1987silhouettes} is \(0.133\), so the result is read as a set of reference profiles in a continuous space rather than as separated classes.
 
 \begin{figure}[H]
 \centering
@@ -36,7 +36,7 @@ The static heatmap is useful because it shows recurring combinations of dispersi
 
 \section{Dynamic Morphology: Clearer Patterns of Change}
 
-The dynamic typology asks whether subfields are easier to group by direction of change than by full-period shape. The unit is the set of subfields with complete five-window structural trajectories, giving 240 complete cases. Each subfield is represented by the linear slopes of eight windowed structural metrics. The selected solution uses average-link hierarchical clustering with correlation distance at \(k=4\). It has silhouette \(=0.396\), mean subsample ARI \(=0.725\), AMI \(=0.048\) against the static morphology typology, and AMI \(=0.093\) against OpenAlex domains.
+The dynamic typology asks whether subfields are easier to group by direction of change than by full-period shape. The unit is the set of subfields with complete five-window structural trajectories, giving 240 complete cases. Each subfield is represented by the linear slopes of eight windowed structural metrics. The selected solution uses average-link hierarchical clustering with correlation distance at \(k=4\). It has silhouette \(=0.396\), mean subsample ARI \(=0.725\), AMI \(=0.048\) against the static morphology typology, and AMI \(=0.093\) against OpenAlex domains. ARI and AMI are chance-adjusted partition-comparison diagnostics \parencite{hubert1985comparing,nguyen2010information}; subsample agreement is used as a stability check, not as proof of natural classes \parencite{vonluxburg2010clustering}.
 
 \input{tables/tab_09_dynamic_typology_summary}
 
@@ -64,7 +64,7 @@ Subfields are therefore easier to group by how their morphology changes than by 
 
 \section{Shape, Movement, and Location Are Not the Same}
 
-Figure~\ref{fig:static_dynamic_projection_comparison} projects the static and dynamic spaces with PCA, PCoA, and UMAP. The static panels use robust-scaled eleven-metric profiles; the dynamic panels use standardized temporal slope vectors. PCoA uses Euclidean distance for static morphology and correlation distance for temporal trajectories, matching the selected clustering geometries.
+Figure~\ref{fig:static_dynamic_projection_comparison} projects the static and dynamic spaces with PCA, PCoA, and UMAP. The static panels use robust-scaled eleven-metric profiles; the dynamic panels use standardized temporal slope vectors. PCoA uses Euclidean distance for static morphology and correlation distance for temporal trajectories, matching the selected clustering geometries \parencite{gower1966distance}.
 
 \begin{figure}[H]
 \centering
