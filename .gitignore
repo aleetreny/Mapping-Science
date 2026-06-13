@@ -1,3 +1,4 @@
+# Local secrets and environments
 .env
 .venv/
 __pycache__/
@@ -19,7 +20,6 @@ warehouse/*.duckdb
 warehouse/*.duckdb.wal
 warehouse/*.duckdb.tmp
 *.parquet
-*.csv
 *.jsonl
 *.npy
 *.npz
@@ -33,13 +33,7 @@ warehouse/*.duckdb.tmp
 research/results/
 research/__pycache__/
 
-# Large document/content outputs
-*.pdf
-!memory/figures/fig_08_field_static_distance_heatmap.pdf
-!memory/figures/fig_08_domain_pair_distance_structure.pdf
-!memory/figures/fig_02_citation_semantic_contrast.pdf
-!memory/figures/fig_07_temporal_modes_schematic.pdf
-!memory/figures/fig_03_openalex_corpus_pipeline.pdf
+# Generated document/content outputs
 *.grobid-xml
 logs/
 outputs/
@@ -57,6 +51,10 @@ scratch/
 tmp_shape_stability_exploration/
 tmp_visual_exploration/
 tmp_visual_preview/
+desktop_view.png
+mobile_view.png
+latex_test_output.txt
+final_micro_revision_prompt_tfm.md
 
 # LaTeX build artifacts for memory/
 memory/*.aux
@@ -72,4 +70,3 @@ memory/*.blg
 memory/*.fdb_latexmk
 memory/*.fls
 memory/*.synctex.gz
-memory/*.pdf

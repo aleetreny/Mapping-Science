@@ -25,7 +25,7 @@ def synthetic_index(
     years: np.ndarray | None = None,
 ) -> pd.DataFrame:
     if years is None:
-        years = np.resize(np.arange(2010, 2026), n)
+        years = np.resize(np.arange(2000, 2025), n)
     return pd.DataFrame(
         {
             "analysis_row_id": np.arange(n),
@@ -71,8 +71,8 @@ def metric_row(
         index,
         embeddings,
         n_available=len(index),
-        year_min=2010,
-        year_max=2025,
+        year_min=2000,
+        year_max=2024,
         analysis_index_path="index.parquet",
         embedding_matrix_path="matrix.npy",
         k_neighbors=5,
@@ -224,9 +224,9 @@ def test_deterministic_sampling_gives_identical_embedding_metric_inputs() -> Non
 def test_compute_embedding_metrics_output_columns_are_stable() -> None:
     metrics, controls, warnings = compute_embedding_metrics(
         compact_embeddings(n=64),
-        np.resize(np.arange(2010, 2026), 64),
-        year_min=2010,
-        year_max=2025,
+        np.resize(np.arange(2000, 2025), 64),
+        year_min=2000,
+        year_max=2024,
         k_neighbors=5,
     )
     row = embedding_metric_row_frame(
@@ -240,8 +240,8 @@ def test_compute_embedding_metrics_output_columns_are_stable() -> None:
                 "domain_display_name": "Domain 1",
                 "n_available": 64,
                 "n_used": 64,
-                "year_min": 2010,
-                "year_max": 2025,
+                "year_min": 2000,
+                "year_max": 2024,
                 "metric_status": "completed_with_warnings" if warnings else "completed",
                 "metric_error_message": "",
                 "metric_warning_message": "; ".join(warnings),
