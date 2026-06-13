@@ -429,6 +429,69 @@ def draw_density_wash(
     )
 
 
+def draw_single_density_region(
+    ax: plt.Axes,
+    grid: np.ndarray,
+    xlim: tuple[float, float],
+    ylim: tuple[float, float],
+    *,
+    color: str,
+    percentile: float = 86,
+    alpha: float = 0.26,
+    linewidth: float = 2.4,
+    zorder: int = 5,
+) -> None:
+    threshold = positive_threshold(grid, percentile)
+    max_value = float(np.nanmax(grid))
+    if max_value <= 0 or threshold >= max_value:
+        return
+    ax.contourf(
+        grid,
+        levels=[threshold, max_value],
+        origin="lower",
+        extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
+        colors=[color],
+        alpha=alpha,
+        zorder=zorder,
+    )
+    ax.contour(
+        grid,
+        levels=[threshold],
+        origin="lower",
+        extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
+        colors=[color],
+        linewidths=linewidth,
+        alpha=0.95,
+        zorder=zorder + 1,
+    )
+
+
+def draw_window_points(
+    ax: plt.Axes,
+    frame: pd.DataFrame,
+    window: tuple[str, int, int],
+    *,
+    color: str,
+    seed: int,
+    max_points: int = 750,
+    alpha: float = 0.36,
+    zorder: int = 6,
+) -> None:
+    subset = subset_window(frame, window)
+    if len(subset) > max_points:
+        subset = subset.sample(max_points, random_state=seed)
+    ax.scatter(
+        subset["umap_x"],
+        subset["umap_y"],
+        s=5.5,
+        linewidths=0,
+        color=color,
+        alpha=alpha,
+        rasterized=True,
+        zorder=zorder,
+    )
+
+
 def option_09_clean_density_overlay() -> Path:
     fig, axes = plt.subplots(2, 2, figsize=(12.6, 9.0))
     fig.patch.set_facecolor("#fbfaf7")
@@ -466,6 +529,141 @@ def option_09_clean_density_overlay() -> Path:
     return save(fig, "fig_07_7_option_09_umap_clean_density_overlay")
 
 
+def option_10_simplified_contours() -> Path:
+    fig, axes = plt.subplots(2, 2, figsize=(12.6, 9.0))
+    fig.patch.set_facecolor("#fbfaf7")
+    fig.suptitle("Early and late high-density cores on the full subfield map", fontsize=17.0, weight="bold", y=0.982)
+    fig.text(
+        0.5,
+        0.940,
+        "A quieter version of the overlay: one early core and one late core are drawn over the full-period shape.",
+        ha="center",
+        fontsize=10.0,
+        color="#4d4d4d",
+    )
+
+    for ax, (sid, name, field, color) in zip(axes.reshape(-1), CASES):
+        frame = load_case(sid, name)
+        xlim, ylim = limits(frame)
+        full = density(frame, xlim=xlim, ylim=ylim, sigma=2.1)
+        early = density(subset_window(frame, EARLY), xlim=xlim, ylim=ylim, sigma=2.15)
+        late = density(subset_window(frame, LATE), xlim=xlim, ylim=ylim, sigma=2.15)
+        draw_background(ax, full, xlim, ylim)
+        draw_single_density_region(ax, early, xlim, ylim, color=EARLY_COLOR, percentile=86, alpha=0.23, linewidth=2.2)
+        draw_single_density_region(ax, late, xlim, ylim, color=LATE_COLOR, percentile=86, alpha=0.23, linewidth=2.2)
+        draw_centroid_path(ax, window_centroids(frame))
+        format_map(ax, xlim, ylim)
+        draw_case_title(ax, name, field, color)
+
+    handles = [
+        Patch(facecolor="#bdbdbd", edgecolor="#8c8c8c", alpha=0.55, label="Full-period field shape"),
+        Line2D([0], [0], color=EARLY_COLOR, linewidth=2.4, label="2000-2004 high-density core"),
+        Line2D([0], [0], color=LATE_COLOR, linewidth=2.4, label="2020-2024 high-density core"),
+        Line2D([0], [0], color=PATH_COLOR, marker="o", linewidth=1.3, markersize=4.5, label="Window centroid path"),
+    ]
+    fig.legend(handles=handles, loc="lower center", ncol=4, frameon=False, fontsize=8.8, bbox_to_anchor=(0.5, 0.030))
+    fig.tight_layout(rect=[0.025, 0.075, 0.985, 0.900], h_pad=2.4, w_pad=2.0)
+    return save(fig, "fig_07_7_option_10_umap_simplified_contours")
+
+
+def option_11_point_overlay() -> Path:
+    fig, axes = plt.subplots(2, 2, figsize=(12.6, 9.0))
+    fig.patch.set_facecolor("#fbfaf7")
+    fig.suptitle("Early and late papers over the complete field shape", fontsize=17.0, weight="bold", y=0.982)
+    fig.text(
+        0.5,
+        0.940,
+        "Grey is the full field density. Blue and red dots are sampled papers from the first and last windows.",
+        ha="center",
+        fontsize=10.0,
+        color="#4d4d4d",
+    )
+
+    for case_index, (sid, name, field, color) in enumerate(CASES):
+        ax = axes.reshape(-1)[case_index]
+        frame = load_case(sid, name)
+        xlim, ylim = limits(frame)
+        full = density(frame, xlim=xlim, ylim=ylim, sigma=2.1)
+        draw_background(ax, full, xlim, ylim)
+        draw_window_points(ax, frame, EARLY, color=EARLY_COLOR, seed=100 + case_index, max_points=700, alpha=0.34)
+        draw_window_points(ax, frame, LATE, color=LATE_COLOR, seed=200 + case_index, max_points=700, alpha=0.34)
+        draw_centroid_path(ax, window_centroids(frame))
+        format_map(ax, xlim, ylim)
+        draw_case_title(ax, name, field, color)
+
+    handles = [
+        Patch(facecolor="#bdbdbd", edgecolor="#8c8c8c", alpha=0.55, label="Full-period field shape"),
+        Line2D([0], [0], color=EARLY_COLOR, marker="o", linestyle="", markersize=5.2, label="2000-2004 sampled papers"),
+        Line2D([0], [0], color=LATE_COLOR, marker="o", linestyle="", markersize=5.2, label="2020-2024 sampled papers"),
+        Line2D([0], [0], color=PATH_COLOR, marker="o", linewidth=1.3, markersize=4.5, label="Window centroid path"),
+    ]
+    fig.legend(handles=handles, loc="lower center", ncol=4, frameon=False, fontsize=8.8, bbox_to_anchor=(0.5, 0.030))
+    fig.tight_layout(rect=[0.025, 0.075, 0.985, 0.900], h_pad=2.4, w_pad=2.0)
+    return save(fig, "fig_07_7_option_11_umap_point_overlay")
+
+
+def option_12_high_contrast_gain_loss() -> Path:
+    fig, axes = plt.subplots(2, 2, figsize=(12.6, 9.0))
+    fig.patch.set_facecolor("#fbfaf7")
+    fig.suptitle("High-contrast final change over the full field shape", fontsize=17.0, weight="bold", y=0.982)
+    fig.text(
+        0.5,
+        0.940,
+        "Only the strongest 2020-2024 gains and losses against 2000-2004 are highlighted.",
+        ha="center",
+        fontsize=10.0,
+        color="#4d4d4d",
+    )
+
+    for ax, (sid, name, field, color) in zip(axes.reshape(-1), CASES):
+        frame = load_case(sid, name)
+        xlim, ylim = limits(frame)
+        full = density(frame, xlim=xlim, ylim=ylim, sigma=2.1)
+        early = density(subset_window(frame, EARLY), xlim=xlim, ylim=ylim, sigma=2.1)
+        late = density(subset_window(frame, LATE), xlim=xlim, ylim=ylim, sigma=2.1)
+        diff = late - early
+        draw_background(ax, full, xlim, ylim)
+
+        magnitude = np.abs(diff)
+        threshold = positive_threshold(magnitude, 84)
+        gain_masked = np.ma.masked_where(diff <= threshold, diff)
+        loss_masked = np.ma.masked_where(diff >= -threshold, -diff)
+        vmax = max(float(np.nanmax(magnitude)), threshold * 1.01)
+        ax.imshow(
+            gain_masked,
+            origin="lower",
+            extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
+            cmap=transparent_cmap(f"{sid}_strong_gain", GAIN_COLOR),
+            vmin=threshold,
+            vmax=vmax,
+            alpha=0.92,
+            zorder=6,
+        )
+        ax.imshow(
+            loss_masked,
+            origin="lower",
+            extent=[xlim[0], xlim[1], ylim[0], ylim[1]],
+            cmap=transparent_cmap(f"{sid}_strong_loss", LOSS_COLOR),
+            vmin=threshold,
+            vmax=vmax,
+            alpha=0.92,
+            zorder=6,
+        )
+        draw_centroid_path(ax, window_centroids(frame))
+        format_map(ax, xlim, ylim)
+        draw_case_title(ax, name, field, color)
+
+    handles = [
+        Patch(facecolor="#bdbdbd", edgecolor="#8c8c8c", alpha=0.55, label="Full-period field shape"),
+        Patch(facecolor=GAIN_COLOR, alpha=0.85, label="Strong relative density gain"),
+        Patch(facecolor=LOSS_COLOR, alpha=0.85, label="Strong relative density loss"),
+        Line2D([0], [0], color=PATH_COLOR, marker="o", linewidth=1.3, markersize=4.5, label="Window centroid path"),
+    ]
+    fig.legend(handles=handles, loc="lower center", ncol=4, frameon=False, fontsize=8.8, bbox_to_anchor=(0.5, 0.030))
+    fig.tight_layout(rect=[0.025, 0.075, 0.985, 0.900], h_pad=2.4, w_pad=2.0)
+    return save(fig, "fig_07_7_option_12_umap_high_contrast_gain_loss")
+
+
 def _font(size: int, bold: bool = False) -> ImageFont.ImageFont:
     for candidate in ["arialbd.ttf" if bold else "arial.ttf", "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"]:
         try:
@@ -481,6 +679,9 @@ def build_contact(paths: list[Path]) -> Path:
         "07 before/after pairs",
         "08 gain/loss overlay",
         "09 clean density overlay",
+        "10 simplified contours",
+        "11 point overlay",
+        "12 high-contrast gain/loss",
     ]
     thumbs = []
     for path in paths:
@@ -488,7 +689,8 @@ def build_contact(paths: list[Path]) -> Path:
         image.thumbnail((980, 680), Image.Resampling.LANCZOS)
         thumbs.append(image.copy())
     cell_w, cell_h = 1050, 780
-    canvas = Image.new("RGB", (cell_w * 2, cell_h * 2), "#f5f5f2")
+    rows = int(np.ceil(len(thumbs) / 2))
+    canvas = Image.new("RGB", (cell_w * 2, cell_h * rows), "#f5f5f2")
     draw = ImageDraw.Draw(canvas)
     for idx, (image, label) in enumerate(zip(thumbs, labels)):
         col = idx % 2
@@ -509,6 +711,9 @@ def main() -> None:
         option_07_before_after_pairs(),
         option_08_change_overlay(),
         option_09_clean_density_overlay(),
+        option_10_simplified_contours(),
+        option_11_point_overlay(),
+        option_12_high_contrast_gain_loss(),
     ]
     contact = build_contact(paths)
     print("Generated:")
