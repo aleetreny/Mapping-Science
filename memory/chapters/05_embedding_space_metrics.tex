@@ -38,17 +38,17 @@ The metric families are read as follows. Dispersion asks how broadly papers spre
 The individual metrics answer more specific questions:
 
 \begin{enumerate}
-    \item \texttt{embedding\_distance\_to\_centroid\_median}: how far the typical paper is from the field center.
-    \item \texttt{embedding\_distance\_to\_centroid\_iqr}: whether the middle of the field is homogeneous or unevenly spread.
-    \item \texttt{embedding\_distance\_to\_centroid\_p90}: how far the outer semantic periphery reaches.
-    \item \texttt{embedding\_knn\_median\_distance}: how tightly papers are packed into local neighborhoods.
-    \item \texttt{embedding\_knn\_distance\_cv}: whether local density is uniform or uneven.
-    \item \texttt{embedding\_knn\_indegree\_gini}: whether some papers act as local hubs for many others.
-    \item \texttt{embedding\_pca\_dim\_80}: how many principal directions are needed to explain most variation.
-    \item \texttt{embedding\_pca\_spectral\_entropy}: whether variation is concentrated or broadly distributed.
-    \item \texttt{embedding\_centroid\_drift\_early\_late}: how much the field center moves between early and late periods.
-    \item \texttt{embedding\_radial\_expansion\_slope}: whether papers move away from or toward the full-period center over time.
-    \item \texttt{embedding\_recent\_novelty\_score}: whether recent papers are far from the early semantic core.
+    \item \textbf{Median centroid distance}: how far the typical paper is from the field center.
+    \item \textbf{Centroid-distance IQR}: whether the middle of the field is homogeneous or unevenly spread.
+    \item \textbf{Centroid-distance P90}: how far the outer semantic periphery reaches.
+    \item \textbf{Median kNN distance}: how tightly papers are packed into local neighborhoods.
+    \item \textbf{kNN distance CV}: whether local density is uniform or uneven.
+    \item \textbf{kNN in-degree Gini}: whether some papers act as local hubs for many others.
+    \item \textbf{PCA \(D_{80}\)}: how many principal directions are needed to explain most variation.
+    \item \textbf{PCA spectral entropy}: whether variation is concentrated or broadly distributed.
+    \item \textbf{Centroid drift}: how much the field center moves between early and late periods.
+    \item \textbf{Radial expansion slope}: whether papers move away from or toward the full-period center over time.
+    \item \textbf{Recent novelty score}: whether recent papers are far from the early semantic core.
 \end{enumerate}
 
 More metrics would not necessarily make the framework better. A larger battery could look more sophisticated while repeating the same information. The aim is a small, interpretable set that covers non-equivalent aspects of field shape.

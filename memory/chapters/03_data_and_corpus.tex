@@ -2,7 +2,7 @@
 
 \section{Why OpenAlex Subfields?}
 
-OpenAlex is the primary bibliographic data source for the thesis: an open index of scholarly works, authors, venues, institutions, and research concepts designed for large-scale reproducible analysis \parencite{priem2022openalex}. Its openness matters because the corpus can be documented, audited, and reconstructed without proprietary infrastructure.
+OpenAlex is the primary bibliographic data source for the thesis: an open index of scholarly works, authors, venues, institutions, and research concepts designed for large-scale reproducible analysis \parencite{priem2022openalex}. It is used because the thesis needs a corpus that can be queried at scale, linked to a documented field hierarchy, filtered through explicit metadata, and reconstructed without proprietary infrastructure. Its openness is therefore not only convenient; it is part of the research design, because the corpus can be documented, audited, and rebuilt from the same public source.
 
 The main analytical unit is the OpenAlex \textit{subfield}. Subfields are granular enough to distinguish research areas, large enough to support distributional measurement, and stable enough for comparisons over time. They are aggregated into \textit{fields} and \textit{domains} when broader summaries are required. Each work is assigned to a subfield through its primary-topic subfield, preserving a one-work--one-subfield structure for the main analysis.
 
@@ -49,9 +49,9 @@ The synchronized corpus covers all four OpenAlex domains. Physical Sciences cont
 
 The domain distribution reflects the OpenAlex taxonomy, the annual cap, and eligible title--abstract availability. It should not be read as the true distribution of global scientific output. The sampling design deliberately reshapes observed publication volume to support comparable semantic measurements across subfields and years.
 
-Validation checks the planned design and the required metadata and text conditions. The synchronized validation report did not fail. Critical checks are clean: no duplicate work identifiers, no rows outside 2000--2024, no rows in 2025 or 2026, no missing subfield, field, domain, or primary-topic identifiers, no missing title or abstract fields, no records below the minimum text thresholds, no non-English rows, and no disallowed work types.
+Validation checks the planned design and the required metadata and text conditions. The critical checks passed: no duplicate work identifiers, no rows outside 2000--2024, no rows in 2025 or 2026, no missing subfield, field, domain, or primary-topic identifiers, no missing title or abstract fields, no records below the minimum text thresholds, no non-English rows, and no disallowed work types.
 
-The remaining limitation is coverage rather than validity. Out of 6,300 diagnostic subfield-year rows, 5,493 reach the annual target of 400 works and 807 remain below target. These below-target cells account for the total shortfall of 53,267 works.
+The remaining limitation is coverage rather than validity. Out of 6,300 checked subfield-year cells, 5,493 reach the annual target of 400 works and 807 remain below target. These below-target cells account for the total shortfall of 53,267 works.
 
 \section{From Corpus to Analysis}
 

@@ -62,6 +62,20 @@
   </rdf:Description> 
   <rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/"> 
    <dc:format>application/pdf</dc:format> 
+   <dc:title><rdf:Alt><rdf:li xml:lang="x-default">Measuring the Shape of Science: Morphological Indicators and Evolution of Research Fields</rdf:li></rdf:Alt></dc:title>
+   <dc:creator><rdf:Seq><rdf:li>Alejandro Treny Ortega</rdf:li></rdf:Seq></dc:creator>
+   <dc:rights><rdf:Alt><rdf:li xml:lang="x-default">©The author. Some rights reserved. This document is under the terms of the Creative Commons Attribution-NonCommercial-NoDerivatives license.</rdf:li></rdf:Alt></dc:rights>
+   <dc:description><rdf:Alt><rdf:li xml:lang="x-default">Master Thesis</rdf:li></rdf:Alt></dc:description>
+   <dc:subject><rdf:Bag><rdf:li>science mapping</rdf:li>
+     <rdf:li>scientometrics</rdf:li>
+     <rdf:li>scientific document embeddings</rdf:li>
+     <rdf:li>SPECTER2</rdf:li>
+     <rdf:li>OpenAlex</rdf:li>
+     <rdf:li>embedding-space morphology</rdf:li>
+     <rdf:li>semantic space</rdf:li>
+     <rdf:li>temporal evolution</rdf:li>
+     <rdf:li>morphological clustering</rdf:li>
+     <rdf:li>research fields</rdf:li></rdf:Bag></dc:subject>
   </rdf:Description> 
   <rdf:Description rdf:about="" xmlns:prism="http://prismstandard.org/namespaces/basic/2.2/"> 
   </rdf:Description> 
@@ -73,15 +87,18 @@
   </rdf:Description> 
   <rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/"> 
    <xmp:CreatorTool>LaTeX with hyperref</xmp:CreatorTool> 
-   <xmp:ModifyDate>2026-06-12T23:14:05+02:00</xmp:ModifyDate> 
-   <xmp:CreateDate>2026-06-12T23:14:05+02:00</xmp:CreateDate> 
-   <xmp:MetadataDate>2026-06-12T23:14:05+02:00</xmp:MetadataDate> 
+   <xmp:ModifyDate>2026-06-13T13:05:32+02:00</xmp:ModifyDate> 
+   <xmp:CreateDate>2026-06-13T13:05:32+02:00</xmp:CreateDate> 
+   <xmp:MetadataDate>2026-06-13T13:05:32+02:00</xmp:MetadataDate> 
   </rdf:Description> 
   <rdf:Description rdf:about="" xmlns:xmpRights = "http://ns.adobe.com/xap/1.0/rights/"> 
+   <xmpRights:Marked>True</xmpRights:Marked>
+   <xmpRights:UsageTerms><rdf:Alt><rdf:li xml:lang="x-default">©The author. Some rights reserved. This document is under the terms of the Creative Commons Attribution-NonCommercial-NoDerivatives license.</rdf:li></rdf:Alt></xmpRights:UsageTerms>
+   <xmpRights:WebStatement>http://creativecommons.org/licenses/by-nc-nd/3.0/es/</xmpRights:WebStatement>
   </rdf:Description> 
   <rdf:Description rdf:about="" xmlns:xmpMM="http://ns.adobe.com/xap/1.0/mm/"> 
    <xmpMM:DocumentID>uuid:F84E2C61-D2D3-251D-3D59-65FDBF8819BD</xmpMM:DocumentID> 
-   <xmpMM:InstanceID>uuid:EFABAF32-5D35-3458-1890-4E2C2D5AAC4F</xmpMM:InstanceID> 
+   <xmpMM:InstanceID>uuid:D6C8944E-13ED-C374-8D66-52B1E7926E1B</xmpMM:InstanceID> 
   </rdf:Description> 
  </rdf:RDF> 
 </x:xmpmeta> 
