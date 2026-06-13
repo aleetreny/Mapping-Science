@@ -7,7 +7,7 @@ science differ only by topic, or also by shape?
 
 Explore the interactive project viewer:
 
-https://aleetreny.github.io/TFM/
+https://aleetreny.github.io/Mapping-Science/
 
 ## What Is Here
 
