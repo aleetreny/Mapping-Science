@@ -505,9 +505,9 @@ def plot_eda(core: pd.DataFrame) -> dict[str, float]:
             value = corr.iloc[i, j]
             color = "white" if abs(value) > 0.62 else "#222222"
             ax.text(j, i, f"{value:.2f}", ha="center", va="center", fontsize=9.5, color=color)
-    for boundary in [2.5, 5.5]:
-        ax.axhline(boundary, color="#222222", linewidth=0.8)
-        ax.axvline(boundary, color="#222222", linewidth=0.8)
+    for boundary in [2.5, 4.5, 5.5]:
+        ax.axhline(boundary, color="black", linewidth=0.8)
+        ax.axvline(boundary, color="black", linewidth=0.8)
     cbar = fig.colorbar(image, ax=ax, fraction=0.046, pad=0.02)
     cbar.set_label("Spearman rho", fontsize=11.0, labelpad=12.0)
     cbar.ax.tick_params(labelsize=10.0)
@@ -859,7 +859,7 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
                     latex_escape(row.subfield_display_name),
                     latex_escape(row.field_display_name),
                     latex_escape(row.domain_display_name),
-                    f"{getattr(row, CENTROID_DRIFT_METRIC):.3f}",
+                    f"{getattr(row, CENTROID_DRIFT_METRIC):.4f}",
                 ]
             )
             + r" \\[0.12cm]"
@@ -876,7 +876,7 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
                     latex_escape(row.subfield_display_name),
                     latex_escape(row.field_display_name),
                     latex_escape(row.domain_display_name),
-                    f"{getattr(row, CENTROID_DRIFT_METRIC):.3f}",
+                    f"{getattr(row, CENTROID_DRIFT_METRIC):.4f}",
                 ]
             )
             + r" \\[0.12cm]"
@@ -891,8 +891,9 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
                 r"\footnotesize\textit{Note.} Centroid drift measures net semantic "
                 r"displacement between the early and late parts of a subfield's "
                 r"publication history. Low values indicate the most stable centroids "
-                r"in this corpus. Drift is reported separately and is not part of the "
-                r"structural morphology profile."
+                r"in this corpus. Drift is reported to four decimal places; rows are "
+                r"ordered by the unrounded values. Drift is reported separately and is "
+                r"not part of the structural morphology profile."
             ),
             r"\end{table}",
             "",
@@ -926,7 +927,7 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
         ax1.text(
             val + 0.001,
             y,
-            f"{val:.3f}",
+            f"{val:.4f}",
             ha="left",
             va="center",
             fontsize=9.5,
@@ -954,7 +955,7 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
         ax2.text(
             val + 0.00006,
             y,
-            f"{val:.3f}",
+            f"{val:.4f}",
             ha="left",
             va="center",
             fontsize=9.5,
@@ -1176,8 +1177,8 @@ def plot_temporal_figures(temporal: pd.DataFrame) -> dict[str, float]:
     ax.set_xticks(np.arange(len(METRICS)))
     ax.set_xticklabels([METRIC_LABELS[m] for m in METRICS], fontsize=11.0)
     ax.tick_params(length=0)
-    for boundary in [2.5, 5.5]:
-        ax.axvline(boundary, color="#2d2d2d", linewidth=0.8)
+    for boundary in [2.5, 4.5, 5.5]:
+        ax.axvline(boundary, color="black", linewidth=0.8)
     cbar = fig.colorbar(image, ax=ax, fraction=0.032, pad=0.015)
     cbar.set_label("Mean standardized slope", fontsize=11.0, labelpad=12.0)
     cbar.ax.tick_params(labelsize=10.0)
@@ -1382,53 +1383,74 @@ def plot_similarity_figures(core: pd.DataFrame) -> dict[str, float]:
     combo = pd.concat([conv.assign(direction="Converging"), div.assign(direction="Diverging")], ignore_index=True)
     combo.to_csv(OUTPUT_DIR / "field_top_convergence_divergence_pairs.csv", index=False)
 
-    # Aggressive abbreviations so pair labels stay on one line at larger font sizes
+    # Controlled abbreviations and line breaks keep the figure compact when scaled in LaTeX.
     _PA = {
         "Agricultural and Biological Sciences": "Agric. & Bio. Sci.",
-        "Arts and Humanities": "Arts & Hum.",
+        "Arts and Humanities": "Arts & Humanities",
         "Biochemistry, Genetics and Molecular Biology": "Biochem., Gen. & Mol. Bio.",
-        "Business, Management and Accounting": "Bus. & Mgmt.",
+        "Business, Management and Accounting": "Business & Mgmt.",
         "Chemical Engineering": "Chem. Eng.",
-        "Computer Science": "Comput. Sci.",
+        "Computer Science": "Computer Sci.",
         "Decision Sciences": "Decision Sci.",
         "Earth and Planetary Sciences": "Earth & Planet. Sci.",
-        "Economics, Econometrics and Finance": "Econ. & Finance",
+        "Economics, Econometrics and Finance": "Economics & Finance",
         "Energy": "Energy",
         "Engineering": "Engineering",
-        "Environmental Science": "Environ. Sci.",
+        "Environmental Science": "Environmental\nSci.",
         "Health Professions": "Health Prof.",
-        "Immunology and Microbiology": "Immunol. & Microbio.",
+        "Immunology and Microbiology": "Immunol. &\nMicrobio.",
         "Materials Science": "Materials Sci.",
         "Mathematics": "Mathematics",
         "Medicine": "Medicine",
         "Neuroscience": "Neuroscience",
         "Nursing": "Nursing",
-        "Pharmacology, Toxicology and Pharmaceutics": "Pharmacol. Tox. Pharm.",
+        "Pharmacology, Toxicology and Pharmaceutics": "Pharm. Tox.\nPharm.",
         "Physics and Astronomy": "Physics & Astron.",
         "Psychology": "Psychology",
         "Social Sciences": "Social Sci.",
         "Veterinary": "Veterinary",
         # Already-abbreviated display names from the CSV
         "Agric. & Bio. Sci.": "Agric. & Bio. Sci.",
-        "Arts & Humanities": "Arts & Hum.",
-        "Business & Mgmt.": "Bus. & Mgmt.",
-        "Computer Sci.": "Comput. Sci.",
+        "Arts & Humanities": "Arts & Humanities",
+        "Business & Mgmt.": "Business & Mgmt.",
+        "Computer Sci.": "Computer Sci.",
         "Decision Sci.": "Decision Sci.",
-        "Environmental Sci.": "Environ. Sci.",
-        "Immunol. & Microbio.": "Immunol. & Microbio.",
+        "Environmental Sci.": "Environmental\nSci.",
+        "Immunol. & Microbio.": "Immunol. &\nMicrobio.",
         "Materials Sci.": "Materials Sci.",
-        "Pharm., Tox. & Pharm.": "Pharmacol. Tox. Pharm.",
-        "Pharm. Tox. Pharm.": "Pharmacol. Tox. Pharm.",
+        "Pharm., Tox. & Pharm.": "Pharm. Tox.\nPharm.",
+        "Pharm. Tox. Pharm.": "Pharm. Tox.\nPharm.",
     }
 
     def _abbrev(name: str) -> str:
         return _PA.get(name, name)
 
+    _PAIR_LABEL_OVERRIDES = {
+        ("Materials Sci.", "Mathematics"): "Materials Sci. -- Mathematics",
+        ("Decision Sci.", "Environmental\nSci."): "Decision Sci. -- Environmental\nSci.",
+        ("Economics & Finance", "Psychology"): "Economics & Finance -- Psychology",
+        ("Arts & Humanities", "Materials Sci."): "Arts & Humanities -- Materials\nSci.",
+        ("Business & Mgmt.", "Environmental\nSci."): "Business & Mgmt. -- Environmental\nSci.",
+        ("Agric. & Bio. Sci.", "Mathematics"): "Agric. & Bio. Sci. -- Mathematics",
+        ("Computer Sci.", "Immunol. &\nMicrobio."): "Computer Sci. -- Immunol. &\nMicrobio.",
+        ("Computer Sci.", "Neuroscience"): "Computer Sci. -- Neuroscience",
+        ("Computer Sci.", "Nursing"): "Computer Sci. -- Nursing",
+        ("Arts & Humanities", "Pharm. Tox.\nPharm."): "Arts & Humanities -- Pharm. Tox.\nPharm.",
+        ("Arts & Humanities", "Computer Sci."): "Arts & Humanities -- Computer Sci.",
+        ("Computer Sci.", "Dentistry"): "Computer Sci. -- Dentistry",
+    }
+
+    def _pair_label(left: str, right: str) -> str:
+        a = _abbrev(left)
+        b = _abbrev(right)
+        return _PAIR_LABEL_OVERRIDES.get((a, b), f"{a} -- {b}")
+
     # Two side-by-side panels (Converging | Diverging) with a shared legend
-    PAIR_COLOR_INITIAL = "#f1f1f1"
+    PAIR_COLOR_INITIAL = "#f8f8f8"
+    PAIR_COLOR_LINE = "#b8bec3"
     PAIR_COLOR_CONVERGING = "#2f7f5f"
     PAIR_COLOR_DIVERGING = "#b65b3a"
-    fig, (ax_conv, ax_div) = plt.subplots(1, 2, figsize=(13.0, 5.2), constrained_layout=True)
+    fig, (ax_conv, ax_div) = plt.subplots(1, 2, figsize=(8.2, 4.25), constrained_layout=False)
 
     x_max = max(conv["initial_distance"].max(), conv["final_distance"].max(),
                 div["initial_distance"].max(), div["final_distance"].max())
@@ -1438,44 +1460,46 @@ def plot_similarity_figures(core: pd.DataFrame) -> dict[str, float]:
         (ax_div, div, PAIR_COLOR_DIVERGING, "Diverging pairs", PAIR_COLOR_DIVERGING),
     ]:
         labels_sub = [
-            f"{_abbrev(row.entity_a_name)} \u2013\u2013 {_abbrev(row.entity_b_name)}"
+            _pair_label(row.entity_a_name, row.entity_b_name)
             for row in subset.itertuples()
         ]
         y_sub = np.arange(len(subset))[::-1]
         ax.hlines(y_sub, subset["initial_distance"], subset["final_distance"],
-                  color=panel_color, linewidth=2.2, alpha=0.85)
+                  color=PAIR_COLOR_LINE, linewidth=1.8, alpha=0.95)
         ax.scatter(subset["initial_distance"], y_sub,
-                   color=PAIR_COLOR_INITIAL, edgecolor="#333333", s=48,
+                   color=PAIR_COLOR_INITIAL, edgecolor="#666666", s=32,
                    label="2000\u20132004", zorder=3)
         ax.scatter(subset["final_distance"], y_sub,
-                   color=panel_color, edgecolor="#333333", s=58,
+                   color=panel_color, edgecolor=panel_color, s=36,
                    label="2020\u20132024", zorder=3)
-        for y_pos, delta in zip(y_sub, subset["delta_distance"]):
-            ax.text(x_max + 0.08, y_pos, f"{delta:+.2f}",
-                    va="center", fontsize=10.5, color="#333333")
+        label_x = np.maximum(subset["initial_distance"].to_numpy(), subset["final_distance"].to_numpy()) + 0.12
+        for x_pos, y_pos, delta in zip(label_x, y_sub, subset["delta_distance"]):
+            ax.text(x_pos, y_pos, f"{delta:+.2f}",
+                    va="center", ha="left", fontsize=8.2, color=panel_color)
         ax.set_yticks(y_sub)
-        ax.set_yticklabels(labels_sub, fontsize=11.0)
-        ax.set_xlabel("Euclidean profile distance", fontsize=11.0)
-        ax.set_title(title, fontsize=12.0, fontweight="bold", color=title_color)
-        ax.tick_params(axis="x", labelsize=10.0)
+        ax.set_yticklabels(labels_sub, fontsize=8.2)
+        ax.set_xlabel("Euclidean profile distance", fontsize=9.0)
+        ax.set_title(title, fontsize=13.6, fontweight="normal", color=title_color)
+        ax.tick_params(axis="x", labelsize=9.0)
         ax.tick_params(axis="y", length=0)
-        ax.grid(True, axis="x", alpha=0.16)
-        ax.set_xlim(left=0, right=x_max + 0.32)
+        ax.grid(True, axis="x", alpha=0.20)
+        ax.set_xlim(left=0, right=x_max + 0.55)
+        ax.set_xticks([0, 1, 2, 3, 4])
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
+
+    fig.subplots_adjust(left=0.25, right=0.97, top=0.84, bottom=0.18, wspace=0.88)
 
     # Shared legend placed below both panels
     from matplotlib.lines import Line2D
     legend_elements = [
         Line2D([0], [0], marker="o", color="w", markerfacecolor=PAIR_COLOR_INITIAL,
-               markeredgecolor="#333333", markersize=8, label="Initial (2000\u20132004)"),
-        Line2D([0], [0], marker="o", color="w", markerfacecolor=PAIR_COLOR_CONVERGING,
-               markeredgecolor="#333333", markersize=8, label="Final \u2013 converging"),
-        Line2D([0], [0], marker="o", color="w", markerfacecolor=PAIR_COLOR_DIVERGING,
-               markeredgecolor="#333333", markersize=8, label="Final \u2013 diverging"),
+               markeredgecolor="#666666", markersize=6, label="2000\u20132004"),
+        Line2D([0], [0], marker="o", color="w", markerfacecolor="#666666",
+               markeredgecolor="#666666", markersize=6, label="2020\u20132024"),
     ]
-    fig.legend(handles=legend_elements, loc="lower center", ncol=3,
-               fontsize=11.0, frameon=False, bbox_to_anchor=(0.5, -0.06))
+    fig.legend(handles=legend_elements, loc="lower center", ncol=2,
+               fontsize=8.6, frameon=False, bbox_to_anchor=(0.5, -0.035))
 
     savefig(fig, "fig_08_field_convergence_divergence_pairs", pdf=True)
 

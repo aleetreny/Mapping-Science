@@ -14,7 +14,7 @@ Q_{0.90}(r).
 They correspond to typical distance from the centroid, middle-spread heterogeneity, and the outer semantic periphery.
 
 \medskip
-\noindent\textbf{Local density and hubness.} Let \(N_k(i)\) be the directed set of within-subfield nearest neighbors for paper \(i\), with \(k=15\) unless the subfield has fewer available non-self neighbors. Let
+\noindent\textbf{Local density.} Let \(N_k(i)\) be the directed set of within-subfield nearest neighbors for paper \(i\), with \(k=15\) unless the subfield has fewer available non-self neighbors. Let
 \[
 D_k(s)=\{d(z_i,z_j): i\in s,\ j\in N_k(i)\},
 \qquad
@@ -26,6 +26,9 @@ The local-density metrics are
 \qquad
 \frac{\operatorname{sd}(D_k(s))}{\operatorname{mean}(D_k(s))}.
 \]
+
+\medskip
+\noindent\textbf{Hubness.}
 Hubness is the Gini coefficient of the in-degree counts \(h_j\). If \(h_{(1)}\leq\cdots\leq h_{(n_s)}\), then
 \[
 G_h(s)=\frac{2\sum_{\ell=1}^{n_s}\ell h_{(\ell)}}{n_s\sum_{\ell=1}^{n_s}h_{(\ell)}}-\frac{n_s+1}{n_s}.

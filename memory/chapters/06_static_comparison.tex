@@ -11,7 +11,7 @@ Before comparing fields, the eight raw structural metrics are inspected directly
 \includegraphics[width=\textwidth]{figures/fig_06_structural_metric_raw_distributions.pdf}
 \end{figure}
 
-The correlation structure shows related but not redundant metric families. Centroid median and centroid P90 are strongly correlated (\(\rho=0.883\)), as expected for two measures of radial spread. PCA \(D_{80}\) and PCA entropy are also strongly related (\(\rho=0.856\)), because both summarize the variance spectrum. The largest negative relation is between kNN median distance and kNN CV (\(\rho=-0.798\)): fields with closer local neighborhoods tend to have more uneven local packing. Cross-family correlations are weaker, supporting the decision to keep dispersion, local density, hubness, and spectral structure as separate dimensions.
+The correlation structure shows related but not redundant metric families. Centroid median and centroid P90 are strongly correlated (\(\rho=0.883\)), as expected for two measures of radial spread. PCA \(D_{80}\) and PCA entropy are also strongly related (\(\rho=0.856\)), because both summarize the variance spectrum. The largest negative relation is between kNN median distance and kNN CV (\(\rho=-0.798\)): subfields with closer local neighborhoods tend to have more uneven local packing. Cross-family correlations are weaker, supporting the decision to keep the four families (global dispersion, local density, hubness, and spectral structure) as separate dimensions.
 
 \begin{figure}[H]
 \centering

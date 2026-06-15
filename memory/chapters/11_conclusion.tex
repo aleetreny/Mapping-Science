@@ -1,9 +1,25 @@
 % Chapter 8: Conclusion
 
-This thesis measured scientific fields as distributions of papers in a dense scientific document embedding space. I built a balanced OpenAlex title--abstract corpus for 2000--2024, represented retained works with row-aligned SPECTER2 embeddings, and computed an eight-metric structural morphology profile in the original 768-dimensional space. The metrics summarized dispersion, local density, hubness, and spectral structure; projections were used only for display.
+This thesis measured scientific fields as distributions of papers in a dense scientific document embedding space. I built a balanced OpenAlex title--abstract corpus for 2000--2024, represented retained works with row-aligned SPECTER2 embeddings, and computed an eight-metric structural morphology profile in the original 768-dimensional space. The metrics summarized four families: global dispersion, local density, hubness, and spectral structure; projections were used only for display.
 
-The results show that domains have morphological tendencies but do not determine field shape, that structural profiles change over time in heterogeneous but measurable ways, and that morphological similarity only partly follows OpenAlex taxonomy. At field level, 17 of 26 fields have their nearest morphological neighbor outside their own OpenAlex domain. Mean field-pair structural distance rises from 1.44 in 2000--2004 to 1.81 in 2020--2024, indicating average differentiation alongside selective convergence between specific field pairs.
+The results show that domains have morphological tendencies but do not determine field shape, that structural profiles change over time in heterogeneous but measurable ways, and that morphological relations only partly follow OpenAlex taxonomy. The main answer to the third research question is temporal: mean field-pair structural distance rises from 1.44 in 2000--2004 to 1.81 in 2020--2024, with 228 diverging field pairs and 97 converging pairs. Cross-domain nearest neighbors, bridges, and isolates complement that result by showing where taxonomy and morphology separate.
 
 Centroid drift is retained as a separate measure of net semantic displacement. It complements the structural analysis without entering the active morphology profile, PCA, clustering, or distance matrices. This separation is the main methodological point: morphology is the eight-dimensional structural shape, temporal evolution is the change of that shape through windows, and semantic displacement is the movement of the center.
 
 The contribution is limited but useful. Once papers are represented in a common scientific-document space, fields can be compared as distributions rather than only as labels, centroids, or visual regions. That separation makes it possible to ask where a field is, how it is shaped, how it changes, and which other fields it resembles without treating any one description as the whole structure of science.
+
+\begin{table}[H]
+\centering
+\caption[Research questions and main results]{Research questions and main results}
+\label{tab:research_questions_results}
+\small
+\begin{tabular}{@{}p{0.36\textwidth}p{0.56\textwidth}@{}}
+\hline
+\textbf{Research question} & \textbf{Main result} \\
+\hline
+RQ1. How can field structure be measured? & With an eight-metric structural morphology profile covering global dispersion, local density, hubness, and spectral structure. \\
+RQ2. How does structure vary and evolve? & Domains show tendencies, but field and subfield variation is large; structural profiles also change heterogeneously over time. \\
+RQ3. Which fields converge or diverge? & Mean field-pair distance rises from 1.44 to 1.81; 228 pairs diverge and 97 pairs converge. \\
+\hline
+\end{tabular}
+\end{table}

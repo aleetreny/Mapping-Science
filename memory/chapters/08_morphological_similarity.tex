@@ -1,4 +1,4 @@
-% Chapter 6: Morphological Similarity and Taxonomy
+% Chapter 6: Morphological Relations, Convergence, and Divergence
 
 \section{Static Similarity Across Fields}
 
@@ -17,7 +17,7 @@ The closest Euclidean field pairs are not simply within-domain neighbors. Agricu
 
 \section{Taxonomy, Bridges, and Isolates}
 
-The domain-pair summary separates within-domain and cross-domain structure. Within-domain field pairs have a lower median distance than cross-domain pairs, \(1.62\) versus \(1.86\), but the relationship is uneven. Social Sciences are the most internally coherent domain, and the closest cross-domain medians involve Life Sciences with Social Sciences and Life Sciences with Physical Sciences. At field level, 17 of 26 fields have their nearest morphological neighbor outside their own domain.
+As a contextual check, the domain-pair summary separates within-domain and cross-domain structure. Within-domain field pairs have a lower median distance than cross-domain pairs, \(1.62\) versus \(1.86\), but the relationship is uneven. Social Sciences are the most internally coherent domain, and the closest cross-domain medians involve Life Sciences with Social Sciences and Life Sciences with Physical Sciences. At field level, 17 of 26 fields have their nearest morphological neighbor outside their own domain.
 
 \begin{figure}[H]
 \centering
@@ -30,7 +30,7 @@ Several bridges are substantively interesting in profile space: Agricultural and
 
 \section{Convergence and Divergence}
 
-Temporal convergence and divergence use the eight structural metrics recomputed inside each five-year window. Operationally, convergence means that the distance between two windowed profiles decreases from 2000--2004 to 2020--2024; divergence means that it increases. Centroid drift is not included in these pairwise distances, because it is a separate semantic-displacement indicator rather than a structural profile dimension.
+Temporal convergence and divergence use the eight structural metrics recomputed inside each five-year window. Operationally, convergence means that the distance between two windowed profiles decreases from 2000--2004 to 2020--2024; divergence means that it increases. Centroid drift is not included in these pairwise distances, because it is a separate semantic-displacement indicator rather than a structural profile dimension. This use of changing profile distance follows science-mapping work on evolving interdisciplinarity and network coherence while remaining descriptive rather than causal \parencite{porter2009interdisciplinary,rafols2010networkcoherence,leydesdorff2011indicators}.
 
 The temporal picture is not global convergence. Across all 325 field pairs, mean Euclidean distance rises from \(1.44\) in 2000--2004 to \(1.81\) in 2020--2024. The same upward movement appears within domains, from \(1.39\) to \(1.70\), and across domains, from \(1.46\) to \(1.85\). Field-level morphology space becomes more separated on average, even though many individual pairs move closer.
 
@@ -45,11 +45,11 @@ Selective convergence remains visible: 97 field pairs decrease in distance, whil
 
 \begin{figure}[H]
 \centering
-\caption[Strongest field-level convergence and divergence pairs]{Strongest field-level convergence and divergence pairs. Each line compares initial and final windowed profile distances; signed labels identify the largest decreases and increases in morphological distance.}
+\caption[Strongest field-level convergence and divergence pairs]{Strongest field-level convergence and divergence under Euclidean profile distance. Open markers are initial distances and filled markers are final distances; labels show final-minus-initial change.}
 \label{fig:field_convergence_divergence_pairs}
 \includegraphics[width=\textwidth]{figures/fig_08_field_convergence_divergence_pairs.pdf}
 \end{figure}
 
 The same distance change can come from different metric movements. Some convergences reflect both fields becoming locally denser or lower-dimensional. Some divergences occur because one field changes sharply while the other follows the population average. Computer Science is the clearest case: its large drops in PCA dimensionality and spectral entropy separate its windowed profile from many fields that also become locally denser but do not move in the same spectral direction.
 
-The relational result is the most direct answer to the third research question. OpenAlex domains still matter, but morphology produces cross-domain affinities, isolated fields, and temporal differentiation that taxonomy alone does not show.
+The direct answer to the third research question comes primarily from the temporal pairwise distances. Mean field-pair morphological distance increases from 1.44 in 2000--2004 to 1.81 in 2020--2024; 228 of the 325 field pairs diverge, while 97 converge. The strongest convergences are Materials Science--Mathematics, Decision Sciences--Environmental Science, and Economics, Econometrics and Finance--Psychology, whereas the strongest divergences include Computer Science with Immunology and Microbiology, Neuroscience, and Nursing. OpenAlex-domain alignment, cross-domain nearest neighbors, bridges, and isolates remain useful complementary context: they show that field relations partly cross taxonomy, but the main evidence for Research Question 3 is the observed increase, convergence, and divergence of structural profile distances over time.

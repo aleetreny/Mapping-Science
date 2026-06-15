@@ -368,7 +368,7 @@ Scientific fields are often described through labels, topics, citation links, or
 
 The empirical corpus is built from OpenAlex title--abstract records covering 2000--2024. It contains 2,378,036 text-eligible works across 252 subfields, with a row-aligned SPECTER2 analysis subset of 2,344,927 embedded works across 241 analysis subfields. Quantitative metrics are computed in the original 768-dimensional SPECTER2 space; PCA and UMAP are used only for display.
 
-The framework defines an eight-metric structural morphology profile that covers dispersion, local density, hubness, and spectral structure. Early--late centroid drift is retained separately as a measure of net semantic displacement. The results show that broad domains have tendencies but do not determine field shape. Physical Sciences are generally more dispersed and spectrally extended, while Health Sciences are more locally dense and hub-concentrated. At field level, 17 of 26 fields have their nearest morphological neighbor outside their own OpenAlex domain. Mean field-pair morphological distance rises from 1.44 in 2000--2004 to 1.81 in 2020--2024, indicating average differentiation alongside selective convergence between specific field pairs. Static morphology is weakly clustered, whereas temporal trajectories form clearer dynamic typologies.
+The framework defines an eight-metric structural morphology profile that covers four families: global dispersion, local density, hubness, and spectral structure. Early--late centroid drift is retained separately as a measure of net semantic displacement. The results show that broad domains have tendencies but do not determine field shape. Physical Sciences are generally more dispersed and spectrally extended, while Health Sciences are more locally dense and hub-concentrated. At field level, 17 of 26 fields have their nearest morphological neighbor outside their own OpenAlex domain. Mean field-pair morphological distance rises from 1.44 in 2000--2004 to 1.81 in 2020--2024. Most field pairs diverge over time, although a substantial minority show selective convergence.
 
 The contribution is a measurement framework for comparing fields as distributions rather than only as labels, centroids, or visual regions. It shows why no single map is enough to describe scientific structure and gives field comparison a clearer object of analysis.
 
@@ -429,7 +429,7 @@ The contribution is a measurement framework for comparing fields as distribution
 \chapter{Temporal Evolution and Dynamic Profiles}
 \input{chapters/07_temporal_evolution}
 
-\chapter{Morphological Similarity and Taxonomy}
+\chapter{Morphological Relations, Convergence, and Divergence}
 \input{chapters/08_morphological_similarity}
 
 \chapter{Discussion}
