@@ -2,26 +2,24 @@
 
 \section{Problem and Contribution}
 
-Scientific fields are usually described by names, topics, citation links, publication counts, or positions on maps. These views are useful, but they do not directly measure how the papers of a field are arranged. Two fields can belong to different OpenAlex domains and still have similarly shaped paper distributions; two fields can be close in semantic location and differ sharply in dispersion, local density, hubness, or spectral structure.
+Scientific fields are usually named, counted, linked through citations, summarized by topics, or displayed on maps. These descriptions answer useful questions, but they do not measure how the papers assigned to a field are arranged. Fields close in semantic space can differ in dispersion, local density, hubness, or spectral structure; fields placed in different OpenAlex domains can have similarly shaped paper distributions.
 
-This thesis treats scientific fields as distributions of embedded documents. I use OpenAlex title--abstract records, represent them with SPECTER2 document embeddings, and measure field morphology in the original 768-dimensional embedding space. By embedding-space morphology I mean the measurable structural shape of a field's paper distribution: its spread around a center, its local neighborhoods, its hub concentration, and its principal directions of variation.
+I treat scientific fields as distributions of embedded scientific documents. Each paper is represented by its title and abstract. SPECTER2 converts that text into a vector in a shared 768-dimensional scientific-document space. Papers assigned to the same OpenAlex subfield then form a document cloud. Eight morphology metrics describe the shape of this cloud, grouped into global dispersion, local density, hubness, and spectral structure.
 
-The active morphology profile has eight structural metrics. Temporal evolution is measured by recomputing those same eight metrics in five-year windows. Net semantic displacement is handled separately through early--late centroid drift: it describes how far a subfield's semantic center moves, not the structural shape used in static profiles, PCA, clustering, or morphological distances.
-
-The contribution is a reproducible framework for separating five related but distinct objects of analysis: labels, semantic locations, static shapes, temporal trajectories, and relations between fields. The thesis does not argue that morphology replaces taxonomies, citation maps, topic models, or visual maps. It argues that those tools leave a measurable layer underdescribed: the internal arrangement of papers once they have shared document coordinates.
+These metrics set up the empirical sequence. Static analyses compare field and subfield profiles. Five-year windows show how those profiles change over time. Relational analyses compare distances between field profiles and identify convergence or divergence. Centroid drift remains separate because it measures movement of a cloud's center, not its internal shape. The contribution is a reproducible comparison of field structure across fields, time windows, and field pairs under one fixed representation.
 
 \section{Research Questions}
 
 The empirical analysis is organized around three research questions:
 
 \begin{enumerate}
-    \item How can the internal structure of scientific fields be measured using scientific document embeddings?
-    \item How does the internal structure of scientific fields vary across disciplines and evolve over time?
-    \item Which scientific fields converge or diverge in their structural profiles over time?
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+    \item How can scientific-field structure be measured using scientific document embeddings?
+    \item How does that structure vary across disciplines and evolve over time?
+    \item Which scientific fields converge or diverge in structural profile over time?
 \end{enumerate}
 
-These questions are descriptive rather than causal. A dispersed field is not better than a compact one, a dynamic field is not necessarily more important, and a low morphological distance does not mean that two fields study the same topic. The goal is to define and test a measurement language for field shape.
+These questions are descriptive. The analysis shows how scientific fields differ and change, but it does not explain the causes of those differences. The metrics also do not indicate that one field is better, more important, or more valuable than another.
 
-\section{Roadmap}
-
-Chapter 2 positions the thesis in science mapping and scientific document representation. Chapter 3 describes the corpus, SPECTER2 representation, structural morphology metrics, temporal windows, and workflow. Chapter 4 compares static morphology across domains, fields, and subfields; Chapter 5 examines temporal evolution, dynamic profiles, and centroid drift as a separate displacement indicator; Chapter 6 studies morphological relations, convergence, and divergence, using taxonomy as contextual evidence rather than the main objective. Chapters 7 and 8 discuss the contribution, limits, and final findings.
+The rest of the thesis follows this sequence. Chapter 2 places the work in science mapping and scientific document representation. Chapter 3 describes the corpus, representation, metrics, temporal windows, and workflow. Chapters 4--6 present the empirical analyses. Chapters 7 and 8 discuss the evidence, limits, and final conclusions.
