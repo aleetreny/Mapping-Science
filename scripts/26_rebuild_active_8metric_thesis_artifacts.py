@@ -537,6 +537,7 @@ def heatmap(
     colorbar_label: str,
     pdf: bool = False,
     vlim: float | None = None,
+    annotate_threshold: float | None = None,
 ) -> None:
     matrix = values.to_numpy(dtype=float)
     if vlim is None:
@@ -544,13 +545,32 @@ def heatmap(
         vlim = max(vlim, 0.5)
     fig, ax = plt.subplots(figsize=figsize, constrained_layout=True)
     image = ax.imshow(matrix, cmap="RdBu_r", vmin=-vlim, vmax=vlim, aspect="auto")
+    
+    # Tick sizes and padding matching correlation matrix visual polish
+    names_fontsize = 10.5
+    cbar_label_fontsize = 11.0
+    cbar_ticks_fontsize = 10.0
+    cbar_labelpad = 12.0
+    
     ax.set_yticks(np.arange(len(row_labels)))
-    ax.set_yticklabels(row_labels, fontsize=8)
+    ax.set_yticklabels(row_labels, fontsize=names_fontsize)
     ax.set_xticks(np.arange(len(column_labels)))
-    ax.set_xticklabels(column_labels, fontsize=8, rotation=0)
+    ax.set_xticklabels(column_labels, fontsize=names_fontsize, rotation=0)
     ax.tick_params(length=0)
+    
+    # Cell values overlaid for significant cells
+    if annotate_threshold is not None:
+        for i in range(matrix.shape[0]):
+            for j in range(matrix.shape[1]):
+                val = matrix[i, j]
+                if abs(val) >= annotate_threshold:
+                    # White text for highly saturated cells, dark gray for lighter ones
+                    color = "white" if (abs(val) / vlim) > 0.55 else "#222222"
+                    ax.text(j, i, f"{val:+.2f}", ha="center", va="center", fontsize=9.0, color=color, fontweight="semibold")
+                    
     cbar = fig.colorbar(image, ax=ax, fraction=0.032, pad=0.015)
-    cbar.set_label(colorbar_label, fontsize=8.5)
+    cbar.set_label(colorbar_label, fontsize=cbar_label_fontsize, labelpad=cbar_labelpad)
+    cbar.ax.tick_params(labelsize=cbar_ticks_fontsize)
     savefig(fig, path_stem, pdf=pdf)
 
 
@@ -563,9 +583,10 @@ def plot_static_profiles(core: pd.DataFrame, subfield: pd.DataFrame, field: pd.D
         "fig_06_domain_metric_profile_heatmap",
         row_labels=domain_ordered["domain_display_name"].tolist(),
         column_labels=[METRIC_LABELS[m] for m in METRICS],
-        figsize=(10.5, 3.1),
+        figsize=(11.5, 3.8),
         colorbar_label="Robust-scaled profile",
         pdf=True,
+        annotate_threshold=0.25,
     )
 
     field_ordered = field.assign(
@@ -576,26 +597,30 @@ def plot_static_profiles(core: pd.DataFrame, subfield: pd.DataFrame, field: pd.D
         "fig_06_field_metric_profile_heatmap",
         row_labels=[shorten(name, width=42, placeholder="...") for name in field_ordered["field_display_name"]],
         column_labels=[METRIC_LABELS[m] for m in METRICS],
-        figsize=(10.5, 8.6),
+        figsize=(11.5, 9.8),
         colorbar_label="Robust-scaled profile",
         pdf=True,
+        annotate_threshold=0.50,
     )
 
-    selected = [
-        "embedding_distance_to_centroid_median",
-        "embedding_knn_median_distance",
-        "embedding_knn_distance_cv",
-        "embedding_knn_indegree_gini",
-        "embedding_pca_spectral_entropy",
-    ]
+    metric_titles = {
+        "embedding_distance_to_centroid_median": "Centroid-Distance Median",
+        "embedding_distance_to_centroid_iqr": "Centroid-Distance IQR",
+        "embedding_distance_to_centroid_p90": "Centroid-Distance P90",
+        "embedding_knn_median_distance": "Median kNN Distance",
+        "embedding_knn_distance_cv": "kNN Distance CV",
+        "embedding_knn_indegree_gini": "kNN In-Degree Gini",
+        "embedding_pca_dim_80": "PCA D80",
+        "embedding_pca_spectral_entropy": "PCA Spectral Entropy",
+    }
     plot_frame = subfield.melt(
         id_vars=["subfield_id", "subfield_display_name", "domain_display_name"],
-        value_vars=selected,
+        value_vars=METRICS,
         var_name="metric",
         value_name="value",
     )
-    fig, axes = plt.subplots(1, len(selected), figsize=(13.0, 4.2), sharey=True, constrained_layout=True)
-    for ax, metric in zip(axes, selected):
+    fig, axes = plt.subplots(2, 4, figsize=(13.0, 8.5), sharey=True, constrained_layout=True)
+    for i, (ax, metric) in enumerate(zip(axes.ravel(), METRICS)):
         data = [plot_frame.loc[(plot_frame["metric"] == metric) & (plot_frame["domain_display_name"] == domain), "value"].dropna() for domain in DOMAIN_ORDER]
         bp = ax.boxplot(
             data,
@@ -607,11 +632,12 @@ def plot_static_profiles(core: pd.DataFrame, subfield: pd.DataFrame, field: pd.D
             patch.set_facecolor(DOMAIN_COLORS[domain])
             patch.set_alpha(0.78)
         ax.axhline(0, color="#555555", linewidth=0.6)
-        ax.set_xlabel(METRIC_LABELS[metric], fontsize=8.5)
-        ax.tick_params(axis="x", labelsize=7.2)
-        ax.tick_params(axis="y", labelsize=8)
+        ax.set_title(metric_titles[metric], fontsize=11.5, fontweight="normal")
+        ax.tick_params(axis="x", labelsize=10.5)
+        ax.tick_params(axis="y", labelsize=11.0)
         ax.grid(True, axis="y", alpha=0.18)
-    axes[0].set_ylabel("Robust-scaled subfield value")
+        if i % 4 == 0:
+            ax.set_ylabel("Robust-scaled subfield value", fontsize=12.0)
     savefig(fig, "fig_06_subfield_metric_distributions_by_domain", pdf=True)
 
     matrix = subfield[METRICS].to_numpy(dtype=float)
