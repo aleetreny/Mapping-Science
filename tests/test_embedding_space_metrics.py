@@ -82,13 +82,19 @@ def metric_row(
     )
 
 
-def test_core_embedding_metric_columns_are_curated_26() -> None:
-    assert len(CORE_EMBEDDING_METRIC_COLUMNS) == 26
+def test_core_embedding_metric_columns_exclude_discarded_temporal_indicators() -> None:
+    discarded_recent = "embedding_recent_" + "novelty_score"
+    discarded_radius_slope = "embedding_radial_" + "expansion_slope"
+    discarded_radius_r2 = "embedding_radial_" + "expansion_r2"
+
+    assert len(CORE_EMBEDDING_METRIC_COLUMNS) == 24
     assert "embedding_knn_indegree_gini" in CORE_EMBEDDING_METRIC_COLUMNS
     assert "embedding_pca_spectral_entropy" in CORE_EMBEDDING_METRIC_COLUMNS
-    assert "embedding_recent_novelty_score" in CORE_EMBEDDING_METRIC_COLUMNS
-    assert "embedding_radial_expansion_r2" not in CORE_EMBEDDING_METRIC_COLUMNS
-    assert "embedding_radial_expansion_r2" in DIAGNOSTIC_COLUMNS
+    assert "embedding_centroid_drift_early_late" in CORE_EMBEDDING_METRIC_COLUMNS
+    assert discarded_recent not in CORE_EMBEDDING_METRIC_COLUMNS
+    assert discarded_radius_slope not in CORE_EMBEDDING_METRIC_COLUMNS
+    assert discarded_radius_r2 not in CORE_EMBEDDING_METRIC_COLUMNS
+    assert discarded_radius_r2 not in DIAGNOSTIC_COLUMNS
     for column in EXCLUDED_FROM_CORE_COLUMNS:
         assert column not in CORE_EMBEDDING_METRIC_COLUMNS
 
@@ -131,7 +137,10 @@ def test_gini_coefficient_is_zero_for_uniform_and_higher_for_concentrated() -> N
     assert concentrated > uniform
 
 
-def test_recent_novelty_score_positive_when_late_points_shift_from_early_core() -> None:
+def test_centroid_drift_positive_when_late_points_shift_from_early_core() -> None:
+    discarded_recent = "embedding_recent_" + "novelty_score"
+    discarded_radius_slope = "embedding_radial_" + "expansion_slope"
+
     years = np.array([2000, 2001, 2002, 2003, 2004] * 4 + [2020, 2021, 2022, 2023, 2024] * 4)
     early = np.tile(np.array([1.0, 0.02, 0.0, 0.0], dtype=np.float32), (20, 1))
     late = np.tile(np.array([0.0, 1.0, 0.02, 0.0], dtype=np.float32), (20, 1))
@@ -145,7 +154,9 @@ def test_recent_novelty_score_positive_when_late_points_shift_from_early_core() 
         k_neighbors=5,
     )
 
-    assert metrics["embedding_recent_novelty_score"] > 0.5
+    assert metrics["embedding_centroid_drift_early_late"] > 0.5
+    assert discarded_recent not in metrics
+    assert discarded_radius_slope not in metrics
 
 
 def test_compact_subfield_has_lower_centroid_distance_than_dispersed_subfield() -> None:

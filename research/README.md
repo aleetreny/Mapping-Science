@@ -12,7 +12,7 @@ using structural metrics measured directly in SPECTER2 embedding space?
 - Analysis period: 2000-2024.
 - Text source: title plus abstract.
 - Embedding model: SPECTER2.
-- Main metric set: reduced 11-metric embedding-space core.
+- Main metric set: eight-metric structural embedding-space core.
 - UMAP role: visualization only.
 
 ## Out Of Scope

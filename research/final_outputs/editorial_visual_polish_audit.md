@@ -52,7 +52,7 @@ Scope: `memory/memoria.tex`, chapters, appendices, tables, figures, outputs, and
 ## 7. Better visual formats
 
 - A conceptual workflow diagram in Chapter 1 can replace part of the long explanatory load and make the thesis logic visible early.
-- A metric-family schematic in Chapter 5 can make the eleven-metric framework easier to remember and reduce reliance on prose plus table alone.
+- A metric-family schematic can make the eight-metric structural framework easier to remember and reduce reliance on prose plus table alone.
 - A full pipeline diagram in Chapter 3 would be useful, but Table A.1 already provides reproducibility detail. Adding both might overburden the front half.
 - A reader compass for Chapters 6 to 9 would be pleasant but risks feeling decorative. Do not add unless text reduction creates a clear opening.
 

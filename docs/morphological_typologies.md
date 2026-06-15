@@ -1,6 +1,6 @@
 # Exploratory Morphological Typologies
 
-Generated: 2026-06-15T11:22:20.469175+00:00
+Generated: 2026-06-15T11:55:32.096847+00:00
 
 ## Input
 

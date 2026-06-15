@@ -59,11 +59,6 @@ METRIC_FAMILIES: dict[str, list[str]] = {
         "embedding_pca_dim_80",
         "embedding_pca_spectral_entropy",
     ],
-    "Temporal movement": [
-        "embedding_centroid_drift_early_late",
-        "embedding_radial_expansion_slope",
-        "embedding_recent_novelty_score",
-    ],
 }
 
 METRIC_SHORT_LABELS: dict[str, str] = {
@@ -75,9 +70,6 @@ METRIC_SHORT_LABELS: dict[str, str] = {
     "embedding_knn_indegree_gini": "Hub\nGini",
     "embedding_pca_dim_80": "PCA\nD80",
     "embedding_pca_spectral_entropy": "PCA\nentropy",
-    "embedding_centroid_drift_early_late": "Centroid\ndrift",
-    "embedding_radial_expansion_slope": "Radial\nslope",
-    "embedding_recent_novelty_score": "Recent\nnovelty",
 }
 
 METRIC_TEXT_LABELS: dict[str, str] = {
@@ -89,16 +81,13 @@ METRIC_TEXT_LABELS: dict[str, str] = {
     "embedding_knn_indegree_gini": "hub Gini",
     "embedding_pca_dim_80": "PCA D80",
     "embedding_pca_spectral_entropy": "PCA entropy",
-    "embedding_centroid_drift_early_late": "centroid drift",
-    "embedding_radial_expansion_slope": "radial slope",
-    "embedding_recent_novelty_score": "recent novelty",
 }
 
 TYPOLOGY_ORDER: list[tuple[str, str]] = [
-    ("T1", "Broad sparse profiles"),
-    ("T2", "Compact low-dispersion profiles"),
-    ("T3", "Low-dimensional locally uneven profiles"),
-    ("T4", "Temporal novelty profiles"),
+    ("T1", "Broad dispersed profiles"),
+    ("T2", "Compact dense profiles"),
+    ("T3", "Hub-concentrated uneven profiles"),
+    ("T4", "Spectrally complex profiles"),
     ("T5", "Uneven dispersion outliers"),
 ]
 
@@ -244,11 +233,9 @@ def load_reduced_metric_core(path: str | Path) -> pd.DataFrame:
 
 
 def feature_columns_for(feature_set: str) -> list[str]:
-    if feature_set == "all11":
+    if feature_set in {"structural8", "static8"}:
         return list(REDUCED_METRICS)
-    if feature_set == "static8":
-        return list(STATIC_STRUCTURAL_METRICS)
-    raise ValueError("feature_set must be all11 or static8")
+    raise ValueError("feature_set must be structural8")
 
 
 def _family_for_metric(metric: str) -> str:
@@ -425,87 +412,28 @@ def explore_candidate_models(
     rows: list[dict[str, Any]] = []
     matrices: dict[tuple[str, str, bool], np.ndarray] = {}
 
-    for feature_set in ["all11", "static8"]:
-        metrics = feature_columns_for(feature_set)
-        for scaling in ["robust", "zscore"]:
-            for family_balanced in ([False, True] if feature_set == "all11" and scaling == "robust" else [False]):
-                matrix, _params = scale_feature_matrix(
-                    frame,
-                    metrics=metrics,
-                    scaling=scaling,
-                    family_balanced=family_balanced,
-                )
-                matrices[(feature_set, scaling, family_balanced)] = matrix
+    feature_set = "structural8"
+    metrics = feature_columns_for(feature_set)
+    for scaling in ["robust", "zscore"]:
+        for family_balanced in ([False, True] if scaling == "robust" else [False]):
+            matrix, _params = scale_feature_matrix(
+                frame,
+                metrics=metrics,
+                scaling=scaling,
+                family_balanced=family_balanced,
+            )
+            matrices[(feature_set, scaling, family_balanced)] = matrix
 
     for k in k_range:
-        for feature_set in ["all11", "static8"]:
-            for scaling in ["robust", "zscore"]:
-                matrix = matrices[(feature_set, scaling, False)]
-                labels = _hierarchical_labels(matrix, k=k, method="ward", distance_metric="euclidean")
-                rows.append(
-                    _candidate_row(
-                        solution_id=f"ward_{scaling}_{feature_set}_k{k}",
-                        algorithm="hierarchical",
-                        linkage_method="ward",
-                        scaling=scaling,
-                        feature_set=feature_set,
-                        family_balanced=False,
-                        k=k,
-                        labels=labels,
-                        matrix=matrix,
-                        distance_metric="euclidean",
-                    )
-                )
-
-        matrix = matrices[("all11", "robust", True)]
-        labels = _hierarchical_labels(matrix, k=k, method="ward", distance_metric="euclidean")
-        rows.append(
-            _candidate_row(
-                solution_id=f"ward_robust_all11_family_balanced_k{k}",
-                algorithm="hierarchical",
-                linkage_method="ward",
-                scaling="robust",
-                feature_set="all11",
-                family_balanced=True,
-                k=k,
-                labels=labels,
-                matrix=matrix,
-                distance_metric="euclidean",
-            )
-        )
-
-        robust_all11 = matrices[("all11", "robust", False)]
-        for distance_metric in ["euclidean", "correlation"]:
-            labels = _hierarchical_labels(
-                robust_all11,
-                k=k,
-                method="average",
-                distance_metric=distance_metric,
-            )
+        for scaling in ["robust", "zscore"]:
+            matrix = matrices[(feature_set, scaling, False)]
+            labels = _hierarchical_labels(matrix, k=k, method="ward", distance_metric="euclidean")
             rows.append(
                 _candidate_row(
-                    solution_id=f"average_{distance_metric}_robust_all11_k{k}",
+                    solution_id=f"ward_{scaling}_{feature_set}_k{k}",
                     algorithm="hierarchical",
-                    linkage_method="average",
-                    scaling="robust",
-                    feature_set="all11",
-                    family_balanced=False,
-                    k=k,
-                    labels=labels,
-                    matrix=robust_all11,
-                    distance_metric=distance_metric,
-                )
-            )
-
-        for feature_set in ["all11", "static8"]:
-            matrix = matrices[(feature_set, "robust", False)]
-            kmeans = KMeans(n_clusters=k, random_state=random_seed, n_init=50)
-            labels = kmeans.fit_predict(matrix) + 1
-            rows.append(
-                _candidate_row(
-                    solution_id=f"kmeans_robust_{feature_set}_k{k}",
-                    algorithm="kmeans",
-                    scaling="robust",
+                    linkage_method="ward",
+                    scaling=scaling,
                     feature_set=feature_set,
                     family_balanced=False,
                     k=k,
@@ -515,64 +443,121 @@ def explore_candidate_models(
                 )
             )
 
-            try:
-                gmm = GaussianMixture(
-                    n_components=k,
-                    covariance_type="full",
-                    random_state=random_seed,
-                    n_init=10,
-                    reg_covar=1e-6,
+        matrix = matrices[(feature_set, "robust", True)]
+        labels = _hierarchical_labels(matrix, k=k, method="ward", distance_metric="euclidean")
+        rows.append(
+            _candidate_row(
+                solution_id=f"ward_robust_{feature_set}_family_balanced_k{k}",
+                algorithm="hierarchical",
+                linkage_method="ward",
+                scaling="robust",
+                feature_set=feature_set,
+                family_balanced=True,
+                k=k,
+                labels=labels,
+                matrix=matrix,
+                distance_metric="euclidean",
+            )
+        )
+
+        robust_structural = matrices[(feature_set, "robust", False)]
+        for distance_metric in ["euclidean", "correlation"]:
+            labels = _hierarchical_labels(
+                robust_structural,
+                k=k,
+                method="average",
+                distance_metric=distance_metric,
+            )
+            rows.append(
+                _candidate_row(
+                    solution_id=f"average_{distance_metric}_robust_{feature_set}_k{k}",
+                    algorithm="hierarchical",
+                    linkage_method="average",
+                    scaling="robust",
+                    feature_set=feature_set,
+                    family_balanced=False,
+                    k=k,
+                    labels=labels,
+                    matrix=robust_structural,
+                    distance_metric=distance_metric,
                 )
-                labels = gmm.fit_predict(matrix) + 1
-                status = "ok"
-                if pd.Series(labels).value_counts().min() <= 1:
-                    status = "fragmented"
-                rows.append(
-                    _candidate_row(
-                        solution_id=f"gmm_robust_{feature_set}_k{k}",
-                        algorithm="gmm",
-                        scaling="robust",
-                        feature_set=feature_set,
-                        family_balanced=False,
-                        k=k,
-                        labels=labels,
-                        matrix=matrix,
-                        distance_metric="euclidean",
-                        bic=gmm.bic(matrix),
-                        aic=gmm.aic(matrix),
-                        status=status,
-                    )
+            )
+
+        matrix = matrices[(feature_set, "robust", False)]
+        kmeans = KMeans(n_clusters=k, random_state=random_seed, n_init=50)
+        labels = kmeans.fit_predict(matrix) + 1
+        rows.append(
+            _candidate_row(
+                solution_id=f"kmeans_robust_{feature_set}_k{k}",
+                algorithm="kmeans",
+                scaling="robust",
+                feature_set=feature_set,
+                family_balanced=False,
+                k=k,
+                labels=labels,
+                matrix=matrix,
+                distance_metric="euclidean",
+            )
+        )
+
+        try:
+            gmm = GaussianMixture(
+                n_components=k,
+                covariance_type="full",
+                random_state=random_seed,
+                n_init=10,
+                reg_covar=1e-6,
+            )
+            labels = gmm.fit_predict(matrix) + 1
+            status = "ok"
+            if pd.Series(labels).value_counts().min() <= 1:
+                status = "fragmented"
+            rows.append(
+                _candidate_row(
+                    solution_id=f"gmm_robust_{feature_set}_k{k}",
+                    algorithm="gmm",
+                    scaling="robust",
+                    feature_set=feature_set,
+                    family_balanced=False,
+                    k=k,
+                    labels=labels,
+                    matrix=matrix,
+                    distance_metric="euclidean",
+                    bic=gmm.bic(matrix),
+                    aic=gmm.aic(matrix),
+                    status=status,
                 )
-            except Exception as exc:  # pragma: no cover - numerical fallback.
-                rows.append(
-                    {
-                        "solution_id": f"gmm_robust_{feature_set}_k{k}",
-                        "algorithm": "gmm",
-                        "linkage": "",
-                        "scaling": "robust",
-                        "feature_set": feature_set,
-                        "family_balanced": False,
-                        "distance_metric": "euclidean",
-                        "k": int(k),
-                        "silhouette": np.nan,
-                        "calinski_harabasz": np.nan,
-                        "davies_bouldin": np.nan,
-                        "min_cluster_size": np.nan,
-                        "max_cluster_size": np.nan,
-                        "cluster_sizes_sorted": "",
-                        "bic": np.nan,
-                        "aic": np.nan,
-                        "status": f"failed: {type(exc).__name__}",
-                    }
-                )
+            )
+        except Exception as exc:  # pragma: no cover - numerical fallback.
+            rows.append(
+                {
+                    "solution_id": f"gmm_robust_{feature_set}_k{k}",
+                    "algorithm": "gmm",
+                    "linkage": "",
+                    "scaling": "robust",
+                    "feature_set": feature_set,
+                    "family_balanced": False,
+                    "distance_metric": "euclidean",
+                    "k": int(k),
+                    "silhouette": np.nan,
+                    "calinski_harabasz": np.nan,
+                    "davies_bouldin": np.nan,
+                    "min_cluster_size": np.nan,
+                    "max_cluster_size": np.nan,
+                    "cluster_sizes_sorted": "",
+                    "bic": np.nan,
+                    "aic": np.nan,
+                    "status": f"failed: {type(exc).__name__}",
+                }
+            )
 
     rows.append(
         {
-            "solution_id": "hdbscan_robust_all11",
+            "solution_id": "hdbscan_robust_structural8",
             "algorithm": "hdbscan",
             "linkage": "",
             "scaling": "robust",
-            "feature_set": "all11",
+            "feature_set": "structural8",
             "family_balanced": False,
             "distance_metric": "euclidean",
             "k": np.nan,
@@ -591,7 +576,7 @@ def explore_candidate_models(
 
 
 def selected_raw_solution(frame: pd.DataFrame, *, k: int = 5) -> tuple[np.ndarray, np.ndarray, pd.DataFrame]:
-    metrics = feature_columns_for("all11")
+    metrics = feature_columns_for("structural8")
     matrix, parameters = scale_feature_matrix(
         frame,
         metrics=metrics,
@@ -626,22 +611,10 @@ def map_typology_labels(raw_labels: np.ndarray, matrix: np.ndarray, metrics: lis
     profile = scaled.groupby("raw_cluster", sort=True)[metrics].mean().reset_index()
     remaining = set(int(value) for value in profile["raw_cluster"])
 
-    temporal = _pick_and_remove(
-        profile,
-        remaining,
-        "embedding_centroid_drift_early_late",
-        direction="max",
-    )
-    outlier = _pick_and_remove(
-        profile,
-        remaining,
-        "embedding_distance_to_centroid_iqr",
-        direction="max",
-    )
     broad = _pick_and_remove(
         profile,
         remaining,
-        "embedding_knn_median_distance",
+        "embedding_distance_to_centroid_p90",
         direction="max",
     )
     compact = _pick_and_remove(
@@ -650,14 +623,31 @@ def map_typology_labels(raw_labels: np.ndarray, matrix: np.ndarray, metrics: lis
         "embedding_distance_to_centroid_median",
         direction="min",
     )
-    low_dimensional = int(next(iter(remaining)))
+    hubbed = _pick_and_remove(
+        profile,
+        remaining,
+        "embedding_knn_indegree_gini",
+        direction="max",
+    )
+    spectral = _pick_and_remove(
+        profile,
+        remaining,
+        "embedding_pca_spectral_entropy",
+        direction="max",
+    )
+    outlier = _pick_and_remove(
+        profile,
+        remaining,
+        "embedding_distance_to_centroid_iqr",
+        direction="max",
+    )
 
     return {
-        broad: ("T1", "Broad sparse profiles"),
-        compact: ("T2", "Compact low-dispersion profiles"),
-        low_dimensional: ("T3", "Low-dimensional locally uneven profiles"),
-        temporal: ("T4", "Temporal novelty profiles"),
-        outlier: ("T5", "Uneven dispersion outliers"),
+        broad: TYPOLOGY_ORDER[0],
+        compact: TYPOLOGY_ORDER[1],
+        hubbed: TYPOLOGY_ORDER[2],
+        spectral: TYPOLOGY_ORDER[3],
+        outlier: TYPOLOGY_ORDER[4],
     }
 
 
@@ -769,14 +759,14 @@ def selected_solution_summary(
     labels: np.ndarray,
     matrix: np.ndarray,
     *,
-    solution_id: str = "ward_robust_all11_k5_selected",
+    solution_id: str = "ward_robust_structural8_k5_selected",
 ) -> pd.DataFrame:
     row = _candidate_row(
         solution_id=solution_id,
         algorithm="hierarchical",
         linkage_method="ward",
         scaling="robust",
-        feature_set="all11",
+        feature_set="structural8",
         family_balanced=False,
         k=len(np.unique(labels)),
         labels=labels,
@@ -795,12 +785,12 @@ def stability_against_selected(
 ) -> pd.DataFrame:
     rows: list[dict[str, Any]] = []
     variants = [
-        ("z-score Ward, all 11 metrics", "ward", "zscore", "all11", False, "euclidean"),
-        ("robust Ward, static 8 metrics", "ward", "robust", "static8", False, "euclidean"),
-        ("family-balanced robust Ward", "ward", "robust", "all11", True, "euclidean"),
-        ("robust k-means, all 11 metrics", "kmeans", "robust", "all11", False, "euclidean"),
-        ("average-link correlation", "average", "robust", "all11", False, "correlation"),
-        ("average-link Euclidean", "average", "robust", "all11", False, "euclidean"),
+        ("z-score Ward, structural 8 metrics", "ward", "zscore", "structural8", False, "euclidean"),
+        ("robust Ward, structural 8 metrics", "ward", "robust", "structural8", False, "euclidean"),
+        ("family-balanced robust Ward", "ward", "robust", "structural8", True, "euclidean"),
+        ("robust k-means, structural 8 metrics", "kmeans", "robust", "structural8", False, "euclidean"),
+        ("average-link correlation", "average", "robust", "structural8", False, "correlation"),
+        ("average-link Euclidean", "average", "robust", "structural8", False, "euclidean"),
     ]
     for label, algorithm, scaling, feature_set, family_balanced, distance_metric in variants:
         metrics = feature_columns_for(feature_set)
@@ -934,11 +924,11 @@ def plot_quality_by_k(
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.8), gridspec_kw={"width_ratios": [1.15, 1]})
     ax = axes[0]
     line_specs = [
-        ("ward_robust_all11", "Ward robust, all 11", "#1f77b4", "o"),
-        ("ward_zscore_all11", "Ward z-score, all 11", "#7f7f7f", "s"),
-        ("ward_robust_static8", "Ward robust, static 8", "#2ca02c", "^"),
-        ("kmeans_robust_all11", "k-means robust, all 11", "#ff7f0e", "D"),
-        ("average_correlation_robust_all11", "Average correlation", "#9467bd", "v"),
+        ("ward_robust_structural8", "Ward robust", "#1f77b4", "o"),
+        ("ward_zscore_structural8", "Ward z-score", "#7f7f7f", "s"),
+        ("ward_robust_structural8_family_balanced", "Family-balanced Ward", "#2ca02c", "^"),
+        ("kmeans_robust_structural8", "k-means robust", "#ff7f0e", "D"),
+        ("average_correlation_robust_structural8", "Average correlation", "#9467bd", "v"),
     ]
     for prefix, label, color, marker in line_specs:
         subset = model_comparison.loc[
@@ -966,10 +956,10 @@ def plot_quality_by_k(
     stability_plot = stability.copy()
     stability_plot["comparison_short"] = stability_plot["comparison"].replace(
         {
-            "z-score Ward, all 11 metrics": "z-score Ward",
-            "robust Ward, static 8 metrics": "static 8 Ward",
+            "z-score Ward, structural 8 metrics": "z-score Ward",
+            "robust Ward, structural 8 metrics": "robust Ward",
             "family-balanced robust Ward": "family-balanced Ward",
-            "robust k-means, all 11 metrics": "k-means",
+            "robust k-means, structural 8 metrics": "k-means",
             "average-link correlation": "avg. correlation",
             "average-link Euclidean": "avg. Euclidean",
         }
@@ -1397,7 +1387,7 @@ def write_typology_summary_table(
             r"\end{tabular}",
             r"\endgroup",
             r"\par\vspace{0.15cm}",
-            r"\footnotesize\textit{Note.} Typologies are obtained from Ward clustering of robust-scaled eleven-metric subfield profiles. Representative subfields are the closest non-repeated display names to each typology centroid in the standardized metric space.",
+            r"\footnotesize\textit{Note.} Typologies are obtained from Ward clustering of robust-scaled eight-metric structural subfield profiles. Representative subfields are the closest non-repeated display names to each typology centroid in the standardized metric space.",
             r"\end{table}",
         ]
     )
@@ -1508,7 +1498,7 @@ def write_summary_report(
         "## Selected solution",
         "",
         "- Algorithm: Ward hierarchical clustering.",
-        "- Distance geometry: Euclidean distance in robust-scaled eleven-metric profile space.",
+        "- Distance geometry: Euclidean distance in robust-scaled eight-metric structural profile space.",
         f"- Selected k: {int(selected['k'])}.",
         f"- Silhouette: {selected['silhouette']:.3f}.",
         f"- Cluster sizes: {selected['cluster_sizes_sorted']}.",
@@ -1562,7 +1552,7 @@ def write_docs_report(path: str | Path, summary_report: str | Path) -> None:
         "Run `python scripts/18_explore_morphological_typologies.py --overwrite` "
         "from the repository root to regenerate the typology outputs, figures, and thesis tables.",
         "",
-        "The active thesis evidence is the reduced eleven-metric core. Domain and field labels "
+        "The active thesis evidence is the eight-metric structural core. Domain and field labels "
         "are metadata for interpretation only; they are not used as clustering targets.",
     ]
     Path(path).parent.mkdir(parents=True, exist_ok=True)

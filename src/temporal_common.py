@@ -20,7 +20,7 @@ DEFAULT_WINDOWS: list[tuple[int, int]] = [
     (2020, 2024),
 ]
 
-WINDOW_STRUCTURAL_METRICS: list[str] = [
+STRUCTURAL_MORPHOLOGY_METRICS: list[str] = [
     "embedding_distance_to_centroid_median",
     "embedding_distance_to_centroid_iqr",
     "embedding_distance_to_centroid_p90",
@@ -31,12 +31,13 @@ WINDOW_STRUCTURAL_METRICS: list[str] = [
     "embedding_pca_spectral_entropy",
 ]
 
-REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS: list[str] = [
-    *WINDOW_STRUCTURAL_METRICS,
-    "embedding_centroid_drift_early_late",
-    "embedding_radial_expansion_slope",
-    "embedding_recent_novelty_score",
-]
+WINDOW_STRUCTURAL_METRICS: list[str] = list(STRUCTURAL_MORPHOLOGY_METRICS)
+
+REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS: list[str] = list(
+    STRUCTURAL_MORPHOLOGY_METRICS
+)
+
+CENTROID_DRIFT_METRIC = "embedding_centroid_drift_early_late"
 
 
 @dataclass(frozen=True)

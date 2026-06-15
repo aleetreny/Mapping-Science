@@ -901,7 +901,9 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
     (TABLE_DIR / "tab_07_centroid_drift_extremes.tex").write_text("\n".join(lines), encoding="utf-8")
     
     # Generate side-by-side horizontal bar chart of the extremes
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13.0, 5.2), constrained_layout=True)
+    # figsize width matches fig_09_dynamic_typology_profile_heatmap (11.3) so fonts
+    # render at the same apparent size when scaled to \textwidth in LaTeX.
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.3, 5.8), constrained_layout=True)
     
     top_plot = top.iloc[::-1]
     ax1.barh(
@@ -1164,7 +1166,7 @@ def plot_temporal_figures(temporal: pd.DataFrame) -> dict[str, float]:
         for col_idx in range(values.shape[1]):
             value = values[row_idx, col_idx]
             color = "white" if (abs(value) / limit) > 0.55 else "#222222"
-            ax.text(col_idx, row_idx, f"{value:+.2f}", ha="center", va="center", fontsize=9.5, color=color)
+            ax.text(col_idx, row_idx, f"{value:+.3f}", ha="center", va="center", fontsize=9.5, color=color)
     row_labels = [
         f"D{int(row.trajectory_cluster_id)} {DYNAMIC_LABELS[int(row.trajectory_cluster_id)]}\n(n={int(row.n_subfields)})"
         for row in profile.itertuples()
@@ -1238,8 +1240,8 @@ def plot_similarity_figures(core: pd.DataFrame) -> dict[str, float]:
     names_fontsize = 11.0
     ax.set_xticks(np.arange(len(field_order)))
     ax.set_yticks(np.arange(len(field_order)))
-    ax.set_xticklabels([x_abbrevs.get(name, name) for name in field_order], rotation=90, fontsize=names_fontsize)
-    ax.set_yticklabels([shorten(name, width=42, placeholder="...") for name in field_order], fontsize=names_fontsize)
+    ax.set_xticklabels([x_abbrevs.get(name, name) if len(name) > 28 else name for name in field_order], rotation=90, fontsize=names_fontsize)
+    ax.set_yticklabels(field_order, fontsize=names_fontsize)
     ax.tick_params(length=0)
     
     # Find and draw thick boundaries between domains
@@ -1302,21 +1304,23 @@ def plot_similarity_figures(core: pd.DataFrame) -> dict[str, float]:
             if mask.any():
                 domain_matrix.loc[a, b] = float(pairs.loc[mask, "distance"].median())
 
-    fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.1), gridspec_kw={"width_ratios": [1.25, 0.85]}, constrained_layout=True)
+    fig, axes = plt.subplots(1, 2, figsize=(13.0, 5.0), gridspec_kw={"width_ratios": [1.25, 0.85], "wspace": 0.45}, constrained_layout=True)
     ax = axes[0]
     image = ax.imshow(domain_matrix.to_numpy(dtype=float), cmap="viridis_r", aspect="equal")
     ax.set_xticks(np.arange(len(DOMAIN_ORDER)))
     ax.set_yticks(np.arange(len(DOMAIN_ORDER)))
-    ax.set_xticklabels([d.replace(" ", "\n") for d in DOMAIN_ORDER], fontsize=8)
-    ax.set_yticklabels(DOMAIN_ORDER, fontsize=8)
+    ax.set_xticklabels([d.replace(" ", "\n") for d in DOMAIN_ORDER], fontsize=12.5)
+    ax.set_yticklabels(DOMAIN_ORDER, fontsize=12.5)
+    ax.tick_params(length=0)
     for i in range(len(DOMAIN_ORDER)):
         for j in range(len(DOMAIN_ORDER)):
             value = domain_matrix.iloc[i, j]
             if np.isfinite(value):
-                ax.text(j, i, f"{value:.2f}", ha="center", va="center", fontsize=8, color="white" if value > 1.85 else "#222222")
-    ax.text(-0.08, 1.04, "A", transform=ax.transAxes, fontsize=11, fontweight="bold")
+                ax.text(j, i, f"{value:.2f}", ha="center", va="center", fontsize=11.0, color="white" if value > 1.85 else "#222222")
+    ax.text(-0.08, 1.04, "A", transform=ax.transAxes, fontsize=12.5, fontweight="bold")
     cbar = fig.colorbar(image, ax=ax, fraction=0.045, pad=0.015)
-    cbar.set_label("Median distance", fontsize=8.5)
+    cbar.set_label("Median distance", fontsize=12.5, labelpad=12.0)
+    cbar.ax.tick_params(labelsize=11.5)
     ax = axes[1]
     counts = pd.Series(
         {
@@ -1326,10 +1330,11 @@ def plot_similarity_figures(core: pd.DataFrame) -> dict[str, float]:
     )
     ax.bar(counts.index, counts.values, color=["#777777", "#4c78a8"], width=0.62)
     for idx, value in enumerate(counts.values):
-        ax.text(idx, value + 0.4, str(value), ha="center", va="bottom", fontsize=10)
+        ax.text(idx, value + 0.4, str(value), ha="center", va="bottom", fontsize=12.5)
     ax.set_ylim(0, max(counts.values) + 4)
-    ax.set_ylabel("Fields")
-    ax.text(-0.08, 1.04, "B", transform=ax.transAxes, fontsize=11, fontweight="bold")
+    ax.set_ylabel("Fields", fontsize=12.5)
+    ax.tick_params(labelsize=12.5)
+    ax.text(-0.08, 1.04, "B", transform=ax.transAxes, fontsize=12.5, fontweight="bold")
     ax.grid(True, axis="y", alpha=0.18)
     savefig(fig, "fig_08_domain_pair_distance_structure", pdf=True)
 
@@ -1366,33 +1371,112 @@ def plot_similarity_figures(core: pd.DataFrame) -> dict[str, float]:
     ]:
         ax.plot(temporal_summary["window"], temporal_summary[column], marker="o", linewidth=1.8, color=color, label=label)
     ax.set_ylabel("Mean morphological distance")
-    ax.set_xlabel("Window")
+    ax.set_xlabel("")
     ax.tick_params(axis="x", labelrotation=25)
     ax.grid(True, axis="y", alpha=0.18)
     ax.legend(fontsize=8, frameon=False, loc="best")
     savefig(fig, "fig_08_temporal_distance_trajectories", pdf=True)
 
-    conv = pd.read_csv(OUTPUT_DIR.parent / "07_morphological_similarity" / "top_pairs" / "field_euclidean_top_converging_pairs.csv").head(5)
-    div = pd.read_csv(OUTPUT_DIR.parent / "07_morphological_similarity" / "top_pairs" / "field_euclidean_top_diverging_pairs.csv").head(5)
+    conv = pd.read_csv(OUTPUT_DIR.parent / "07_morphological_similarity" / "top_pairs" / "field_euclidean_top_converging_pairs.csv").head(6)
+    div = pd.read_csv(OUTPUT_DIR.parent / "07_morphological_similarity" / "top_pairs" / "field_euclidean_top_diverging_pairs.csv").head(6)
     combo = pd.concat([conv.assign(direction="Converging"), div.assign(direction="Diverging")], ignore_index=True)
     combo.to_csv(OUTPUT_DIR / "field_top_convergence_divergence_pairs.csv", index=False)
-    labels = [
-        shorten(f"{row.entity_a_name} -- {row.entity_b_name}", width=55, placeholder="...")
-        for row in combo.itertuples()
+
+    # Aggressive abbreviations so pair labels stay on one line at larger font sizes
+    _PA = {
+        "Agricultural and Biological Sciences": "Agric. & Bio. Sci.",
+        "Arts and Humanities": "Arts & Hum.",
+        "Biochemistry, Genetics and Molecular Biology": "Biochem., Gen. & Mol. Bio.",
+        "Business, Management and Accounting": "Bus. & Mgmt.",
+        "Chemical Engineering": "Chem. Eng.",
+        "Computer Science": "Comput. Sci.",
+        "Decision Sciences": "Decision Sci.",
+        "Earth and Planetary Sciences": "Earth & Planet. Sci.",
+        "Economics, Econometrics and Finance": "Econ. & Finance",
+        "Energy": "Energy",
+        "Engineering": "Engineering",
+        "Environmental Science": "Environ. Sci.",
+        "Health Professions": "Health Prof.",
+        "Immunology and Microbiology": "Immunol. & Microbio.",
+        "Materials Science": "Materials Sci.",
+        "Mathematics": "Mathematics",
+        "Medicine": "Medicine",
+        "Neuroscience": "Neuroscience",
+        "Nursing": "Nursing",
+        "Pharmacology, Toxicology and Pharmaceutics": "Pharmacol. Tox. Pharm.",
+        "Physics and Astronomy": "Physics & Astron.",
+        "Psychology": "Psychology",
+        "Social Sciences": "Social Sci.",
+        "Veterinary": "Veterinary",
+        # Already-abbreviated display names from the CSV
+        "Agric. & Bio. Sci.": "Agric. & Bio. Sci.",
+        "Arts & Humanities": "Arts & Hum.",
+        "Business & Mgmt.": "Bus. & Mgmt.",
+        "Computer Sci.": "Comput. Sci.",
+        "Decision Sci.": "Decision Sci.",
+        "Environmental Sci.": "Environ. Sci.",
+        "Immunol. & Microbio.": "Immunol. & Microbio.",
+        "Materials Sci.": "Materials Sci.",
+        "Pharm., Tox. & Pharm.": "Pharmacol. Tox. Pharm.",
+        "Pharm. Tox. Pharm.": "Pharmacol. Tox. Pharm.",
+    }
+
+    def _abbrev(name: str) -> str:
+        return _PA.get(name, name)
+
+    # Two side-by-side panels (Converging | Diverging) with a shared legend
+    PAIR_COLOR_INITIAL = "#f1f1f1"
+    PAIR_COLOR_CONVERGING = "#2f7f5f"
+    PAIR_COLOR_DIVERGING = "#b65b3a"
+    fig, (ax_conv, ax_div) = plt.subplots(1, 2, figsize=(13.0, 5.2), constrained_layout=True)
+
+    x_max = max(conv["initial_distance"].max(), conv["final_distance"].max(),
+                div["initial_distance"].max(), div["final_distance"].max())
+
+    for ax, subset, panel_color, title, title_color in [
+        (ax_conv, conv, PAIR_COLOR_CONVERGING, "Converging pairs", PAIR_COLOR_CONVERGING),
+        (ax_div, div, PAIR_COLOR_DIVERGING, "Diverging pairs", PAIR_COLOR_DIVERGING),
+    ]:
+        labels_sub = [
+            f"{_abbrev(row.entity_a_name)} \u2013\u2013 {_abbrev(row.entity_b_name)}"
+            for row in subset.itertuples()
+        ]
+        y_sub = np.arange(len(subset))[::-1]
+        ax.hlines(y_sub, subset["initial_distance"], subset["final_distance"],
+                  color=panel_color, linewidth=2.2, alpha=0.85)
+        ax.scatter(subset["initial_distance"], y_sub,
+                   color=PAIR_COLOR_INITIAL, edgecolor="#333333", s=48,
+                   label="2000\u20132004", zorder=3)
+        ax.scatter(subset["final_distance"], y_sub,
+                   color=panel_color, edgecolor="#333333", s=58,
+                   label="2020\u20132024", zorder=3)
+        for y_pos, delta in zip(y_sub, subset["delta_distance"]):
+            ax.text(x_max + 0.08, y_pos, f"{delta:+.2f}",
+                    va="center", fontsize=10.5, color="#333333")
+        ax.set_yticks(y_sub)
+        ax.set_yticklabels(labels_sub, fontsize=11.0)
+        ax.set_xlabel("Euclidean profile distance", fontsize=11.0)
+        ax.set_title(title, fontsize=12.0, fontweight="bold", color=title_color)
+        ax.tick_params(axis="x", labelsize=10.0)
+        ax.tick_params(axis="y", length=0)
+        ax.grid(True, axis="x", alpha=0.16)
+        ax.set_xlim(left=0, right=x_max + 0.32)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+    # Shared legend placed below both panels
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D([0], [0], marker="o", color="w", markerfacecolor=PAIR_COLOR_INITIAL,
+               markeredgecolor="#333333", markersize=8, label="Initial (2000\u20132004)"),
+        Line2D([0], [0], marker="o", color="w", markerfacecolor=PAIR_COLOR_CONVERGING,
+               markeredgecolor="#333333", markersize=8, label="Final \u2013 converging"),
+        Line2D([0], [0], marker="o", color="w", markerfacecolor=PAIR_COLOR_DIVERGING,
+               markeredgecolor="#333333", markersize=8, label="Final \u2013 diverging"),
     ]
-    fig, ax = plt.subplots(figsize=(9.7, 5.8), constrained_layout=True)
-    y = np.arange(len(combo))[::-1]
-    colors = combo["direction"].map({"Converging": "#2f7f5f", "Diverging": "#b65b3a"}).to_numpy()
-    ax.hlines(y, combo["initial_distance"], combo["final_distance"], color=colors, linewidth=2.0, alpha=0.85)
-    ax.scatter(combo["initial_distance"], y, color="#f1f1f1", edgecolor="#333333", s=34, label="2000--2004", zorder=3)
-    ax.scatter(combo["final_distance"], y, color=colors, edgecolor="#333333", s=42, label="2020--2024", zorder=3)
-    for y_pos, delta in zip(y, combo["delta_distance"]):
-        ax.text(max(combo["initial_distance"].max(), combo["final_distance"].max()) + 0.06, y_pos, f"{delta:+.2f}", va="center", fontsize=8)
-    ax.set_yticks(y)
-    ax.set_yticklabels(labels, fontsize=7.6)
-    ax.set_xlabel("Morphological distance")
-    ax.grid(True, axis="x", alpha=0.16)
-    ax.legend(fontsize=8, frameon=False, loc="lower right")
+    fig.legend(handles=legend_elements, loc="lower center", ncol=3,
+               fontsize=11.0, frameon=False, bbox_to_anchor=(0.5, -0.06))
+
     savefig(fig, "fig_08_field_convergence_divergence_pairs", pdf=True)
 
     changes = pd.read_parquet(ROOT / "data" / "processed" / "temporal" / "morphological_pair_distance_changes.parquet")

@@ -17,7 +17,7 @@ This report strictly separates our **active implemented methodology** from **sup
 
 A core methodological tenet of this work is that **all morphological measurements are performed in the original 768-dimensional SPECTER2 embedding space**. Non-linear dimensionality reduction via UMAP is restricted strictly to qualitative, auxiliary visualization. Embedding-space distances are treated as model-dependent semantic approximations, not objective measures of scientific reality. Projected coordinates are **not used as quantitative evidence because nonlinear projections may distort distances, densities, and neighborhood relations**.
 
-Furthermore, clustering is treated exclusively as an **exploratory typology** based on the 11 metric profiles. This chapter is planned as a downstream exploratory analysis and must be implemented only over the reduced 11-metric profiles. No active clustering script is currently in production.
+Furthermore, clustering is treated exclusively as an **exploratory typology** based on the eight structural metric profiles. The active typology is implemented over those profiles and does not use paper-level graph communities.
 
 ---
 
@@ -57,7 +57,7 @@ This represents the active mathematical engine of the thesis:
     *   *References:* **Radovanović et al. (2010)** (`Core Active-Methodology` | `methodological justification`). This provides the mathematical basis for high-dimensional nearest-neighbor concentration ("hubness"), justifying our local Gini coefficient of nearest-neighbor indegrees (`embedding_knn_indegree_gini`) to characterize subfields.
 *   **Exploratory Profile Clustering (Morphological Typologies):**
     *   *Methodology Status:* `methodological justification` / `implemented` (conceptual boundary)
-    *   *Status Statement:* **This chapter is planned as a downstream exploratory analysis and must be implemented only over the reduced 11-metric profiles.**
+    *   *Status Statement:* **The active exploratory analysis is implemented only over the eight structural metric profiles.**
     *   *References:* **Arthur & Vassilvitskii (2007)** (`Core Active-Methodology` | `implemented` for standard KMeans++ initialization seeding), **Kleinberg (2002)** (`Core Active-Methodology` | `methodological justification`). Kleinberg's theorem mathematically proves that no clustering algorithm represents a unique, perfect division of data, establishing our clustering as strictly exploratory.
 *   **UMAP Restricted to Qualitative Visualization:**
     *   *Methodology Status:* `implemented` (strictly constrained to auxiliary qualitative visualization)
@@ -104,7 +104,7 @@ To protect the thesis from critique during the defense, we list the primary clai
 1.  **UMAP is strictly visual:** We defend that UMAP introduces metric distortions using the proofs of Chari & Pachter (2023). All our 11 morphological metrics are calculated in 768-D to preserve high-dimensional relationships as model-dependent semantic approximations, not objective measures of scientific reality.
 2.  **SPECTER2 is a citation-informed semantic vector space:** The representations carry deep semantic and structural citation signals, outperforming standard language models for scholarly document mapping.
 3.  **Local subfield profiles suffer from varying hubness:** We can measure this using `embedding_knn_indegree_gini`, showing that some subfields have highly dominant "central papers" (hubs) while others are topologically flat.
-4.  **Morphological typologies are strictly exploratory:** We present our planned KMeans groupings of the 11 metrics as qualitative, heuristic typologies, backed by Kleinberg's (2002) proof that no clustering is absolute.
+4.  **Morphological typologies are strictly exploratory:** We present groupings of the eight structural metrics as qualitative, heuristic typologies, backed by Kleinberg's (2002) proof that no clustering is absolute.
 5.  **OpenAlex coverage is statistically sound for macro-level mapping:** OpenAlex reference coverage is broadly comparable to Web of Science and Scopus in a cleaned shared-publication comparison, as shown by Culbert et al. (2025), and is highly comprehensive, as shown by Martín-Martín et al. (2021).
 
 ---

@@ -1,7 +1,7 @@
 # Static Comparison
 
 `scripts/13_analyze_static_discipline_profiles.py` compares subfields, fields,
-and domains using only the reduced 11-metric embedding-space core.
+and domains using only the eight structural morphology metrics.
 
 It writes:
 

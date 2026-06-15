@@ -270,7 +270,7 @@ All references are marked with their explicit category (`Core Active-Methodology
 
 > [!NOTE]
 > **Active Implementation Status:**
-> This chapter is planned as a downstream exploratory analysis and must be implemented only over the reduced 11-metric profiles. No active clustering script is currently in the active production pipeline, and any future typologies must not cluster paper-level graph topologies.
+> The active exploratory typology is implemented only over the eight structural metric profiles. Future typologies must not cluster paper-level graph topologies unless the thesis scope explicitly changes.
 
 ### Ref 18: Traag, Waltman, & van Eck (2019)
 *   **Full Citation:** Traag, V. A., Waltman, L., & van Eck, N. J. (2019). From Louvain to Leiden: guaranteeing well-behaved communities. *Scientific Reports*, 9(1), 5233.
@@ -279,7 +279,7 @@ All references are marked with their explicit category (`Core Active-Methodology
 *   **Methodology Status:** `future work`
 *   **Short Summary:** Exposes a fundamental flaw in the popular Louvain community detection algorithm (its capacity to find disconnected or arbitrary communities) and proposes the Leiden algorithm as a guaranteed, well-behaved solution.
 *   **Thesis Chapter:** Chapter 9: Exploratory Morphological Typologies
-*   **Claim Supported:** Discussed strictly as a future work extension to cluster paper-level network graphs into internally connected topological communities. (Note: Our active pipeline clusters high-level **reduced 11-metric subfield profiles** via Euclidean KMeans/Ward, and does **not** construct or cluster paper-level graphs).
+*   **Claim Supported:** Discussed strictly as a future work extension to cluster paper-level network graphs into internally connected topological communities. (Note: Our active pipeline clusters high-level **eight-metric structural subfield profiles** via Euclidean KMeans/Ward, and does **not** construct or cluster paper-level graphs).
 *   **Caveats:** Requires paper-level graph construction, and is not implemented in our current codebase.
 *   **Confidence Level:** 5/5
 

@@ -9,7 +9,7 @@ main evidence.
 
 The core methodological choice is to measure discipline structure in the
 original SPECTER2 embedding space. The final downstream feature set is the
-reduced 11-metric core documented in [reduced_metric_core.md](reduced_metric_core.md).
+eight-metric structural core documented in [reduced_metric_core.md](reduced_metric_core.md).
 
 Main analyses:
 

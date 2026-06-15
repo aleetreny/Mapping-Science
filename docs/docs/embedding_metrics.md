@@ -24,9 +24,9 @@ outputs/03_embedding_metrics/diagnostics/
 ```
 
 The full metric table is intentionally broader than the thesis core. It keeps
-diagnostics and candidate metrics so the reduced 11-metric set can be audited
-and reproduced. The main downstream scripts use `docs/reduced_metric_core.md`
-as the thesis metric definition.
+diagnostics and candidate metrics so the active eight-metric structural core
+can be audited and reproduced. The main downstream scripts use the canonical
+metric list in `src/temporal_common.py` as the thesis metric definition.
 
 Run:
 

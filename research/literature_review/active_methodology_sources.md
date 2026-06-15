@@ -11,9 +11,9 @@ All references listed here are categorized as core to the methodology. Their ass
 The thesis explores the semantic morphology of scientific disciplines through a concrete, reproducible data pipeline:
 $$\text{OpenAlex Balanced Corpus} \longrightarrow \text{SPECTER2 Embeddings (768-D)} \longrightarrow \text{Reduced 11-Metric Embedding-Space Core} \longrightarrow \text{Static, Temporal, \& Convergence Analyses}$$
 
-*   **No High-Dimensional Dimensionality Reduction for Calculations:** All 11 morphological metrics are calculated in the original 768-dimensional SPECTER2 space. Embedding-space distances are treated as model-dependent semantic approximations, not objective measures of scientific reality.
+*   **No High-Dimensional Dimensionality Reduction for Calculations:** All eight structural morphology metrics are calculated in the original 768-dimensional SPECTER2 space. Embedding-space distances are treated as model-dependent semantic approximations, not objective measures of scientific reality.
 *   **UMAP Status:** Strictly constrained to **auxiliary qualitative visualization** (`scripts/09_build_global_umap_visualization.py`, `scripts/10_build_subfield_umap_visualizations.py`, etc.). It is not used as quantitative evidence because nonlinear projections may distort distances, densities, and neighborhood relations.
-*   **Clustering Status:** This chapter is planned as a downstream exploratory analysis and must be implemented only over the reduced 11-metric profiles. It focuses on exploratory morphological typologies of subfield-level metric profiles, not as natural, absolute categories of science, and is not performed on raw paper-level graphs.
+*   **Clustering Status:** The active exploratory analysis is implemented over the eight-metric structural profiles. It focuses on exploratory morphological typologies of subfield-level metric profiles, not as natural, absolute categories of science, and is not performed on raw paper-level graphs.
 
 ---
 
@@ -41,7 +41,7 @@ $$\text{OpenAlex Balanced Corpus} \longrightarrow \text{SPECTER2 Embeddings (768
 ### 2.3 Original Embedding-Space Geometry & Morphological Metrics
 *   **[radovanovic2010hubness](file:///c:/Users/Z0058EYW/Workspace/TFM/research/literature_review/candidate_references.bib)** (Radovanović et al., 2010)
     *   *Reference Category:* `core-justification`
-    *   *Role in Pipeline:* Provides the mathematical proof for "hubness"—the tendency of high-dimensional spaces to generate popular nearest neighbors. Directly justifies our inclusion of **`embedding_knn_indegree_gini`** in our reduced 11-metric core to measure and describe the local hubness profile of each subfield.
+    *   *Role in Pipeline:* Provides the mathematical proof for "hubness"—the tendency of high-dimensional spaces to generate popular nearest neighbors. Directly justifies our inclusion of **`embedding_knn_indegree_gini`** in the eight-metric structural core to measure and describe the local hubness profile of each subfield.
 
 ### 2.4 Mathematical Critique of Projection Distortions (UMAP Constraints)
 *   **[chari2023specious](file:///c:/Users/Z0058EYW/Workspace/TFM/research/literature_review/candidate_references.bib)** (Chari, Banerjee, & Pachter, 2023)

@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 
 from src.storage import save_parquet
+from src.temporal_common import CENTROID_DRIFT_METRIC, STRUCTURAL_MORPHOLOGY_METRICS
 
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
@@ -18,19 +19,7 @@ import matplotlib.pyplot as plt
 
 VALID_METRIC_STATUSES = {"completed", "completed_with_warnings"}
 
-REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS = [
-    "embedding_distance_to_centroid_median",
-    "embedding_distance_to_centroid_iqr",
-    "embedding_distance_to_centroid_p90",
-    "embedding_knn_median_distance",
-    "embedding_knn_distance_cv",
-    "embedding_knn_indegree_gini",
-    "embedding_pca_dim_80",
-    "embedding_pca_spectral_entropy",
-    "embedding_centroid_drift_early_late",
-    "embedding_radial_expansion_slope",
-    "embedding_recent_novelty_score",
-]
+REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS = list(STRUCTURAL_MORPHOLOGY_METRICS)
 
 REDUCED_INTERPRETABLE_EMBEDDING_CORE_GROUPS = {
     "global_semantic_dispersion": [
@@ -46,11 +35,6 @@ REDUCED_INTERPRETABLE_EMBEDDING_CORE_GROUPS = {
     "intrinsic_dimensionality": [
         "embedding_pca_dim_80",
         "embedding_pca_spectral_entropy",
-    ],
-    "temporal_semantic_movement": [
-        "embedding_centroid_drift_early_late",
-        "embedding_radial_expansion_slope",
-        "embedding_recent_novelty_score",
     ],
 }
 
@@ -93,6 +77,8 @@ OPTIONAL_METADATA_COLUMNS = [
 OUTPUT_FILENAMES = {
     "metrics_csv": "reduced_interpretable_core_metrics.csv",
     "metrics_parquet": "reduced_interpretable_core_metrics.parquet",
+    "centroid_drift_csv": "centroid_drift_early_late.csv",
+    "centroid_drift_parquet": "centroid_drift_early_late.parquet",
     "spearman_matrix": "reduced_core_spearman_correlation_matrix.csv",
     "pearson_matrix": "reduced_core_pearson_correlation_matrix.csv",
     "spearman_heatmap": "reduced_core_spearman_correlation_heatmap.png",
@@ -106,8 +92,9 @@ OUTPUT_FILENAMES = {
 }
 
 METHODOLOGICAL_NOTE = (
-    "This reduced core is intended for the main downstream analysis, while the "
-    "full embedding-space metric table is retained for sensitivity checks."
+    "This active structural core is intended for the main downstream morphology "
+    "analysis. Early--late centroid drift is retained as a separate semantic "
+    "displacement indicator and is not part of the structural profile matrix."
 )
 
 
@@ -121,8 +108,8 @@ def existing_outputs(output_dir: str | Path) -> list[Path]:
 
 
 def validate_reduced_core_definition() -> None:
-    if len(REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS) != 11:
-        raise ValueError("reduced interpretable embedding core must have exactly 11 metrics")
+    if len(REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS) != 8:
+        raise ValueError("active structural embedding core must have exactly 8 metrics")
     if len(set(REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS)) != len(
         REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS
     ):
@@ -171,6 +158,17 @@ def build_reduced_metric_table(frame: pd.DataFrame) -> tuple[pd.DataFrame, list[
     for metric in available_metrics:
         reduced[metric] = pd.to_numeric(reduced[metric], errors="coerce")
     return reduced, missing_columns(frame, REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS)
+
+
+def build_centroid_drift_table(frame: pd.DataFrame) -> pd.DataFrame:
+    metadata_columns = available_columns(frame, OPTIONAL_METADATA_COLUMNS)
+    if CENTROID_DRIFT_METRIC not in frame.columns:
+        return pd.DataFrame(columns=[*metadata_columns, CENTROID_DRIFT_METRIC])
+    drift = frame[metadata_columns + [CENTROID_DRIFT_METRIC]].copy()
+    drift[CENTROID_DRIFT_METRIC] = pd.to_numeric(
+        drift[CENTROID_DRIFT_METRIC], errors="coerce"
+    )
+    return drift
 
 
 def reduced_numeric_frame(reduced: pd.DataFrame) -> pd.DataFrame:
@@ -437,16 +435,16 @@ def markdown_summary(
     flagged_metrics: list[str],
 ) -> str:
     lines = [
-        "# Reduced Interpretable Embedding Core",
+        "# Structural Embedding-Space Morphology Core",
         "",
-        "This downstream step selects a compact embedding-space feature set for the "
-        "main thesis analysis. It does not recompute embeddings or remove columns "
-        "from the full script-12 metric table.",
+        "This downstream step selects the active structural embedding-space "
+        "feature set for the main thesis analysis. It does not recompute "
+        "embeddings or remove columns from the full metric table.",
         "",
         f"- Input table: `{input_path}`",
         f"- Input rows: {n_rows_input}",
         f"- Eligible subfields: {n_rows_eligible}",
-        f"- Reduced core metrics: {len(REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS)}",
+        f"- Structural core metrics: {len(REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS)}",
         "",
         "## Reduced Core By Block",
         "",
@@ -549,8 +547,11 @@ def build_reduced_interpretable_embedding_core_outputs(
 
     eligible = filter_eligible_rows(frame)
     reduced, missing_metrics = build_reduced_metric_table(eligible)
+    drift = build_centroid_drift_table(eligible)
     reduced.to_csv(paths["metrics_csv"], index=False)
     save_parquet(reduced, paths["metrics_parquet"])
+    drift.to_csv(paths["centroid_drift_csv"], index=False)
+    save_parquet(drift, paths["centroid_drift_parquet"])
 
     spearman, pearson = correlation_matrices(reduced)
     spearman.to_csv(paths["spearman_matrix"])

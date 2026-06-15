@@ -292,7 +292,7 @@ def markdown_summary(summary: dict[str, Any]) -> str:
             "# Static Discipline Profiles",
             "",
             "This stage compares OpenAlex subfields, fields, and domains using the "
-            "reduced 11-metric SPECTER2 embedding-space core.",
+            "active 8-metric structural SPECTER2 embedding-space core.",
             "",
             f"- Input rows: {summary['n_rows_input']}",
             f"- Profile rows: {summary['n_profile_rows']}",
@@ -313,6 +313,10 @@ def build_static_discipline_profile_outputs(
     top_n: int = 10,
 ) -> dict[str, Any]:
     metrics = list(REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS)
+    if len(metrics) != 8:
+        raise ValueError(
+            "Static discipline profiles require the active 8-metric structural core."
+        )
     paths = output_paths(output_dir)
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 

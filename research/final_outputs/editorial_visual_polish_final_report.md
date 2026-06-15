@@ -50,7 +50,7 @@ The reduction is moderate because conceptual figures were added and all empirica
 - Chapter 1 now visually separates taxonomy, embeddings, paper-cloud distributions, morphology metrics, and empirical uses.
 - Chapter 2 now visually contrasts link-based citation topology with continuous semantic embedding geometry.
 - Chapter 5 now visually groups the metric families around five geometric questions.
-- Chapter 7 now visually separates centroid drift, radial expansion, and densification before the empirical temporal results.
+- Chapter 7 now visually separates structural trajectory change from centroid drift before the empirical temporal results.
 - Chapter 4 section titles clarify measurement space versus visual display.
 - Chapter 9 now frames clustering more explicitly as compression rather than discovery.
 
@@ -64,7 +64,7 @@ The reduction is moderate because conceptual figures were added and all empirica
 
 - Figure 1.1: conceptual workflow of embedding-space morphology. Purpose: show the thesis logic before the empirical chapters.
 - Figure 2.1: citation topology and semantic geometry. Purpose: clarify why the thesis uses document embeddings as a distributional measurement space rather than treating science only as a link graph.
-- Figure 5.1: metric families as field-shape grammar. Purpose: make the eleven-metric core easier to remember and reduce list-like exposition.
+- Figure 5.1: metric families as field-shape grammar. Purpose: make the eight-metric structural core easier to remember and reduce list-like exposition.
 - Figure 7.1: schematic modes of temporal morphology. Purpose: distinguish centroid movement, expansion, and densification before the empirical temporal chapter.
 - Final manuscript versions use the user-provided PNG files under `memory/figures/`:
   - `memory/figures/fig_01_conceptual_workflow.png`

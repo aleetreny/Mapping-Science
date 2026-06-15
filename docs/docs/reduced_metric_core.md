@@ -19,11 +19,13 @@ outputs/04_reduced_metric_core/reduced_core_pearson_correlation_matrix.csv
 outputs/04_reduced_metric_core/reduced_core_spearman_correlation_heatmap.png
 outputs/04_reduced_metric_core/reduced_core_pearson_correlation_heatmap.png
 outputs/04_reduced_metric_core/reduced_core_histograms.png
+outputs/04_reduced_metric_core/centroid_drift_early_late.parquet
+outputs/04_reduced_metric_core/centroid_drift_early_late.csv
 outputs/04_reduced_metric_core/summary.md
 outputs/04_reduced_metric_core/summary.json
 ```
 
-The 11 metrics are:
+The eight active structural morphology metrics are:
 
 ```text
 embedding_distance_to_centroid_median
@@ -34,10 +36,10 @@ embedding_knn_distance_cv
 embedding_knn_indegree_gini
 embedding_pca_dim_80
 embedding_pca_spectral_entropy
-embedding_centroid_drift_early_late
-embedding_radial_expansion_slope
-embedding_recent_novelty_score
 ```
+
+Centroid drift is retained only as a separate net semantic displacement output
+and is not part of the morphology profile matrices.
 
 Run:
 

@@ -51,8 +51,8 @@ Clustering is a fundamental step in grouping subfields into Morphological Typolo
 
 ### Academic Defense (How We Mitigate It):
 *   We cite **Kleinberg (2002)** to provide a rigorous theoretical backing for treating our morphological typologies as **exploratory, qualitative heuristics** rather than objective, absolute taxonomies of knowledge.
-*   **Methodological Decision:** Our active pipeline groups disciplines strictly by running standard KMeans and hierarchical Ward clustering **over the reduced 11 embedding-space metric profiles** at the subfield level.
-*   **Clustering Chapter Status:** This chapter is planned as a downstream exploratory analysis and must be implemented only over the reduced 11-metric profiles. No active clustering script is in our active production pipeline.
+*   **Methodological Decision:** Our active pipeline groups disciplines strictly by running standard KMeans and hierarchical Ward clustering **over the eight structural embedding-space metric profiles** at the subfield level.
+*   **Clustering Chapter Status:** The active exploratory analysis is implemented only over the eight structural metric profiles.
 *   **Non-Active Extension (Future Work):** We do **not** build paper-level citation or kNN graphs, nor do we run graph-level community detection such as **Leiden community detection** (**Traag et al., 2019**). These paper-level graph models are explicitly relegated to **future work extensions**.
 
 ---

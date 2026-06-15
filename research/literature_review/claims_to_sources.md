@@ -25,11 +25,11 @@ Every claim has been scoped conservatively to **avoid overstating what the empir
 
 ## 2. Original Embedding-Space Geometry & Hubness
 
-### Claim 2: "High-dimensional spaces inherently suffer from 'hubness' (popular nearest neighbors). We measure this structural artifact locally in our reduced 11-metric core to characterize subfields, but we do not apply global distance-reduction corrections."
+### Claim 2: "High-dimensional spaces inherently suffer from 'hubness' (popular nearest neighbors). We measure this structural artifact locally in our eight-metric structural core to characterize subfields, but we do not apply global distance-reduction corrections."
 *   **Supporting Literature:**
     *   **[radovanovic2010hubness](file:///c:/Users/Z0058EYW/Workspace/TFM/research/literature_review/candidate_references.bib#L80-L90)** (Radovanović et al., 2010)  
         *   *Methodology Status:* `methodological justification`  
-        *   *Thesis Support:* Proves that hubness is an intrinsic geometric property of high-dimensional spaces. This supports our use of the KNN graph indegree Gini coefficient (**`embedding_knn_indegree_gini`**) in our 11-metric core to measure the local hubness profile of each subfield.
+        *   *Thesis Support:* Proves that hubness is an intrinsic geometric property of high-dimensional spaces. This supports our use of the KNN graph indegree Gini coefficient (**`embedding_knn_indegree_gini`**) in the eight-metric structural core to measure the local hubness profile of each subfield.
     *   **[feldbauer2019skhubness](file:///c:/Users/Z0058EYW/Workspace/TFM/research/literature_review/candidate_references.bib#L91-L101)** (Feldbauer et al., 2019)  
         *   *Methodology Status:* `future work`  
         *   *Thesis Support:* Introduces software and algorithms (Mutual Proximity, Local Scaling) to correct hubness bias. Cited in the discussion as a concrete future step to refine high-dimensional nearest-neighbor measurements.
@@ -103,7 +103,7 @@ Every claim has been scoped conservatively to **avoid overstating what the empir
 
 ## 6. Exploratory Typologies & Clustering Limits
 
-### Claim 8: "Clustering is strictly an exploratory tool to identify morphological typologies. No clustering algorithm represents a 'natural, perfect partition' of scientific knowledge. This chapter is planned as a downstream exploratory analysis and must be implemented only over the reduced 11-metric profiles."
+### Claim 8: "Clustering is strictly an exploratory tool to identify morphological typologies. No clustering algorithm represents a 'natural, perfect partition' of scientific knowledge. The active typology is implemented only over the eight-metric structural profiles."
 *   **Supporting Literature:**
     *   **[kleinberg2002clustering](file:///c:/Users/Z0058EYW/Workspace/TFM/research/literature_review/candidate_references.bib#L164-L174)** (Kleinberg, 2002)  
         *   *Methodology Status:* `methodological justification`  

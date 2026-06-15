@@ -59,14 +59,11 @@ CORE_EMBEDDING_METRIC_COLUMNS = [
     "embedding_centroid_drift_early_late",
     "embedding_annual_centroid_path_length",
     "embedding_directionality_ratio",
-    "embedding_radial_expansion_slope",
-    "embedding_recent_novelty_score",
 ]
 
 DIAGNOSTIC_COLUMNS = [
     "embedding_graph_connected_component_count",
     "embedding_graph_largest_component_share",
-    "embedding_radial_expansion_r2",
 ]
 
 QUALITY_CONTROL_COLUMNS = [
@@ -123,7 +120,6 @@ EMBEDDING_METRIC_ROLE_BY_COLUMN = {
     **{column: "core" for column in CORE_EMBEDDING_METRIC_COLUMNS},
     "embedding_graph_connected_component_count": "excluded_from_core",
     "embedding_graph_largest_component_share": "excluded_from_core",
-    "embedding_radial_expansion_r2": "diagnostic",
     **{column: "control" for column in QUALITY_CONTROL_COLUMNS},
 }
 
@@ -484,55 +480,19 @@ def temporal_embedding_metrics(
         early_centroid = np.mean(normalized[early_mask], axis=0)
         late_centroid = np.mean(normalized[late_mask], axis=0)
         drift = cosine_distance_between_centroids(early_centroid, late_centroid)
-        early_distances_to_early = cosine_distance_to_direction(
-            normalized[early_mask],
-            early_centroid,
-        )
-        late_distances_to_early = cosine_distance_to_direction(
-            normalized[late_mask],
-            early_centroid,
-        )
-        early_distances_to_early = early_distances_to_early[
-            np.isfinite(early_distances_to_early)
-        ]
-        late_distances_to_early = late_distances_to_early[
-            np.isfinite(late_distances_to_early)
-        ]
-        if len(early_distances_to_early) and len(late_distances_to_early):
-            recent_novelty = float(
-                np.median(late_distances_to_early)
-                - np.median(early_distances_to_early)
-            )
-        else:
-            recent_novelty = np.nan
-            warnings.append(
-                "embedding_recent_novelty_score unavailable because cosine distances "
-                "to the early centroid could not be computed"
-            )
     else:
         drift = np.nan
-        recent_novelty = np.nan
         warnings.append(
             "embedding_centroid_drift_early_late unavailable because early or late "
             f"period has fewer than {TEMPORAL_MIN_POINTS} embeddings"
         )
-        warnings.append(
-            "embedding_recent_novelty_score unavailable because early or late "
-            f"period has fewer than {TEMPORAL_MIN_POINTS} embeddings"
-        )
 
     annual_centroids: list[tuple[int, np.ndarray]] = []
-    global_centroid = np.mean(normalized, axis=0)
-    annual_median_distance: list[tuple[int, float]] = []
     for year in range(year_min, year_max + 1):
         year_mask = years == year
         if np.count_nonzero(year_mask) < TEMPORAL_MIN_POINTS:
             continue
         annual_centroids.append((year, np.mean(normalized[year_mask], axis=0)))
-        distances = cosine_distance_to_direction(normalized[year_mask], global_centroid)
-        distances = distances[np.isfinite(distances)]
-        if len(distances):
-            annual_median_distance.append((year, float(np.median(distances))))
 
     if len(annual_centroids) >= 2:
         steps = [
@@ -556,53 +516,11 @@ def temporal_embedding_metrics(
             "embedding_directionality_ratio unavailable because drift or path is unavailable"
         )
 
-    if len(annual_median_distance) >= 2:
-        year_values = np.array([year for year, _ in annual_median_distance], dtype=float)
-        distance_values = np.array(
-            [distance for _, distance in annual_median_distance],
-            dtype=float,
-        )
-        centered_years = year_values - year_values.mean()
-        coefficients = np.polyfit(centered_years, distance_values, deg=1)
-        slope = float(coefficients[0])
-    else:
-        slope = np.nan
-        warnings.append(
-            "embedding_radial_expansion_slope unavailable because fewer than two "
-            f"years have at least {TEMPORAL_MIN_POINTS} embeddings"
-        )
-
-    if len(annual_median_distance) >= 3:
-        year_values = np.array([year for year, _ in annual_median_distance], dtype=float)
-        distance_values = np.array(
-            [distance for _, distance in annual_median_distance],
-            dtype=float,
-        )
-        centered_years = year_values - year_values.mean()
-        coefficients = np.polyfit(centered_years, distance_values, deg=1)
-        fitted = np.polyval(coefficients, centered_years)
-        ss_residual = float(np.sum((distance_values - fitted) ** 2))
-        ss_total = float(np.sum((distance_values - distance_values.mean()) ** 2))
-        radial_r2 = float(1.0 - (ss_residual / ss_total)) if ss_total > EPS else np.nan
-        if not np.isfinite(radial_r2):
-            warnings.append(
-                "embedding_radial_expansion_r2 unavailable because annual distances are constant"
-            )
-    else:
-        radial_r2 = np.nan
-        warnings.append(
-            "embedding_radial_expansion_r2 unavailable because fewer than three "
-            f"years have at least {TEMPORAL_MIN_POINTS} embeddings"
-        )
-
     return (
         {
             "embedding_centroid_drift_early_late": drift,
             "embedding_annual_centroid_path_length": path,
             "embedding_directionality_ratio": directionality,
-            "embedding_radial_expansion_slope": slope,
-            "embedding_recent_novelty_score": recent_novelty,
-            "embedding_radial_expansion_r2": radial_r2,
         },
         {
             "n_years_available": int(len(available_years)),
@@ -940,17 +858,6 @@ def metric_dictionary_frame() -> pd.DataFrame:
             "Early-late centroid drift divided by annual centroid path length.",
             "More directional semantic movement.",
         ),
-        "embedding_radial_expansion_slope": (
-            "Temporal movement",
-            "Linear trend of annual median cosine distance to the full-period centroid.",
-            "Semantic expansion away from the period centroid.",
-        ),
-        "embedding_recent_novelty_score": (
-            "Temporal novelty",
-            "Median late-period cosine distance to the early-period centroid minus "
-            "median early-period cosine distance to that same centroid.",
-            "Recent papers are farther from the early semantic core.",
-        ),
     }
     for name in CORE_EMBEDDING_METRIC_COLUMNS:
         family, definition, higher = definitions[name]
@@ -977,10 +884,6 @@ def metric_dictionary_frame() -> pd.DataFrame:
             ),
         )
         role = EMBEDDING_METRIC_ROLE_BY_COLUMN.get(name, "diagnostic")
-        if name == "embedding_radial_expansion_r2":
-            family = "Temporal diagnostic"
-            definition = "R-squared fit strength for the annual radial expansion trend."
-            higher = "Cleaner linear radial expansion or contraction fit."
         rows.append(
             {
                 "metric_name": name,

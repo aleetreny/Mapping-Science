@@ -10,7 +10,6 @@ import pandas as pd
 
 from src.storage import save_parquet
 from src.temporal_common import (
-    REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS,
     WINDOW_STRUCTURAL_METRICS,
     TemporalWindow,
     dataframe_to_records,
@@ -51,9 +50,9 @@ ANALYSIS_FILENAMES = {
     "summary_json": "summary.json",
 }
 
+STATIC_STRUCTURAL_METRIC_SET = "static_structural"
 STATIC_METRIC_SETS = {
-    "static_full_reduced": REDUCED_INTERPRETABLE_EMBEDDING_CORE_METRICS,
-    "static_window_structural": WINDOW_STRUCTURAL_METRICS,
+    STATIC_STRUCTURAL_METRIC_SET: WINDOW_STRUCTURAL_METRICS,
 }
 TEMPORAL_METRIC_SET = "temporal_window_structural"
 DEFAULT_OVERALL_CHANGE_RANKING = (
@@ -885,7 +884,7 @@ def save_morphological_matrices(
             static_subset = static_pairs.loc[
                 (static_pairs["level"] == level)
                 & (static_pairs["distance_metric"] == distance_metric)
-                & (static_pairs["metric_set"] == "static_full_reduced")
+                & (static_pairs["metric_set"] == STATIC_STRUCTURAL_METRIC_SET)
             ]
             if not static_subset.empty:
                 matrix = matrix_from_pairs(static_subset, value_column="morphological_distance")
@@ -1350,7 +1349,7 @@ def write_static_pair_summaries(
             subset = static_pairs.loc[
                 (static_pairs["level"] == level)
                 & (static_pairs["distance_metric"] == distance_metric)
-                & (static_pairs["metric_set"] == "static_full_reduced")
+                & (static_pairs["metric_set"] == STATIC_STRUCTURAL_METRIC_SET)
                 & static_pairs["morphological_distance"].notna()
             ].copy()
             closest = subset.sort_values(
@@ -1495,7 +1494,7 @@ def write_morphological_outputs(
             static_subset = static_pairs.loc[
                 (static_pairs["level"] == level)
                 & (static_pairs["distance_metric"] == distance_metric)
-                & (static_pairs["metric_set"] == "static_full_reduced")
+                & (static_pairs["metric_set"] == STATIC_STRUCTURAL_METRIC_SET)
             ]
             temporal_subset = temporal_pairs.loc[
                 (temporal_pairs["level"] == level)
@@ -1681,7 +1680,7 @@ def markdown_summary(summary: dict[str, Any]) -> str:
         "- Morphological distance is computed between robust-scaled metric profiles.",
         f"- Scaling method: `{summary.get('scaler', 'robust')}`.",
         "- Temporal morphology uses the eight non-temporal structural metrics recomputed per five-year window.",
-        "- Static morphology uses the 11-metric reduced interpretable embedding core when available, plus an 8-metric structural static sensitivity set.",
+        "- Static morphology uses the active eight-metric structural profile.",
         "- Negative final-minus-initial distance means morphological convergence. Positive means morphological divergence.",
         "- Field and domain profiles are averages of robust-scaled subfield profiles.",
         "",
