@@ -30,7 +30,7 @@ At the broadest scale, domains show morphological tendencies. Physical Sciences 
 \centering
 \caption[Domain-level morphological profiles]{Domain-level standardized structural morphology profiles. Values are visual contrasts across the four domain profiles, not inferential statistics.}
 \label{fig:domain_metric_profile_heatmap}
-\includegraphics[width=\textwidth]{figures/fig_06_domain_metric_profile_heatmap.png}
+\includegraphics[width=\textwidth]{figures/fig_06_domain_metric_profile_heatmap.pdf}
 \end{figure}
 
 The domain view is useful because it gives the first answer to the static part of the second research question: broad areas of science differ in shape. It is also limited, because four averages can easily hide the heterogeneity that matters for the thesis.
@@ -43,7 +43,7 @@ Field profiles break the clean domain story. Physical Sciences include dispersed
 \centering
 \caption[Field-level morphological profiles]{Field-level standardized structural morphology profiles. Rows are fields ordered by parent OpenAlex domain.}
 \label{fig:field_metric_profile_heatmap}
-\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{figures/fig_06_field_metric_profile_heatmap.png}
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{figures/fig_06_field_metric_profile_heatmap.pdf}
 \end{figure}
 
 The most visible contrast is local structure. Chemistry, Physics and Astronomy, Materials Science, Engineering, and Environmental Science have high median kNN distances, meaning that even near neighbors tend to be farther away. Dentistry, Nursing, Immunology and Microbiology, Veterinary, and Health Professions have lower median kNN distances. This does not mean that one group is more important or more coherent in a substantive sense; it means that their retained title--abstract records are packed differently in the SPECTER2 space.
@@ -52,7 +52,7 @@ The most visible contrast is local structure. Chemistry, Physics and Astronomy, 
 \centering
 \caption[Subfield metric distributions by domain]{Subfield-level standardized metric distributions by domain for the eight structural metrics.}
 \label{fig:subfield_metric_distributions_by_domain}
-\includegraphics[width=\textwidth]{figures/fig_06_subfield_metric_distributions_by_domain.png}
+\includegraphics[width=\textwidth]{figures/fig_06_subfield_metric_distributions_by_domain.pdf}
 \end{figure}
 
 The boxplots show why morphology cannot be inferred from a domain label. Physical Sciences have the highest median subfield dispersion and kNN distance, but some physical subfields are compact. Health Sciences have lower local distances on average, but hubness varies widely. Social Sciences contain both compact applied areas and highly atypical humanities subfields. The field and subfield levels are therefore not details after the domain result; they are the evidence that taxonomy and morphology only partly align.
@@ -71,7 +71,7 @@ The exploratory PCA map in Figure~\ref{fig:metric_profile_pca_map} summarizes st
 \centering
 \caption[Subfield profile PCA map]{Exploratory PCA map of subfield structural morphology profiles. Points are subfields represented by the eight standardized structural metrics.}
 \label{fig:metric_profile_pca_map}
-\includegraphics[width=\textwidth]{figures/fig_06_metric_profile_pca_map.png}
+\includegraphics[width=\textwidth]{figures/fig_06_metric_profile_pca_map.pdf}
 \end{figure}
 
 The static result is deliberately modest: domains help orient the comparison, but they do not determine field shape. Broad domain tendencies coexist with large within-domain variation and cross-domain overlap in metric-profile space; Appendix~\ref{app:umap-atlas} retains selected UMAP maps only as visual diagnostics. This establishes static morphology as measurable but not neatly taxonomic, which motivates the next chapter's shift from full-period shape to structural change over time.
