@@ -901,37 +901,61 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
     (TABLE_DIR / "tab_07_centroid_drift_extremes.tex").write_text("\n".join(lines), encoding="utf-8")
     
     # Generate side-by-side horizontal bar chart of the extremes
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 5.0), constrained_layout=True)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13.0, 5.2), constrained_layout=True)
     
     top_plot = top.iloc[::-1]
     ax1.barh(
         [shorten(name, width=32, placeholder="...") for name in top_plot["subfield_display_name"]],
         top_plot[CENTROID_DRIFT_METRIC],
         color="#e45756",
-        height=0.6,
+        height=0.65,
         alpha=0.85,
     )
-    ax1.set_title("Highest early--late centroid drift", fontsize=11.0, fontweight="bold")
-    ax1.set_xlabel("Centroid drift value", fontsize=10.0)
+    ax1.set_title("Highest early--late centroid drift", fontsize=11.5, fontweight="normal")
+    ax1.set_xlabel("Centroid drift value", fontsize=12.0)
     ax1.spines['top'].set_visible(False)
     ax1.spines['right'].set_visible(False)
     ax1.grid(True, axis="x", alpha=0.15, linestyle="--")
-    ax1.tick_params(axis="both", labelsize=9.5)
+    ax1.tick_params(axis="both", labelsize=11.0)
+    ax1.set_xticks([0.0, 0.02, 0.04])
+    ax1.set_xlim(0, 0.048)
+    for y, val in enumerate(top_plot[CENTROID_DRIFT_METRIC]):
+        ax1.text(
+            val + 0.001,
+            y,
+            f"{val:.3f}",
+            ha="left",
+            va="center",
+            fontsize=10.5,
+            color="#222222",
+        )
     
     bottom_plot = bottom.iloc[::-1]
     ax2.barh(
         [shorten(name, width=32, placeholder="...") for name in bottom_plot["subfield_display_name"]],
         bottom_plot[CENTROID_DRIFT_METRIC],
         color="#4c78a8",
-        height=0.6,
+        height=0.65,
         alpha=0.85,
     )
-    ax2.set_title("Lowest early--late centroid drift", fontsize=11.0, fontweight="bold")
-    ax2.set_xlabel("Centroid drift value", fontsize=10.0)
+    ax2.set_title("Lowest early--late centroid drift", fontsize=11.5, fontweight="normal")
+    ax2.set_xlabel("Centroid drift value", fontsize=12.0)
     ax2.spines['top'].set_visible(False)
     ax2.spines['right'].set_visible(False)
     ax2.grid(True, axis="x", alpha=0.15, linestyle="--")
-    ax2.tick_params(axis="both", labelsize=9.5)
+    ax2.tick_params(axis="both", labelsize=11.0)
+    ax2.set_xticks([0.0, 0.001, 0.002])
+    ax2.set_xlim(0, 0.0027)
+    for y, val in enumerate(bottom_plot[CENTROID_DRIFT_METRIC]):
+        ax2.text(
+            val + 0.00006,
+            y,
+            f"{val:.3f}",
+            ha="left",
+            va="center",
+            fontsize=10.5,
+            color="#222222",
+        )
     
     savefig(fig, "fig_07_centroid_drift_extremes", pdf=True)
     plt.close(fig)
@@ -1137,20 +1161,22 @@ def plot_temporal_figures(temporal: pd.DataFrame) -> dict[str, float]:
     for row_idx in range(values.shape[0]):
         for col_idx in range(values.shape[1]):
             value = values[row_idx, col_idx]
-            color = "white" if abs(value) > 0.72 * limit else "#222222"
-            ax.text(col_idx, row_idx, f"{value:+.2f}", ha="center", va="center", fontsize=8, color=color)
+            color = "white" if (abs(value) / limit) > 0.55 else "#222222"
+            ax.text(col_idx, row_idx, f"{value:+.2f}", ha="center", va="center", fontsize=9.5, color=color)
     row_labels = [
         f"D{int(row.trajectory_cluster_id)} {DYNAMIC_LABELS[int(row.trajectory_cluster_id)]}\n(n={int(row.n_subfields)})"
         for row in profile.itertuples()
     ]
     ax.set_yticks(np.arange(len(row_labels)))
-    ax.set_yticklabels(row_labels, fontsize=8.8)
+    ax.set_yticklabels(row_labels, fontsize=11.0)
     ax.set_xticks(np.arange(len(METRICS)))
-    ax.set_xticklabels([METRIC_LABELS[m] for m in METRICS], fontsize=8.8)
+    ax.set_xticklabels([METRIC_LABELS[m] for m in METRICS], fontsize=11.0)
+    ax.tick_params(length=0)
     for boundary in [2.5, 5.5]:
         ax.axvline(boundary, color="#2d2d2d", linewidth=0.8)
-    cbar = fig.colorbar(image, ax=ax, shrink=0.84, pad=0.015)
-    cbar.set_label("Mean standardized slope", fontsize=9)
+    cbar = fig.colorbar(image, ax=ax, fraction=0.032, pad=0.015)
+    cbar.set_label("Mean standardized slope", fontsize=11.0, labelpad=12.0)
+    cbar.ax.tick_params(labelsize=10.0)
     savefig(fig, "fig_09_dynamic_typology_profile_heatmap", pdf=True)
 
     return {
@@ -1175,14 +1201,32 @@ def plot_similarity_figures(core: pd.DataFrame) -> dict[str, float]:
     field_order = ordered_fields(core)
     matrix = matrix.reindex(index=field_order, columns=field_order)
 
-    fig, ax = plt.subplots(figsize=(9.5, 8.5), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(12.0, 11.0), constrained_layout=True)
     image = ax.imshow(matrix.to_numpy(dtype=float), cmap="viridis_r", aspect="equal")
+    
+    names_fontsize = 11.0
     ax.set_xticks(np.arange(len(field_order)))
     ax.set_yticks(np.arange(len(field_order)))
-    ax.set_xticklabels([shorten(name, width=19, placeholder="...") for name in field_order], rotation=90, fontsize=6.3)
-    ax.set_yticklabels([shorten(name, width=31, placeholder="...") for name in field_order], fontsize=6.5)
+    ax.set_xticklabels([shorten(name, width=42, placeholder="...") for name in field_order], rotation=90, fontsize=names_fontsize)
+    ax.set_yticklabels([shorten(name, width=42, placeholder="...") for name in field_order], fontsize=names_fontsize)
+    ax.tick_params(length=0)
+    
+    # Find and draw thick boundaries between domains
+    boundaries = []
+    current_domain = None
+    for idx, field in enumerate(field_order):
+        dom = name_to_domain[field]
+        if current_domain is not None and dom != current_domain:
+            boundaries.append(idx - 0.5)
+        current_domain = dom
+        
+    for boundary in boundaries:
+        ax.axhline(boundary, color="#222222", linewidth=2.0)
+        ax.axvline(boundary, color="#222222", linewidth=2.0)
+        
     cbar = fig.colorbar(image, ax=ax, fraction=0.035, pad=0.015)
-    cbar.set_label("Morphological distance", fontsize=8.5)
+    cbar.set_label("Morphological distance", fontsize=11.0, labelpad=12.0)
+    cbar.ax.tick_params(labelsize=10.0)
     savefig(fig, "fig_08_field_static_distance_heatmap", pdf=True)
 
     nearest_rows = []
