@@ -547,7 +547,7 @@ def heatmap(
     image = ax.imshow(matrix, cmap="RdBu_r", vmin=-vlim, vmax=vlim, aspect="auto")
     
     # Tick sizes and padding matching correlation matrix visual polish
-    names_fontsize = 10.5
+    names_fontsize = 11.0
     cbar_label_fontsize = 11.0
     cbar_ticks_fontsize = 10.0
     cbar_labelpad = 12.0
@@ -566,7 +566,7 @@ def heatmap(
                 if abs(val) >= annotate_threshold:
                     # White text for highly saturated cells, dark gray for lighter ones
                     color = "white" if (abs(val) / vlim) > 0.55 else "#222222"
-                    ax.text(j, i, f"{val:+.2f}", ha="center", va="center", fontsize=9.0, color=color, fontweight="semibold")
+                    ax.text(j, i, f"{val:+.2f}", ha="center", va="center", fontsize=9.5, color=color)
                     
     cbar = fig.colorbar(image, ax=ax, fraction=0.032, pad=0.015)
     cbar.set_label(colorbar_label, fontsize=cbar_label_fontsize, labelpad=cbar_labelpad)
@@ -619,7 +619,8 @@ def plot_static_profiles(core: pd.DataFrame, subfield: pd.DataFrame, field: pd.D
         var_name="metric",
         value_name="value",
     )
-    fig, axes = plt.subplots(2, 4, figsize=(13.0, 8.5), sharey=True, constrained_layout=True)
+    fig, axes = plt.subplots(2, 4, figsize=(13.0, 8.5), sharey=True)
+    fig.subplots_adjust(hspace=0.24, wspace=0.12, left=0.07, right=0.98, top=0.93, bottom=0.12)
     for i, (ax, metric) in enumerate(zip(axes.ravel(), METRICS)):
         data = [plot_frame.loc[(plot_frame["metric"] == metric) & (plot_frame["domain_display_name"] == domain), "value"].dropna() for domain in DOMAIN_ORDER]
         bp = ax.boxplot(
@@ -633,7 +634,13 @@ def plot_static_profiles(core: pd.DataFrame, subfield: pd.DataFrame, field: pd.D
             patch.set_alpha(0.78)
         ax.axhline(0, color="#555555", linewidth=0.6)
         ax.set_title(metric_titles[metric], fontsize=11.5, fontweight="normal")
-        ax.tick_params(axis="x", labelsize=10.5)
+        
+        # Remove X-axis labels from the top row to avoid repetition
+        if i < 4:
+            ax.tick_params(axis="x", labelbottom=False)
+        else:
+            ax.tick_params(axis="x", labelsize=10.5)
+            
         ax.tick_params(axis="y", labelsize=11.0)
         ax.grid(True, axis="y", alpha=0.18)
         if i % 4 == 0:
