@@ -911,12 +911,13 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
         height=0.65,
         alpha=0.85,
     )
-    ax1.set_title("Highest early--late centroid drift", fontsize=11.5, fontweight="normal")
-    ax1.set_xlabel("Centroid drift value", fontsize=12.0)
+    ax1.set_title("Highest early--late centroid drift", fontsize=11.0, fontweight="normal")
+    ax1.set_xlabel("Centroid drift value", fontsize=11.0)
     ax1.spines['top'].set_visible(False)
     ax1.spines['right'].set_visible(False)
     ax1.grid(True, axis="x", alpha=0.15, linestyle="--")
-    ax1.tick_params(axis="both", labelsize=11.0)
+    ax1.tick_params(axis="y", labelsize=11.0, length=0)
+    ax1.tick_params(axis="x", labelsize=10.0)
     ax1.set_xticks([0.0, 0.02, 0.04])
     ax1.set_xlim(0, 0.048)
     for y, val in enumerate(top_plot[CENTROID_DRIFT_METRIC]):
@@ -926,7 +927,7 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
             f"{val:.3f}",
             ha="left",
             va="center",
-            fontsize=10.5,
+            fontsize=9.5,
             color="#222222",
         )
     
@@ -938,12 +939,13 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
         height=0.65,
         alpha=0.85,
     )
-    ax2.set_title("Lowest early--late centroid drift", fontsize=11.5, fontweight="normal")
-    ax2.set_xlabel("Centroid drift value", fontsize=12.0)
+    ax2.set_title("Lowest early--late centroid drift", fontsize=11.0, fontweight="normal")
+    ax2.set_xlabel("Centroid drift value", fontsize=11.0)
     ax2.spines['top'].set_visible(False)
     ax2.spines['right'].set_visible(False)
     ax2.grid(True, axis="x", alpha=0.15, linestyle="--")
-    ax2.tick_params(axis="both", labelsize=11.0)
+    ax2.tick_params(axis="y", labelsize=11.0, length=0)
+    ax2.tick_params(axis="x", labelsize=10.0)
     ax2.set_xticks([0.0, 0.001, 0.002])
     ax2.set_xlim(0, 0.0027)
     for y, val in enumerate(bottom_plot[CENTROID_DRIFT_METRIC]):
@@ -953,7 +955,7 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
             f"{val:.3f}",
             ha="left",
             va="center",
-            fontsize=10.5,
+            fontsize=9.5,
             color="#222222",
         )
     
@@ -1204,10 +1206,39 @@ def plot_similarity_figures(core: pd.DataFrame) -> dict[str, float]:
     fig, ax = plt.subplots(figsize=(12.0, 11.0), constrained_layout=True)
     image = ax.imshow(matrix.to_numpy(dtype=float), cmap="viridis_r", aspect="equal")
     
+    x_abbrevs = {
+        "Agricultural and Biological Sciences": "Agri. Biol. Sci.",
+        "Arts and Humanities": "Arts Hum.",
+        "Biochemistry, Genetics and Molecular Biology": "Biochem. Gen. Mol. Biol.",
+        "Business, Management and Accounting": "Bus. Mgmt. Acc.",
+        "Chemical Engineering": "Chem. Eng.",
+        "Chemistry": "Chem.",
+        "Computer Science": "Comp. Sci.",
+        "Decision Sciences": "Dec. Sci.",
+        "Earth and Planetary Sciences": "Earth Planet. Sci.",
+        "Economics, Econometrics and Finance": "Econ. Fin.",
+        "Energy": "Energy",
+        "Engineering": "Eng.",
+        "Environmental Science": "Env. Sci.",
+        "Immunology and Microbiology": "Immun. Microb.",
+        "Materials Science": "Mat. Sci.",
+        "Mathematics": "Math.",
+        "Medicine": "Med.",
+        "Neuroscience": "Neuro.",
+        "Nursing": "Nursing",
+        "Pharmacology, Toxicology and Pharmaceutics": "Pharm. Tox.",
+        "Physics and Astronomy": "Phys. Astron.",
+        "Psychology": "Psych.",
+        "Social Sciences": "Soc. Sci.",
+        "Veterinary": "Vet.",
+        "Dentistry": "Dentistry",
+        "Health Professions": "Health Prof.",
+    }
+    
     names_fontsize = 11.0
     ax.set_xticks(np.arange(len(field_order)))
     ax.set_yticks(np.arange(len(field_order)))
-    ax.set_xticklabels([shorten(name, width=42, placeholder="...") for name in field_order], rotation=90, fontsize=names_fontsize)
+    ax.set_xticklabels([x_abbrevs.get(name, name) for name in field_order], rotation=90, fontsize=names_fontsize)
     ax.set_yticklabels([shorten(name, width=42, placeholder="...") for name in field_order], fontsize=names_fontsize)
     ax.tick_params(length=0)
     
