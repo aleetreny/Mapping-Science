@@ -10,6 +10,12 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+plt.rcParams.update({
+    "font.family": "DejaVu Sans",
+    "font.size": 9.0,
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
+})
 import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import leaves_list, linkage
@@ -212,7 +218,7 @@ def write_metric_core_table() -> None:
                     interpretation,
                 ]
             )
-            + r" \\"
+            + r" \\[0.12cm]"
         )
     lines.extend(
         [
@@ -483,7 +489,7 @@ def plot_eda(core: pd.DataFrame) -> dict[str, float]:
         
     # Set default main figure as centered
     fig = _make_eda_plot(core, "centered")
-    savefig(fig, "fig_06_structural_metric_raw_distributions")
+    savefig(fig, "fig_06_structural_metric_raw_distributions", pdf=True)
     plt.close(fig)
 
     corr = core[METRICS].corr(method="spearman")
@@ -505,7 +511,7 @@ def plot_eda(core: pd.DataFrame) -> dict[str, float]:
     cbar = fig.colorbar(image, ax=ax, fraction=0.046, pad=0.02)
     cbar.set_label("Spearman rho", fontsize=11.0, labelpad=12.0)
     cbar.ax.tick_params(labelsize=10.0)
-    savefig(fig, "fig_06_structural_metric_spearman_correlation")
+    savefig(fig, "fig_06_structural_metric_spearman_correlation", pdf=True)
     return diagnostics
 
 
@@ -574,6 +580,108 @@ def heatmap(
     savefig(fig, path_stem, pdf=pdf)
 
 
+def _make_boxplot_distributions(subfield: pd.DataFrame, style: str) -> plt.Figure:
+    from matplotlib.patches import Patch
+    
+    metric_titles = {
+        "embedding_distance_to_centroid_median": "Centroid-Distance Median",
+        "embedding_distance_to_centroid_iqr": "Centroid-Distance IQR",
+        "embedding_distance_to_centroid_p90": "Centroid-Distance P90",
+        "embedding_knn_median_distance": "Median kNN Distance",
+        "embedding_knn_distance_cv": "kNN Distance CV",
+        "embedding_knn_indegree_gini": "kNN In-Degree Gini",
+        "embedding_pca_dim_80": "PCA D80",
+        "embedding_pca_spectral_entropy": "PCA Spectral Entropy",
+    }
+    plot_frame = subfield.melt(
+        id_vars=["subfield_id", "subfield_display_name", "domain_display_name"],
+        value_vars=METRICS,
+        var_name="metric",
+        value_name="value",
+    )
+    
+    fig, axes = plt.subplots(2, 4, figsize=(13.0, 8.5), sharey=True)
+    # Open up space at the bottom (bottom=0.16) for the shared legend
+    fig.subplots_adjust(hspace=0.22, wspace=0.12, left=0.07, right=0.98, top=0.93, bottom=0.16)
+    
+    for i, (ax, metric) in enumerate(zip(axes.ravel(), METRICS)):
+        data_by_domain = []
+        for domain in DOMAIN_ORDER:
+            vals = plot_frame.loc[(plot_frame["metric"] == metric) & (plot_frame["domain_display_name"] == domain), "value"].dropna().to_numpy(dtype=float)
+            data_by_domain.append(vals)
+            
+        if style == "violin":
+            vp = ax.violinplot(data_by_domain, showmeans=False, showmedians=False, showextrema=False)
+            for pc, domain in zip(vp['bodies'], DOMAIN_ORDER):
+                pc.set_facecolor(DOMAIN_COLORS[domain])
+                pc.set_alpha(0.65)
+                pc.set_edgecolor("#333333")
+                pc.set_linewidth(0.8)
+            for idx, vals in enumerate(data_by_domain, start=1):
+                if len(vals) > 0:
+                    q1, med, q3 = np.percentile(vals, [25, 50, 75])
+                    ax.plot([idx], [med], marker="o", color="#222222", markersize=4, zorder=5)
+                    ax.plot([idx, idx], [q1, q3], color="#222222", linewidth=2.5, zorder=4)
+        else:
+            bp = ax.boxplot(
+                data_by_domain,
+                patch_artist=True,
+                showfliers=False,
+                medianprops=dict(color="#222222", linewidth=1.2) if style != "monochrome" else dict(color="black", linewidth=1.5),
+                boxprops=dict(linewidth=0.8) if style != "monochrome" else dict(linewidth=1.2, edgecolor="black"),
+                whiskerprops=dict(color="#555555", linewidth=0.8),
+                capprops=dict(color="#555555", linewidth=0.8),
+            )
+            
+            for idx, (patch, domain) in enumerate(zip(bp["boxes"], DOMAIN_ORDER)):
+                if style == "monochrome":
+                    patch.set_facecolor("#ffffff")
+                    patch.set_edgecolor("black")
+                else:
+                    patch.set_facecolor(DOMAIN_COLORS[domain])
+                    patch.set_alpha(0.78)
+            
+            if style == "jitter":
+                for idx, vals in enumerate(data_by_domain, start=1):
+                    if len(vals) > 0:
+                        x = np.random.normal(idx, 0.08, size=len(vals))
+                        ax.scatter(x, vals, s=6, color="#222222", alpha=0.32, edgecolor="none", zorder=3)
+                        
+        ax.axhline(0, color="#777777", linewidth=0.6, linestyle=":")
+        ax.set_title(metric_titles[metric], fontsize=11.5, fontweight="normal")
+        
+        # Hide top and right spines for a clean modern paper aesthetic
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        
+        # Remove all subplot X-axis ticks and labels (using shared legend instead)
+        ax.tick_params(axis="x", bottom=False, labelbottom=False)
+        ax.tick_params(axis="y", labelsize=11.0)
+        ax.grid(True, axis="y", alpha=0.15, linestyle="--")
+        if i % 4 == 0:
+            ax.set_ylabel("Robust-scaled subfield value", fontsize=12.0)
+            
+    # Add a single horizontal legend at the bottom with a larger font size
+    legend_handles = [
+        Patch(facecolor="#ffffff" if style == "monochrome" else DOMAIN_COLORS[domain], 
+              edgecolor="black" if style == "monochrome" else "none", 
+              alpha=1.0 if style == "monochrome" else 0.78, 
+              label=domain)
+        for domain in DOMAIN_ORDER
+    ]
+    fig.legend(
+        handles=legend_handles,
+        labels=DOMAIN_ORDER,
+        loc="lower center",
+        ncol=4,
+        fontsize=12.0,
+        frameon=False,
+        bbox_to_anchor=(0.5, 0.05),
+    )
+            
+    return fig
+
+
 def plot_static_profiles(core: pd.DataFrame, subfield: pd.DataFrame, field: pd.DataFrame, domain: pd.DataFrame) -> dict[str, float]:
     domain_ordered = domain.assign(
         domain_order=domain["domain_display_name"].map({d: i for i, d in enumerate(DOMAIN_ORDER)})
@@ -603,49 +711,16 @@ def plot_static_profiles(core: pd.DataFrame, subfield: pd.DataFrame, field: pd.D
         annotate_threshold=0.50,
     )
 
-    metric_titles = {
-        "embedding_distance_to_centroid_median": "Centroid-Distance Median",
-        "embedding_distance_to_centroid_iqr": "Centroid-Distance IQR",
-        "embedding_distance_to_centroid_p90": "Centroid-Distance P90",
-        "embedding_knn_median_distance": "Median kNN Distance",
-        "embedding_knn_distance_cv": "kNN Distance CV",
-        "embedding_knn_indegree_gini": "kNN In-Degree Gini",
-        "embedding_pca_dim_80": "PCA D80",
-        "embedding_pca_spectral_entropy": "PCA Spectral Entropy",
-    }
-    plot_frame = subfield.melt(
-        id_vars=["subfield_id", "subfield_display_name", "domain_display_name"],
-        value_vars=METRICS,
-        var_name="metric",
-        value_name="value",
-    )
-    fig, axes = plt.subplots(2, 4, figsize=(13.0, 8.5), sharey=True)
-    fig.subplots_adjust(hspace=0.24, wspace=0.12, left=0.07, right=0.98, top=0.93, bottom=0.12)
-    for i, (ax, metric) in enumerate(zip(axes.ravel(), METRICS)):
-        data = [plot_frame.loc[(plot_frame["metric"] == metric) & (plot_frame["domain_display_name"] == domain), "value"].dropna() for domain in DOMAIN_ORDER]
-        bp = ax.boxplot(
-            data,
-            patch_artist=True,
-            tick_labels=[d.replace(" ", "\n") for d in DOMAIN_ORDER],
-            showfliers=False,
-        )
-        for patch, domain in zip(bp["boxes"], DOMAIN_ORDER):
-            patch.set_facecolor(DOMAIN_COLORS[domain])
-            patch.set_alpha(0.78)
-        ax.axhline(0, color="#555555", linewidth=0.6)
-        ax.set_title(metric_titles[metric], fontsize=11.5, fontweight="normal")
+    # Generate the 4 boxplot/violin variants
+    for style in ["colored", "monochrome", "jitter", "violin"]:
+        fig = _make_boxplot_distributions(subfield, style)
+        savefig(fig, f"fig_06_subfield_metric_distributions_by_domain_{style}", pdf=True)
+        plt.close(fig)
         
-        # Remove X-axis labels from the top row to avoid repetition
-        if i < 4:
-            ax.tick_params(axis="x", labelbottom=False)
-        else:
-            ax.tick_params(axis="x", labelsize=10.5)
-            
-        ax.tick_params(axis="y", labelsize=11.0)
-        ax.grid(True, axis="y", alpha=0.18)
-        if i % 4 == 0:
-            ax.set_ylabel("Robust-scaled subfield value", fontsize=12.0)
+    # Main default is colored (without top-row ticks/labels and spines off)
+    fig = _make_boxplot_distributions(subfield, "colored")
     savefig(fig, "fig_06_subfield_metric_distributions_by_domain", pdf=True)
+    plt.close(fig)
 
     matrix = subfield[METRICS].to_numpy(dtype=float)
     pca = PCA(n_components=2, random_state=42)
@@ -712,7 +787,7 @@ def write_extremes_table(subfield: pd.DataFrame) -> None:
             f"{latex_escape(row.subfield_display_name)} ({getattr(row, metric):+.2f})"
             for row in low.itertuples()
         )
-        lines.append(f"{latex_escape(METRIC_TEXT[metric])} & {high_text} & {low_text} \\\\")
+        lines.append(f"{latex_escape(METRIC_TEXT[metric])} & {high_text} & {low_text} \\\\[0.15cm]")
         for direction, subset in [("high", high), ("low", low)]:
             for rank, row in enumerate(subset.itertuples(), start=1):
                 rows_for_csv.append(
@@ -776,7 +851,7 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
                         f"{getattr(row, CENTROID_DRIFT_METRIC):.3f}",
                     ]
                 )
-                + r" \\"
+                + r" \\[0.12cm]"
             )
         if group_label == "Highest":
             lines.append(r"\hline")
@@ -1054,7 +1129,7 @@ def plot_similarity_figures(core: pd.DataFrame) -> dict[str, float]:
     ax.tick_params(axis="x", labelrotation=25)
     ax.grid(True, axis="y", alpha=0.18)
     ax.legend(fontsize=8, frameon=False, loc="best")
-    savefig(fig, "fig_08_temporal_distance_trajectories")
+    savefig(fig, "fig_08_temporal_distance_trajectories", pdf=True)
 
     conv = pd.read_csv(OUTPUT_DIR.parent / "07_morphological_similarity" / "top_pairs" / "field_euclidean_top_converging_pairs.csv").head(5)
     div = pd.read_csv(OUTPUT_DIR.parent / "07_morphological_similarity" / "top_pairs" / "field_euclidean_top_diverging_pairs.csv").head(5)
@@ -1077,7 +1152,7 @@ def plot_similarity_figures(core: pd.DataFrame) -> dict[str, float]:
     ax.set_xlabel("Morphological distance")
     ax.grid(True, axis="x", alpha=0.16)
     ax.legend(fontsize=8, frameon=False, loc="lower right")
-    savefig(fig, "fig_08_field_convergence_divergence_pairs")
+    savefig(fig, "fig_08_field_convergence_divergence_pairs", pdf=True)
 
     changes = pd.read_parquet(ROOT / "data" / "processed" / "temporal" / "morphological_pair_distance_changes.parquet")
     field_changes = changes.loc[(changes["level"] == "field") & (changes["distance_metric"] == "euclidean")]

@@ -55,6 +55,7 @@ def figure_paths(output_dir: str | Path, figure_dir: str | Path) -> dict[str, Pa
         "output_png": output_dir / f"{FIGURE_STEM}.png",
         "output_pdf": output_dir / f"{FIGURE_STEM}.pdf",
         "thesis_png": figure_dir / f"{FIGURE_STEM}.png",
+        "thesis_pdf": figure_dir / f"{FIGURE_STEM}.pdf",
     }
 
 
@@ -601,6 +602,7 @@ def plot_sensitivity_figure(
     fig.savefig(paths["output_png"], dpi=240, bbox_inches="tight")
     fig.savefig(paths["output_pdf"], bbox_inches="tight")
     fig.savefig(paths["thesis_png"], dpi=240, bbox_inches="tight")
+    fig.savefig(paths["thesis_pdf"], bbox_inches="tight")
     plt.close(fig)
 
 
@@ -621,7 +623,7 @@ def render_summary_markdown(
     selected_silhouette = float(selected_solution["silhouette"])
     if selected_silhouette >= morphology_silhouette + 0.05:
         interpretation = (
-            "Centroid embeddings cluster more clearly than the eleven-metric "
+            "Centroid embeddings cluster more clearly than the structural "
             "morphology profiles. This supports the narrower claim that semantic "
             "location has a stronger topic/location structure than morphology."
         )

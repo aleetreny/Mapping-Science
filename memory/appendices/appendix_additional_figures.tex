@@ -2,11 +2,11 @@
 
 \label{app:additional-figures}
 
-\noindent This appendix collects supplemental clustering diagnostics for the typological comparisons in Chapter~9.
+\noindent This appendix collects supplemental clustering diagnostics for the static and dynamic profile comparisons in Chapter~5.
 
 \section{Centroid-Embedding Clustering Sensitivity}
 
-Chapter~9 clusters subfields by morphology. As a sensitivity check, the analysis was repeated with semantic-location centroids. For each analysis subfield \(s\), the centroid was computed as
+Chapter~5 clusters subfields by morphology and temporal trajectories. As a sensitivity check, the analysis was repeated with semantic-location centroids. For each analysis subfield \(s\), the centroid was computed as
 \[
 \bar{z}_s=\frac{1}{n_s}\sum_{i\in s}z_i,
 \]
@@ -14,7 +14,7 @@ where paper embeddings \(z_i\) were L2-normalized before averaging and each cent
 
 The centroid exploration covered Ward hierarchical clustering, average-link hierarchical clustering, \(k\)-means, and nearest-neighbor spectral clustering for \(k=3,\ldots,10\). HDBSCAN was not available in the active environment and was not forced. The best balanced centroid solution used average linkage with cosine distance at \(k=3\), with silhouette \(=0.236\) and cluster sizes \(157\), \(60\), and \(24\). Agreement with the selected morphology typology was low (ARI \(=0.085\), AMI \(=0.084\)), while alignment with OpenAlex domains was higher (ARI \(=0.279\), AMI \(=0.471\)). A directly comparable Ward \(k=5\) centroid solution had silhouette \(=0.156\), AMI \(=0.095\) against the morphology typology, and AMI \(=0.569\) against domains.
 
-The result supports the Chapter~9 interpretation: semantic location carries stronger domain/topic structure than morphology, while agreement between centroid clusters and morphology typologies remains low.
+The result supports the Chapter~5 interpretation: semantic location carries stronger domain/topic structure than morphology, while agreement between centroid clusters and morphology typologies remains low.
 
 \begin{figure}[H]
 \centering
@@ -29,15 +29,15 @@ The hybrid check asks what happens when morphology is combined with semantic loc
 
 The best balanced hybrid solution uses spectral clustering on the \(\alpha=0.75\) hybrid distance matrix, with \(k=3\), silhouette \(=0.247\), and cluster sizes \(91\), \(77\), and \(73\). It is highly stable under subsampling (mean ARI \(=0.951\)), but it aligns much more with centroid/domain structure than with morphology: AMI is \(0.591\) against OpenAlex domains, \(0.505\) against centroid clusters, and only \(0.092\) against the morphology typology.
 
-The hybrid result clarifies the boundary of the Chapter~9 claim. Stability improves when semantic location receives substantial weight, but the partition is no longer a morphology typology on its own.
+The hybrid result clarifies the boundary of the Chapter~5 claim. Stability improves when semantic location receives substantial weight, but the partition is no longer a morphology typology on its own.
 
 \section{Static and Dynamic Domain Composition}
 
-The domain-composition diagnostic is retained here as supporting context rather than as a main Chapter~9 figure. It shows that both static and dynamic morphology typologies carry domain tendencies, but neither is optimized to reproduce OpenAlex domains.
+The domain-composition diagnostic is retained here as supporting context rather than as a main figure. It shows that both static and dynamic morphology typologies carry domain tendencies, but neither is optimized to reproduce OpenAlex domains.
 
 \begin{figure}[H]
 \centering
 \caption[Domain composition of static and dynamic typologies]{Domain composition of static and dynamic morphology typologies. Bars show the OpenAlex domain share within each typology. Domains are used only as interpretive metadata; neither the static nor the dynamic clustering optimizes domain purity.}
 \label{fig:appendix_static_dynamic_domain_composition}
-\includegraphics[width=\textwidth]{figures/fig_c_static_dynamic_domain_composition.png}
+\includegraphics[width=\textwidth]{figures/fig_c_static_dynamic_domain_composition.pdf}
 \end{figure}

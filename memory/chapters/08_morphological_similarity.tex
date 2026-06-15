@@ -1,79 +1,55 @@
-% Chapter 8: Morphological Similarity, Convergence and Divergence
+% Chapter 6: Morphological Similarity and Taxonomy
 
-\section{Turning Profiles into Relations}
+\section{Static Similarity Across Fields}
 
-Two disciplines are morphologically similar when their embedding-space metric profiles are close after robust standardization. This is not document-level semantic similarity: two fields can be morphologically close without studying the same topics, using the same vocabulary, citing the same work, or belonging to the same institutional tradition. Their paper distributions have similar structural shape under the reduced metric representation.
+Two fields are morphologically similar when their robust-scaled structural metric profiles are close. This is not document-level semantic similarity: two fields can have similar structural profiles without using the same vocabulary, citing the same work, or studying the same topics. Static similarity uses the eight-metric structural profile; field and domain profiles are averages of robust-scaled subfield profiles; distances are Euclidean distances between those profiles.
 
-Static similarity uses the full eleven-metric core from Chapter~5. For each metric, values are centered by the cross-subfield median and scaled by the interquartile range; field and domain profiles are averages of the robust-scaled subfield profiles. The primary distance used below is Euclidean distance between these standardized profiles, because it preserves magnitude differences in dispersion, local density, hubness, spectral structure, and full-period temporal indicators.
-
-Temporal convergence and divergence use the eight structural metrics recomputed inside each five-year window. The three full-period temporal indicators are excluded from windowed pairwise distances because they are already summaries over time. Operationally, convergence means that the distance between two windowed profiles decreases from 2000--2004 to 2020--2024; divergence means that it increases.
-
-\section{Static Similarity Across Disciplines}
-
-The static field-level distance matrix gives a compact view of profile-space structure. If OpenAlex domains fully aligned with morphology, the diagonal domain blocks would be uniformly light and the off-block regions uniformly dark. Figure~\ref{fig:field_static_distance_heatmap} shows a weaker pattern. Some domain blocks are internally coherent, but many nearest profile-space relations cross domain boundaries.
+The static field-level distance matrix tests how far morphology follows OpenAlex domains. If domains fully organized morphology, the diagonal blocks would be uniformly light and off-block regions uniformly dark. The observed pattern is weaker: some domain blocks are internally coherent, but many local profile-space relations cross domain boundaries.
 
 \begin{figure}[H]
 \centering
-\caption[Pairwise field morphological distances]{Pairwise morphological distance between fields. Distances are computed from robust-scaled eleven-metric profiles; lower values indicate more similar morphology.}
+\caption[Pairwise field morphological distances]{Pairwise morphological distance between fields using the eight structural metrics. Lower values indicate more similar robust-scaled morphology profiles.}
 \label{fig:field_static_distance_heatmap}
 \includegraphics[width=\textwidth]{figures/fig_08_field_static_distance_heatmap.pdf}
 \end{figure}
 
-The closest Euclidean field pairs are not simply within-domain neighbors. Biochemistry, Genetics and Molecular Biology is closest to Medicine; Neuroscience is closest to Psychology; Chemical Engineering is close to Medicine; and Agricultural and Biological Sciences is close to Materials Science. These links do not imply shared content. They mean that the fields have similar standardized levels of compactness, dispersion, hubness, spectral structure, and temporal indicators. The comparison makes shape relations visible without turning them into topic relations.
+The closest Euclidean field pairs are not simply within-domain neighbors. Agricultural and Biological Sciences is closest to Environmental Science (\(0.530\)); Energy is close to Immunology and Microbiology (\(0.562\)); Decision Sciences is close to Neuroscience (\(0.575\)); Engineering is close to Environmental Science (\(0.587\)); and Biochemistry, Genetics and Molecular Biology is close to Decision Sciences (\(0.594\)). These links do not imply shared content. They mean that the fields have similar standardized levels of compactness, dispersion, hubness, and spectral structure.
 
-Figure~\ref{fig:domain_pair_distance_structure} replaces the binary within--cross contrast with a domain-pair view. Within-domain field pairs have a lower overall median distance than cross-domain pairs, \(1.90\) versus \(2.20\), but the domain cells show where that average comes from. Social Sciences are the most internally coherent domain, while the closest cross-domain relation is between Life Sciences and Health Sciences. At field level, 18 of 26 fields have their nearest morphological neighbor outside their own domain. This is the chapter's clearest evidence that formal domains and morphology do not give the same structure.
+\section{Taxonomy, Bridges, and Isolates}
+
+The domain-pair summary separates within-domain and cross-domain structure. Within-domain field pairs have a lower median distance than cross-domain pairs, \(1.62\) versus \(1.86\), but the relationship is uneven. Social Sciences are the most internally coherent domain, and the closest cross-domain medians involve Life Sciences with Social Sciences and Life Sciences with Physical Sciences. At field level, 17 of 26 fields have their nearest morphological neighbor outside their own domain.
 
 \begin{figure}[H]
 \centering
-\caption[Domain-pair morphological distance structure]{Domain-pair morphological distance structure. Panel A reports median field-pair distances for each pair of OpenAlex domains. Diagonal cells are within-domain medians, computed from pairs of fields in the same domain and excluding self-comparisons; off-diagonal cells are between-domain medians. Panel B counts fields whose nearest morphological neighbor lies inside or outside their own domain.}
+\caption[Domain-pair morphological distance structure]{Domain-pair morphological distance structure. Panel A reports median field-pair distances by OpenAlex domain pair; Panel B counts within-domain and cross-domain nearest neighbors.}
 \label{fig:domain_pair_distance_structure}
 \includegraphics[width=\textwidth]{figures/fig_08_domain_pair_distance_structure.pdf}
 \end{figure}
 
-Figure~\ref{fig:field_nearest_neighbor_ring} makes the same result more concrete by turning the distance matrix into a directed nearest-neighbor map. Each arrow starts in a field and points to the field with the closest full-period morphology profile; dark arrows cross OpenAlex domain boundaries and grey arrows remain inside the same domain. The circular layout preserves domain membership, so the figure should be read as a stress test of the taxonomy: if domain labels fully organized morphology, most arrows would stay within their own sector.
+Several bridges are substantively interesting in profile space: Agricultural and Biological Sciences with Environmental Science; Energy with Immunology and Microbiology; Decision Sciences with Neuroscience; and Medicine with Biochemistry, Genetics and Molecular Biology. These are morphological bridges only. They show similar profile shape, not collaboration, topical merger, or citation linkage. The isolates are equally important: Pharmacology, Toxicology and Pharmaceutics has the largest nearest-neighbor distance, with Chemical Engineering still \(2.10\) away; Computer Science follows, with Neuroscience \(1.75\) away.
 
-\begin{figure}[H]
-\centering
-\caption[Directed field nearest-neighbor map]{Directed nearest-neighbor map between fields in morphology-profile space. Arrows point from each field to its nearest morphological neighbor under the robust-scaled eleven-metric distance; dark arrows indicate cross-domain nearest neighbors and grey arrows indicate within-domain nearest neighbors. Node size is proportional to the number of included subfields.}
-\label{fig:field_nearest_neighbor_ring}
-\includegraphics[width=\textwidth]{figures/fig_08_field_neighbor_variant_02_domain_ring.pdf}
-\end{figure}
+\section{Convergence and Divergence}
 
-The map clarifies three aspects that are harder to see in the heatmap. First, cross-domain similarity is not a marginal exception but the dominant local relation: the dark chords are spread around the ring rather than concentrated in a single anomalous block. Second, several relations are reciprocal, including Medicine with Biochemistry, Genetics and Molecular Biology, Neuroscience with Psychology, Energy with Immunology and Microbiology, and Nursing with Veterinary. These reciprocal links identify local morphological pairs, not merely one-sided approximations. Third, some fields act as attractors for multiple neighbors. Materials Science receives links from Agricultural and Biological Sciences, Chemistry, and Earth and Planetary Sciences, while Neuroscience receives links from Business, Management and Accounting, Decision Sciences, and Social Sciences. The interpretation is therefore not that domains are irrelevant, but that domain membership is an incomplete predictor of field shape: morphology produces local affinities, bridges, and asymmetric pulls that the domain-level taxonomy smooths over.
+Temporal convergence and divergence use the eight structural metrics recomputed inside each five-year window. Operationally, convergence means that the distance between two windowed profiles decreases from 2000--2004 to 2020--2024; divergence means that it increases. Centroid drift is not included in these pairwise distances, because it is a separate semantic-displacement indicator rather than a structural profile dimension.
 
-\section{Convergence and Divergence Over Time}
-
-The temporal picture is not global convergence. Across all 325 field pairs, mean Euclidean distance rises from \(1.44\) in 2000--2004 to \(1.81\) in 2020--2024. The same upward movement appears within domains, from \(1.39\) to \(1.70\), and across domains, from \(1.46\) to \(1.85\). Field-level morphology space becomes more separated on average, even though many individual pairs move closer. This supports the main argument because it separates average differentiation from selective convergence.
+The temporal picture is not global convergence. Across all 325 field pairs, mean Euclidean distance rises from \(1.44\) in 2000--2004 to \(1.81\) in 2020--2024. The same upward movement appears within domains, from \(1.39\) to \(1.70\), and across domains, from \(1.46\) to \(1.85\). Field-level morphology space becomes more separated on average, even though many individual pairs move closer.
 
 \begin{figure}[H]
 \centering
 \caption[Temporal field-pair distance trajectories]{Mean field-pair morphological distance across five-year windows using the eight windowed structural metrics.}
 \label{fig:temporal_distance_trajectories}
-\includegraphics[width=0.88\textwidth]{figures/fig_08_temporal_distance_trajectories.png}
+\includegraphics[width=0.88\textwidth]{figures/fig_08_temporal_distance_trajectories.pdf}
 \end{figure}
 
-This average expansion coexists with selective convergence: 97 field pairs decrease in distance, while 228 increase. The strongest convergences tend to involve shared declines in local distance and spectral dimensionality. Materials Science and Mathematics move from \(1.75\) to \(0.85\); Decision Sciences and Environmental Science from \(1.67\) to \(0.82\); and Economics, Econometrics and Finance and Psychology from \(1.53\) to \(0.70\). These are relative movements in metric-profile space, not evidence of intellectual merger.
+Selective convergence remains visible: 97 field pairs decrease in distance, while 228 increase. The strongest convergences tend to involve shared declines in local distance and spectral dimensionality. Materials Science and Mathematics move from \(1.75\) to \(0.85\); Decision Sciences and Environmental Science from \(1.67\) to \(0.82\); and Economics, Econometrics and Finance and Psychology from \(1.53\) to \(0.70\). The diverging side has a clearer protagonist: Computer Science appears in nine of the ten largest field-level Euclidean divergences.
 
 \begin{figure}[H]
 \centering
-\caption[Strongest field convergence and divergence]{Strongest field-level convergence and divergence under Euclidean profile distance. Open markers are initial distances and filled markers are final distances; labels show final-minus-initial change.}
+\caption[Strongest field-level convergence and divergence pairs]{Strongest field-level convergence and divergence pairs. Each line compares initial and final windowed profile distances; signed labels identify the largest decreases and increases in morphological distance.}
 \label{fig:field_convergence_divergence_pairs}
-\includegraphics[width=\textwidth]{figures/fig_08_field_convergence_divergence_pairs.png}
+\includegraphics[width=\textwidth]{figures/fig_08_field_convergence_divergence_pairs.pdf}
 \end{figure}
 
-\input{tables/tab_08_field_convergence_drivers}
+The same distance change can come from different metric movements. Some convergences reflect both fields becoming locally denser or lower-dimensional. Some divergences occur because one field changes sharply while the other follows the population average. Computer Science is the clearest case: its large drops in PCA dimensionality and spectral entropy separate its windowed profile from many fields that also become locally denser but do not move in the same spectral direction.
 
-The diverging side has a clearer protagonist. Computer Science appears in nine of the ten largest field-level Euclidean divergences, including divergences from Immunology and Microbiology, Neuroscience, Nursing, Dentistry, Energy, and Arts and Humanities. This does not mean that Computer Science becomes semantically remote in topic space; its windowed morphology changes in a way that separates its standardized structural profile from many other fields.
-
-\section{Nearest Neighbors, Bridges, and Isolates}
-
-Nearest-neighbor relations make the matrix interpretable without turning this chapter into a typology. Some neighbors are expected: Chemistry and Materials Science are close, and Nursing and Veterinary are each other's nearest field-level neighbors among the more isolated Health Sciences fields. Other neighbors cross domains: Medicine is nearest to Biochemistry, Genetics and Molecular Biology; Psychology is nearest to Neuroscience; and Energy is nearest to Immunology and Microbiology.
-
-These are bridges only in a morphological sense. They indicate similar profile shape, not collaboration or topical overlap. The strongest static isolates are equally important. Computer Science has the largest nearest-neighbor distance among fields: even its closest field-level neighbor, Physics and Astronomy, remains at distance \(2.75\). It also appears in the farthest static pairs, especially against Pharmacology, Toxicology and Pharmaceutics, Dentistry, Chemistry, Arts and Humanities, and Veterinary.
-
-At subfield level, the same relational logic becomes more extreme. Ecology and Materials Chemistry are the closest static subfield pair, followed by Nutrition and Dietetics with Pulmonary and Respiratory Medicine. The strongest temporal subfield convergence is concentrated around Philosophy, which appears in all ten top Euclidean convergence pairs; the strongest divergence is concentrated around Molecular Medicine, which appears in all ten top Euclidean divergence pairs. These cases show that the most dramatic relational movements occur below the broad field level.
-
-Morphological similarity is a structural comparison under a specific representation. A low distance means that two aggregate metric profiles are close after robust scaling; a high distance means that their profiles differ on one or more metric dimensions. The value of the chapter is relational and descriptive: it shows which scientific regions resemble, approach, or separate from one another in morphological profile space, providing groundwork for Chapter~9.
-
-\paragraph{What this result means.}
-Morphological similarity only partly follows taxonomy. Many fields are closest in shape to fields outside their own domain. This does not mean those fields study the same topics; it means their embedded paper distributions are arranged in similar ways. Shape and taxonomic membership are related, but not the same.
+The relational result is the most direct answer to the third research question. OpenAlex domains still matter, but morphology produces cross-domain affinities, isolated fields, and temporal differentiation that taxonomy alone does not show.
