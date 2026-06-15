@@ -2,7 +2,7 @@
 
 \label{app:metric-formulations}
 
-\noindent This appendix records the formal definitions behind the active eight-metric structural morphology profile. All quantities are computed on L2-normalized SPECTER2 document embeddings in the original embedding space. For a subfield \(s\), let \(Z_s=\{z_i:i\in s\}\), \(n_s=|Z_s|\), \(c_s=n_s^{-1}\sum_{i\in s}z_i\), and \(r_i=d(z_i,c_s)\), where \(d(\cdot,\cdot)\) is cosine distance.
+\noindent This appendix records the formal definitions behind the eight-metric structural morphology profile used in the thesis. All quantities are computed on L2-normalized SPECTER2 document embeddings in the original embedding space. For a subfield \(s\), let \(Z_s=\{z_i:i\in s\}\), \(n_s=|Z_s|\), \(c_s=n_s^{-1}\sum_{i\in s}z_i\), and \(r_i=d(z_i,c_s)\), where \(d(\cdot,\cdot)\) is cosine distance.
 
 \medskip
 \noindent\textbf{Global dispersion.} The three centroid-based dispersion metrics are
@@ -11,7 +11,7 @@
 Q_{0.75}(r)-Q_{0.25}(r), \qquad
 Q_{0.90}(r).
 \]
-They correspond to typical distance from the centroid, middle-spread heterogeneity, and the outer semantic periphery.
+They describe typical distance from the centroid, middle-spread heterogeneity, and the outer semantic periphery.
 
 \medskip
 \noindent\textbf{Local density.} Let \(N_k(i)\) be the directed set of within-subfield nearest neighbors for paper \(i\), with \(k=15\) unless the subfield has fewer available non-self neighbors. Let
@@ -41,7 +41,7 @@ D_{80}(s)=\min\left\{m:\frac{\sum_{j=1}^{m}\lambda_j}{\sum_{j=1}^{p}\lambda_j}\g
 \qquad
 H(s)=-\frac{\sum_{j=1}^{p}p_j\log p_j}{\log p},
 \]
-where \(p_j=\lambda_j/\sum_{\ell=1}^{p}\lambda_\ell\). The first quantity counts the PCA components needed to explain 80 percent of variance; the second measures how evenly variance is spread across positive-variance directions.
+where \(p_j=\lambda_j/\sum_{\ell=1}^{p}\lambda_\ell\). The first quantity counts the PCA components needed to explain 80 percent of variance. The second measures how evenly variance is spread across positive-variance directions.
 
 \medskip
 \noindent\textbf{Separate semantic-displacement indicator.} Let \(c_s^{early}\) and \(c_s^{late}\) be centroids for the early and late windows. In the full thesis period these are 2000--2004 and 2020--2024. Early--late centroid drift is
