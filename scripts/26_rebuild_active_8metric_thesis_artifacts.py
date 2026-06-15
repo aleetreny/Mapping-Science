@@ -419,7 +419,7 @@ def plot_pipeline_figure() -> None:
     savefig(fig, "fig_03_openalex_corpus_pipeline", pdf=True)
 
 
-def plot_eda(core: pd.DataFrame) -> dict[str, float]:
+def _make_eda_plot(core: pd.DataFrame, style: str) -> plt.Figure:
     metric_titles = {
         "embedding_distance_to_centroid_median": "a) Centroid-Distance Median",
         "embedding_distance_to_centroid_iqr": "b) Centroid-Distance IQR",
@@ -431,30 +431,69 @@ def plot_eda(core: pd.DataFrame) -> dict[str, float]:
         "embedding_pca_spectral_entropy": "h) PCA Spectral Entropy",
     }
     fig, axes = plt.subplots(2, 4, figsize=(12.0, 7.0), constrained_layout=True)
-    diagnostics: dict[str, float] = {}
     for i, (ax, metric) in enumerate(zip(axes.ravel(), METRICS)):
         values = pd.to_numeric(core[metric], errors="coerce").dropna()
-        ax.hist(values, bins=min(28, max(8, values.nunique())), color="#4c78a8", edgecolor="white", linewidth=0.4)
+        counts, bins, patches = ax.hist(values, bins=min(28, max(8, values.nunique())), color="#4c78a8", edgecolor="white", linewidth=0.4)
         median = float(values.median())
-        diagnostics[f"{metric}_median"] = median
-        diagnostics[f"{metric}_skew"] = float(values.skew())
-        ax.axvline(median, color="#222222", linestyle="--", linewidth=1.0)
-        ax.set_title(metric_titles[metric], fontsize=13.0, fontweight="bold", pad=8)
         
-        # Only label Y axis on the leftmost subplots (columns 0 and 4)
+        # Stop vertical median line before the text region in 'clean' styles
+        if "clean" in style:
+            ax.axvline(median, color="#222222", linestyle="--", linewidth=1.0, ymax=0.80)
+        else:
+            ax.axvline(median, color="#222222", linestyle="--", linewidth=1.0)
+        
+        # Increase Y-limit to leave space above the highest bar
+        max_y = float(np.max(counts)) if len(counts) > 0 else 10.0
+        ax.set_ylim(0, max_y * 1.35)
+        
+        # Render titles inside the subplot area
+        if style == "centered":
+            ax.text(0.5, 0.88, metric_titles[metric], transform=ax.transAxes,
+                    ha="center", va="center", fontsize=11.0, fontweight="bold",
+                    bbox=dict(boxstyle="square,pad=0.2", facecolor="#ffffff", edgecolor="#e5e7eb", alpha=0.9, linewidth=0.6))
+        elif style == "left":
+            ax.text(0.05, 0.88, metric_titles[metric], transform=ax.transAxes,
+                    ha="left", va="center", fontsize=11.0, fontweight="bold",
+                    bbox=dict(boxstyle="square,pad=0.2", facecolor="#ffffff", edgecolor="#e5e7eb", alpha=0.9, linewidth=0.6))
+        elif style == "centered_nobox" or style == "centered_clean":
+            ax.text(0.5, 0.88, metric_titles[metric], transform=ax.transAxes,
+                    ha="center", va="center", fontsize=11.0, fontweight="bold")
+        elif style == "left_nobox" or style == "left_clean":
+            ax.text(0.05, 0.88, metric_titles[metric], transform=ax.transAxes,
+                    ha="left", va="center", fontsize=11.0, fontweight="bold")
+        
+        # Only label Y axis on the leftmost subplots
         if i % 4 == 0:
             ax.set_ylabel("Subfields", fontsize=12.0, labelpad=4)
             
-        # Only label X axis on the bottom row subplots (indices 4, 5, 6, 7)
+        # Only label X axis on the bottom row subplots
         if i >= 4:
             ax.set_xlabel("Raw value", fontsize=12.0, labelpad=4)
             
         ax.tick_params(labelsize=11.0)
+    return fig
+
+
+def plot_eda(core: pd.DataFrame) -> dict[str, float]:
+    diagnostics: dict[str, float] = {}
+    for metric in METRICS:
+        values = pd.to_numeric(core[metric], errors="coerce").dropna()
+        diagnostics[f"{metric}_median"] = float(values.median())
+        diagnostics[f"{metric}_skew"] = float(values.skew())
+        
+    for style in ["centered", "left", "centered_nobox", "left_nobox", "centered_clean", "left_clean"]:
+        fig = _make_eda_plot(core, style)
+        savefig(fig, f"fig_06_structural_metric_raw_distributions_{style}")
+        plt.close(fig)
+        
+    # Set default main figure as centered_clean
+    fig = _make_eda_plot(core, "centered_clean")
     savefig(fig, "fig_06_structural_metric_raw_distributions")
+    plt.close(fig)
 
     corr = core[METRICS].corr(method="spearman")
     corr.to_csv(OUTPUT_DIR / "structural_metric_raw_spearman_correlation.csv")
-    fig, ax = plt.subplots(figsize=(7.3, 6.4), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(8.8, 6.4), constrained_layout=True)
     image = ax.imshow(corr.to_numpy(dtype=float), cmap="RdBu_r", vmin=-1, vmax=1)
     ax.set_xticks(np.arange(len(METRICS)))
     ax.set_yticks(np.arange(len(METRICS)))
