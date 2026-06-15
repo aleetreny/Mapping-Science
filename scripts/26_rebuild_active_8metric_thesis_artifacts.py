@@ -843,27 +843,45 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
         r"\caption[Net semantic displacement extremes]{Highest and lowest early--late centroid drift by subfield}",
         r"\label{tab:centroid_drift_extremes}",
         r"\scriptsize",
-        r"\begin{tabular}{@{}p{0.12\textwidth}p{0.34\textwidth}p{0.22\textwidth}p{0.17\textwidth}r@{}}",
+        r"\begin{tabular}{@{}p{0.40\textwidth}p{0.24\textwidth}p{0.20\textwidth}r@{}}",
         r"\hline",
-        r"\textbf{Group} & \textbf{Subfield} & \textbf{Field} & \textbf{Domain} & \textbf{Drift} \\",
+        r"\textbf{Subfield} & \textbf{Field} & \textbf{Domain} & \textbf{Drift} \\",
         r"\hline",
     ]
-    for group_label, subset in [("Highest", top), ("Lowest", bottom)]:
-        for row in subset.itertuples():
-            lines.append(
-                " & ".join(
-                    [
-                        group_label,
-                        latex_escape(row.subfield_display_name),
-                        latex_escape(row.field_display_name),
-                        latex_escape(row.domain_display_name),
-                        f"{getattr(row, CENTROID_DRIFT_METRIC):.3f}",
-                    ]
-                )
-                + r" \\[0.12cm]"
+    
+    # Highest Section
+    lines.append(r"\multicolumn{4}{l}{\textbf{Subfields with the Highest Drift (Most Semantically Dynamic)}} \\")
+    lines.append(r"\hline")
+    for row in top.itertuples():
+        lines.append(
+            " & ".join(
+                [
+                    latex_escape(row.subfield_display_name),
+                    latex_escape(row.field_display_name),
+                    latex_escape(row.domain_display_name),
+                    f"{getattr(row, CENTROID_DRIFT_METRIC):.3f}",
+                ]
             )
-        if group_label == "Highest":
-            lines.append(r"\hline")
+            + r" \\[0.12cm]"
+        )
+    lines.append(r"\hline")
+    
+    # Lowest Section
+    lines.append(r"\multicolumn{4}{l}{\textbf{Subfields with the Lowest Drift (Most Semantically Stable)}} \\")
+    lines.append(r"\hline")
+    for row in bottom.itertuples():
+        lines.append(
+            " & ".join(
+                [
+                    latex_escape(row.subfield_display_name),
+                    latex_escape(row.field_display_name),
+                    latex_escape(row.domain_display_name),
+                    f"{getattr(row, CENTROID_DRIFT_METRIC):.3f}",
+                ]
+            )
+            + r" \\[0.12cm]"
+        )
+    
     lines.extend(
         [
             r"\hline",
@@ -881,6 +899,43 @@ def write_centroid_drift_table(drift: pd.DataFrame) -> dict[str, float]:
         ]
     )
     (TABLE_DIR / "tab_07_centroid_drift_extremes.tex").write_text("\n".join(lines), encoding="utf-8")
+    
+    # Generate side-by-side horizontal bar chart of the extremes
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.0, 5.0), constrained_layout=True)
+    
+    top_plot = top.iloc[::-1]
+    ax1.barh(
+        [shorten(name, width=32, placeholder="...") for name in top_plot["subfield_display_name"]],
+        top_plot[CENTROID_DRIFT_METRIC],
+        color="#e45756",
+        height=0.6,
+        alpha=0.85,
+    )
+    ax1.set_title("Highest early--late centroid drift", fontsize=11.0, fontweight="bold")
+    ax1.set_xlabel("Centroid drift value", fontsize=10.0)
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.grid(True, axis="x", alpha=0.15, linestyle="--")
+    ax1.tick_params(axis="both", labelsize=9.5)
+    
+    bottom_plot = bottom.iloc[::-1]
+    ax2.barh(
+        [shorten(name, width=32, placeholder="...") for name in bottom_plot["subfield_display_name"]],
+        bottom_plot[CENTROID_DRIFT_METRIC],
+        color="#4c78a8",
+        height=0.6,
+        alpha=0.85,
+    )
+    ax2.set_title("Lowest early--late centroid drift", fontsize=11.0, fontweight="bold")
+    ax2.set_xlabel("Centroid drift value", fontsize=10.0)
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
+    ax2.grid(True, axis="x", alpha=0.15, linestyle="--")
+    ax2.tick_params(axis="both", labelsize=9.5)
+    
+    savefig(fig, "fig_07_centroid_drift_extremes", pdf=True)
+    plt.close(fig)
+    
     return {
         "centroid_drift_max": float(frame[CENTROID_DRIFT_METRIC].max()),
         "centroid_drift_median": float(frame[CENTROID_DRIFT_METRIC].median()),
@@ -999,13 +1054,76 @@ def plot_temporal_figures(temporal: pd.DataFrame) -> dict[str, float]:
     dynamic["overall_structural_change_l2"] = change_norm
     dynamic = dynamic.sort_values(["overall_structural_change_l2", "subfield_display_name"], ascending=[False, True]).head(15)
     dynamic.to_csv(OUTPUT_DIR / "most_dynamic_subfields.csv", index=False)
-    fig, ax = plt.subplots(figsize=(9.0, 5.7), constrained_layout=True)
+    families = {
+        "Global dispersion": [
+            "embedding_distance_to_centroid_median",
+            "embedding_distance_to_centroid_iqr",
+            "embedding_distance_to_centroid_p90",
+        ],
+        "Local density": [
+            "embedding_knn_median_distance",
+            "embedding_knn_distance_cv",
+        ],
+        "Hubness": [
+            "embedding_knn_indegree_gini",
+        ],
+        "Spectral structure": [
+            "embedding_pca_dim_80",
+            "embedding_pca_spectral_entropy",
+        ],
+    }
+    
+    family_colors = {
+        "Global dispersion": "#4c78a8",
+        "Local density": "#f58518",
+        "Hubness": "#e45756",
+        "Spectral structure": "#54a24b",
+    }
+    
     plot = dynamic.iloc[::-1]
-    colors = [DOMAIN_COLORS.get(domain, "#888888") for domain in plot["domain_display_name"]]
-    ax.barh([shorten(name, width=42, placeholder="...") for name in plot["subfield_display_name"]], plot["overall_structural_change_l2"], color=colors)
-    ax.set_xlabel("First--last structural profile displacement")
-    ax.tick_params(axis="y", labelsize=7.7)
-    ax.grid(True, axis="x", alpha=0.18)
+    subfield_ids = plot.index
+    
+    contribs = {family: [] for family in families}
+    for sub_id in subfield_ids:
+        sub_change = changes.loc[sub_id]
+        l2 = plot.loc[sub_id, "overall_structural_change_l2"]
+        for family, family_metrics in families.items():
+            fam_sum = sum(sub_change[m]**2 for m in family_metrics)
+            contribs[family].append(fam_sum / l2 if l2 > 0 else 0)
+            
+    fig, ax = plt.subplots(figsize=(10.5, 6.4), constrained_layout=True)
+    y_pos = np.arange(len(plot))
+    
+    lefts = np.zeros(len(plot))
+    for family, color in family_colors.items():
+        vals = np.array(contribs[family])
+        ax.barh(y_pos, vals, left=lefts, color=color, height=0.6, alpha=0.83, label=family)
+        lefts += vals
+        
+    for y, val in zip(y_pos, plot["overall_structural_change_l2"]):
+        ax.text(
+            val + 0.08, 
+            y, 
+            f"{val:.2f}", 
+            ha="left", 
+            va="center", 
+            fontsize=9.5, 
+            color="#222222"
+        )
+        
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#cccccc')
+    ax.spines['bottom'].set_color('#cccccc')
+    
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(plot["subfield_display_name"], fontsize=11.0)
+    ax.set_xlabel("First--last structural profile displacement (L2 metric contributions)", fontsize=11.0, labelpad=8)
+    ax.tick_params(axis="y", length=0)
+    ax.tick_params(axis="x", labelsize=10.0)
+    ax.grid(True, axis="x", alpha=0.15, linestyle="--")
+    ax.set_xlim(0, max(plot["overall_structural_change_l2"]) * 1.12)
+    ax.legend(loc="lower right", frameon=False, fontsize=10.0)
     savefig(fig, "fig_07_most_dynamic_subfields", pdf=True)
 
     profile = pd.read_csv(
