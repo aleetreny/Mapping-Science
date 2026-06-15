@@ -917,7 +917,7 @@ def plot_temporal_figures(temporal: pd.DataFrame) -> dict[str, float]:
     }
     
     fig, axes = plt.subplots(2, 4, figsize=(13.0, 8.5), sharex=True)
-    fig.subplots_adjust(hspace=0.28, wspace=0.18, left=0.07, right=0.98, top=0.93, bottom=0.16)
+    fig.subplots_adjust(hspace=0.28, wspace=0.18, left=0.07, right=0.98, top=0.93, bottom=0.18)
     
     for i, (ax, metric) in enumerate(zip(axes.ravel(), METRICS)):
         for domain in DOMAIN_ORDER:
@@ -963,7 +963,7 @@ def plot_temporal_figures(temporal: pd.DataFrame) -> dict[str, float]:
         ncol=4,
         fontsize=12.0,
         frameon=False,
-        bbox_to_anchor=(0.5, 0.05),
+        bbox_to_anchor=(0.5, 0.02),
     )
     savefig(fig, "fig_07_domain_temporal_trajectories", pdf=True)
 
