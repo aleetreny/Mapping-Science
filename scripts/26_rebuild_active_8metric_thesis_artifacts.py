@@ -749,7 +749,16 @@ def plot_static_profiles(core: pd.DataFrame, subfield: pd.DataFrame, field: pd.D
             label=domain,
         )
     for row in pca_frame.sort_values("pca_radius", ascending=False).head(8).itertuples():
-        ax.text(row.pca_1, row.pca_2, shorten(str(row.subfield_display_name), width=24, placeholder="..."), fontsize=6.5)
+        label_text = str(row.subfield_display_name)
+        ax.annotate(
+            label_text,
+            xy=(row.pca_1, row.pca_2),
+            xytext=(5, 2),
+            textcoords="offset points",
+            fontsize=8.0,
+            color="#222222",
+            alpha=0.95,
+        )
     ax.axhline(0, color="#777777", linewidth=0.6)
     ax.axvline(0, color="#777777", linewidth=0.6)
     ax.set_xlabel(f"Profile PCA 1 ({pca.explained_variance_ratio_[0] * 100:.1f}%)")
@@ -896,8 +905,21 @@ def plot_temporal_figures(temporal: pd.DataFrame) -> dict[str, float]:
         .reset_index()
         .sort_values(["window_start", "domain_display_name"], kind="mergesort")
     )
-    fig, axes = plt.subplots(2, 4, figsize=(13.2, 6.6), sharex=True, constrained_layout=True)
-    for ax, metric in zip(axes.ravel(), METRICS):
+    metric_titles = {
+        "embedding_distance_to_centroid_median": "Centroid-Distance Median",
+        "embedding_distance_to_centroid_iqr": "Centroid-Distance IQR",
+        "embedding_distance_to_centroid_p90": "Centroid-Distance P90",
+        "embedding_knn_median_distance": "Median kNN Distance",
+        "embedding_knn_distance_cv": "kNN Distance CV",
+        "embedding_knn_indegree_gini": "kNN In-Degree Gini",
+        "embedding_pca_dim_80": "PCA D80",
+        "embedding_pca_spectral_entropy": "PCA Spectral Entropy",
+    }
+    
+    fig, axes = plt.subplots(2, 4, figsize=(13.0, 8.5), sharex=True)
+    fig.subplots_adjust(hspace=0.28, wspace=0.18, left=0.07, right=0.98, top=0.93, bottom=0.16)
+    
+    for i, (ax, metric) in enumerate(zip(axes.ravel(), METRICS)):
         for domain in DOMAIN_ORDER:
             subset = domain_time.loc[domain_time["domain_display_name"] == domain]
             ax.plot(
@@ -905,18 +927,44 @@ def plot_temporal_figures(temporal: pd.DataFrame) -> dict[str, float]:
                 subset[metric],
                 marker="o",
                 linewidth=1.5,
-                markersize=3,
+                markersize=3.5,
                 color=DOMAIN_COLORS[domain],
                 label=domain,
             )
         ax.axhline(0, color="#777777", linewidth=0.6)
-        ax.text(0.02, 0.93, METRIC_TEXT[metric], transform=ax.transAxes, ha="left", va="top", fontsize=8.5)
-        ax.tick_params(axis="x", labelrotation=35, labelsize=7.2)
-        ax.tick_params(axis="y", labelsize=7.5)
-        ax.grid(True, axis="y", alpha=0.17)
-    axes[0, 0].set_ylabel("Mean standardized value")
-    axes[1, 0].set_ylabel("Mean standardized value")
-    axes[0, 3].legend(fontsize=7.5, frameon=False, loc="best")
+        ax.set_title(metric_titles[metric], fontsize=11.5, fontweight="normal")
+        
+        # Hide top and right spines for a clean modern paper aesthetic
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        
+        # Format X ticks: remove ticks and labels on the top row
+        if i < 4:
+            ax.tick_params(axis="x", bottom=False, labelbottom=False)
+        else:
+            ax.tick_params(axis="x", bottom=True, labelrotation=25, labelsize=10.5)
+            
+        ax.tick_params(axis="y", labelsize=11.0)
+        ax.grid(True, axis="y", alpha=0.15, linestyle="--")
+        
+        if i % 4 == 0:
+            ax.set_ylabel("Mean standardized value", fontsize=12.0)
+            
+    # Add a single horizontal legend at the bottom with a larger font size
+    from matplotlib.patches import Patch
+    legend_handles = [
+        Patch(facecolor=DOMAIN_COLORS[domain], edgecolor="none", alpha=0.78, label=domain)
+        for domain in DOMAIN_ORDER
+    ]
+    fig.legend(
+        handles=legend_handles,
+        labels=DOMAIN_ORDER,
+        loc="lower center",
+        ncol=4,
+        fontsize=12.0,
+        frameon=False,
+        bbox_to_anchor=(0.5, 0.05),
+    )
     savefig(fig, "fig_07_domain_temporal_trajectories", pdf=True)
 
     first_label = scaled.sort_values("window_start")["window_label"].iloc[0]

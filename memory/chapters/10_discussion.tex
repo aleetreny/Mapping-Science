@@ -1,49 +1,23 @@
-% Chapter 10: Discussion
+% Chapter 7: Discussion
 
-\section{The Main Argument}
+\section{Interpretation and Contribution}
 
-The thesis argues that scientific fields can be measured as distributions of papers in a scientific document embedding space. Labels, topics, citation networks, and visual maps each describe part of science. Field morphology adds another part: the internal arrangement of embedded papers.
+The thesis shows that field morphology adds a measurement layer between taxonomy, semantic location, and visualization. A domain label tells us how a work is classified; a centroid gives an average location; a projection gives a readable display. Structural morphology asks how the retained papers are arranged around one another: how dispersed, locally dense, hub-concentrated, and spectrally extended they are.
 
-The core distinction is simple. A taxonomy tells us what a field is called. A centroid tells us where its average paper sits. A map gives a visual projection. Morphology asks how the papers are arranged: how broad the field is, how dense its neighborhoods are, whether it has hubs, how many directions of variation it uses, and how these features change over time.
+The empirical chapters support the same interpretation from three directions. Static profiles show broad domain tendencies but large within-domain variation. Temporal profiles show structured change in the same eight structural dimensions without one universal direction. Relational profiles show that OpenAlex domains organize part of morphology but do not determine nearest neighbors, bridges, isolates, convergence, or divergence.
 
-That distinction organizes the empirical results. Broad domains have tendencies, but they do not determine morphology. Fields change over time, but not in one universal direction. Morphological similarity partly crosses OpenAlex boundaries. Static morphology is weakly clustered, while temporal trajectories form clearer descriptive groups. Semantic location aligns more strongly with domains than morphology does.
+The contribution is therefore not another field classification. It is a way to keep labels, locations, shapes, trajectories, and relations analytically separate. That separation matters because visually close regions, taxonomically related fields, and morphologically similar fields need not be the same. Centroid drift further separates semantic displacement from structural morphology: a field can move in semantic location without having the same structural change as another field.
 
-\section{What the Results Show}
+\section{Limits of the Evidence}
 
-The results matter because different representations of science do not collapse into the same structure.
+The evidence is conditional on the OpenAlex corpus, its primary-topic taxonomy, the balanced sampling design, SPECTER2, and the chosen metrics. Coverage differs across fields, years, languages, document types, and metadata practices; title--abstract embeddings compress scientific documents while missing many contextual features; and high-dimensional geometry brings anisotropy, density variation, and hubness \parencite{aggarwal2001surprising,radovanovic2010hubness}.
 
-The static results show that domain labels are informative but insufficient. Physical Sciences are generally more dispersed and spectrally extended. Health Sciences are more locally dense and hub-concentrated. Social Sciences and Life Sciences occupy less extreme average positions. Yet field-level and subfield-level variation inside each domain is large, and the most atypical subfields are extreme for different reasons: dispersion, novelty, local density, hubness, spectral structure, or combinations of them.
+The strongest claims are therefore comparative. I can say that one field is more dispersed than another under the fixed representation, that one pair of fields becomes closer in the selected profile distance, or that temporal slope profiles cluster more clearly than static profiles. I cannot infer why those changes occurred. Convergence and divergence are profile-distance terms, not claims about collaboration, citation flows, disciplinary merger, or epistemic separation.
 
-The temporal results add a second layer. Across the population of subfields, median centroid distance, median kNN distance, and PCA \(D_{80}\) decline from the first to the last window, while local distance variability can rise and hubness does not move uniformly. This is not a simple story of fields becoming smaller, denser, or more homogeneous. A subfield may become locally compact while becoming more uneven; another may reduce spectral dimensionality while losing hub concentration; another may move far in centroid space without sharing the same structural trajectory.
+\section{Implications and Future Validation}
 
-The relational results show that morphology and taxonomy overlap only partly. Field-level profile distances show many nearest morphological neighbors across domain boundaries. Average field-pair distance increases from 2000--2004 to 2020--2024, so profile space becomes more separated rather than globally convergent, even as selected pairs move closer. This matters because convergence and divergence are often tempting words: here they mean movement in morphology-profile distance, not intellectual merger or isolation.
+Future work should first test model and corpus robustness. The same sampling plan, metric code, and aggregation rules can be rerun with alternative scientific embedding models, multilingual or full-text representations, and other bibliographic infrastructures. Changing one component at a time would show which findings are stable properties of the framework and which depend on representation or coverage.
 
-The typology results sharpen the same point. Static morphology is weakly clustered, with Ward \(k=5\) silhouette \(=0.133\). Temporal trajectories separate more clearly, with silhouette \(=0.396\) and mean subsample ARI \(=0.725\). Subfields are easier to group by how their morphology changes than by their full-period shape.
+External validation should compare morphology with evidence that was deliberately excluded from the metric construction: citation networks, journal structures, funding categories, author mobility, and expert assessments. Agreement would strengthen the interpretation of specific cases; disagreement would be equally useful because it would show where geometric shape and other forms of scientific organization separate.
 
-\section{Why the Design Choices Matter}
-
-The design choices work together to keep the comparison focused on shape. The balanced OpenAlex title--abstract corpus reduces the risk that large or better-covered fields dominate the analysis simply because they contribute more papers.
-
-SPECTER2 supplies the coordinates needed for morphology. Citation networks show links, topic models summarize themes, and taxonomies provide labels; embeddings make distances, neighborhoods, centroids, dispersion, and movement measurable for each retained document.
-
-The original 768-dimensional SPECTER2 space is the measurement space because projections distort geometry. Low-dimensional displays help communicate results, but they are not the source of the quantitative claims.
-
-The metric design matters because no single number captures field shape. The eleven-metric core separates dispersion, local density, hubness, spectral structure, and temporal movement. This allows the thesis to show, for example, that a field can be broad without being hub-dominated, compact without being spectrally simple, or locally denser while becoming more uneven.
-
-\section{What the Framework Cannot Claim}
-
-The results are model-conditional, but not arbitrary: the corpus, representation, and metrics are fixed explicitly, which makes the comparison reproducible. OpenAlex coverage differs across fields, years, languages, document types, and metadata practices. Primary-topic assignment also forces each work into one subfield, even when papers have multiple intellectual affiliations.
-
-SPECTER2 embeddings are learned document representations. They compress titles and abstracts into vectors shaped by training data, citation-informed supervision, and scientific-language coverage. They may encode patterns useful for scientific document retrieval while missing method, evidence, theoretical stance, institutional context, or domain-specific nuance.
-
-The geometric summaries are also partial. High-dimensional spaces are affected by anisotropy, distance concentration, local density variation, and hubness. The metrics summarize distributions rather than comparing every aspect of them, and PCA \(D_{80}\) is an operational proxy for spectral complexity.
-
-Clustering is the final boundary. Static clusters are weak by standard separation diagnostics; temporal clusters are clearer and more stable, but they still summarize slope profiles. Centroid and hybrid clustering show that semantic location can reconstruct more domain-like structure, which is why location and morphology must be interpreted separately.
-
-\section{What Future Work Should Test}
-
-The most direct extension is model robustness. The same corpus and metrics could be run with other scientific embedding models to test which morphology findings are stable across representations. A second extension is text robustness: multilingual corpora and full-text or section-aware embeddings could show how much of the observed morphology is tied to English title--abstract records.
-
-A third extension is relational validation. Morphology could be compared with citation networks, journal structures, funding categories, institutional affiliations, or author mobility to ask when shape, topic, and social organization move together. A fourth is expert validation: domain specialists could assess whether the extreme cases identified by morphology correspond to meaningful field changes.
-
-The value of the framework is diagnostic. It identifies where structural changes or unusual profiles occur so that substantive experts can ask better questions. Scientific fields have names, positions, shapes, trajectories, and relations. Measuring those dimensions separately makes science more legible and makes simple maps less tempting.
+Temporal and substantive validation should focus on the strongest structural shifts, convergences, divergences, and centroid-drift cases. Five-year windows make the comparison stable, but they can smooth short shocks and database changes. Annual, rolling, and event-centered trajectories, combined with expert inspection of extreme cases, would test whether morphology highlights meaningful field transformations or mainly representation artifacts.

@@ -665,7 +665,7 @@ def build_projection_comparison(output_dir: Path, figure_dir: Path) -> None:
         "",
         "## Inputs",
         "",
-        "- Static morphology: robust-scaled eleven-metric full-period profiles; labels T1--T5.",
+        "- Static morphology: robust-scaled eight-metric structural full-period profiles; labels T1--T5.",
         "- Dynamic morphology: standardized linear slopes of eight windowed structural metrics; labels D1--D4.",
         "",
         "## Projection Methods",

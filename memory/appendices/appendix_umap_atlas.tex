@@ -1,12 +1,12 @@
-% Appendix C: Illustrative UMAP Atlas of Selected Subfields
+% Appendix B: Illustrative UMAP Atlas of Selected Subfields
 
 \label{app:umap-atlas}
 
 This appendix provides an illustrative atlas of selected subfield-level UMAP projections. The panels are visual diagnostics only: they do not compute morphology metrics, assign clusters, measure distances, or support quantitative claims. Because each panel is a separate subfield-specific projection, axes, distances, shapes, and density scales should not be compared across subfields.
 
-The atlas maps were generated from the row-aligned SPECTER2 analysis matrix using main-analysis records from 2000--2024 and at most 10,000 papers per subfield. The per-subfield UMAP routine used cosine distance with \(n_{\mathrm{neighbors}}=30\), \(\mathrm{min\_dist}=0.05\), \(\mathrm{random\_state}=42\), and low-memory mode. The density panel uses a smoothed 150-by-150 histogram over displayed UMAP coordinates, clipped at the 99th percentile of positive density values and drawn with \texttt{viridis}.
+The atlas maps were generated from the row-aligned SPECTER2 analysis matrix using main-analysis records from 2000--2024 and at most 10,000 papers per subfield. The per-subfield UMAP routine \parencite{mcinnes2018umap} used cosine distance with \(n_{\mathrm{neighbors}}=30\), \(\mathrm{min\_dist}=0.05\), \(\mathrm{random\_state}=42\), and low-memory mode. The density panel uses a smoothed 150-by-150 histogram over displayed UMAP coordinates, clipped at the 99th percentile of positive density values and drawn with \texttt{viridis}.
 
-The six cases connect to recurring empirical themes in Chapters 6--9: atypical profiles, dispersed physical-science structure, compact or separated local organization, computer-science novelty, and broad material-science morphology.
+The selected cases connect to recurring empirical themes in the main chapters: atypical profiles, dispersed physical-science structure, compact or separated local organization, computer-science displacement, and broad material-science morphology.
 
 A broader interactive project viewer is available at \url{https://aleetreny.github.io/TFM/}. It can be used to explore additional discipline and subfield shapes beyond the selected cases included in this appendix.
 

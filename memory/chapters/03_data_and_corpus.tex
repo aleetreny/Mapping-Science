@@ -1,63 +1,83 @@
-% Chapter 3: Data and Corpus Construction
+% Chapter 3: Data, Representation, and Morphology Metrics
 
-\section{Why OpenAlex Subfields?}
+\section{Corpus and Analytical Units}
 
-OpenAlex is the primary bibliographic data source for the thesis: an open index of scholarly works, authors, venues, institutions, and research concepts designed for large-scale reproducible analysis \parencite{priem2022openalex}. It is used because the thesis needs a corpus that can be queried at scale, linked to a documented field hierarchy, filtered through explicit metadata, and reconstructed without proprietary infrastructure. Its openness is therefore not only convenient; it is part of the research design, because the corpus can be documented, audited, and rebuilt from the same public source.
+The empirical corpus is built from OpenAlex, an open index of scholarly works, authors, venues, institutions, and research concepts \parencite{priem2022openalex}. I use OpenAlex because the thesis needs a corpus that can be queried at scale, linked to a documented field hierarchy, filtered through explicit metadata, and reconstructed from public infrastructure. The analytical hierarchy has three levels: subfields, fields, and domains. The direct unit of measurement is the OpenAlex subfield; fields and domains are used for aggregation and interpretation.
 
-The main analytical unit is the OpenAlex \textit{subfield}. Subfields are granular enough to distinguish research areas, large enough to support distributional measurement, and stable enough for comparisons over time. They are aggregated into \textit{fields} and \textit{domains} when broader summaries are required. Each work is assigned to a subfield through its primary-topic subfield, preserving a one-work--one-subfield structure for the main analysis.
+Each work is assigned to one subfield through its primary-topic subfield. This one-work--one-subfield design keeps the analysis auditable and avoids double counting, but it also simplifies papers with multiple intellectual affiliations. The resulting corpus should be read as a controlled analytical sample, not as a census of global science.
 
-OpenAlex subfields are used as practical units of comparison, not as natural boundaries of scientific knowledge. Coverage differences, metadata incompleteness, classification uncertainty, and language bias remain part of the corpus being studied. Comparative evidence shows that open databases can support broad science mapping while varying by database, discipline, and document type \parencite{martinmartin2021google}; recent work also documents OpenAlex metadata limits, including abstract coverage, despite broadly comparable reference coverage under cleaned comparisons with Web of Science and Scopus \parencite{culbert2025reference}. The corpus is therefore a controlled analytical sample, not a census of global scientific production.
-
-\section{Why Title and Abstract?}
-
-The empirical analyses use a synchronized OpenAlex title--abstract corpus covering publications from 2000 to 2024. The full corpus contains 2,378,036 text-eligible works across 252 subfields, 26 fields, and 4 domains. The embedding-based analysis uses a row-aligned subset of 2,344,927 embedded works across 241 analysis subfields.
+The synchronized title--abstract corpus covers 2000--2024 and contains 2,378,036 text-eligible works across 252 subfields, 26 fields, and 4 domains. The embedding-based analysis subset contains 2,344,927 embedded works across 241 analysis subfields. The difference reflects valid embedding availability, row alignment with metadata, and minimum-observation requirements for downstream morphology metrics.
 
 \input{tables/tab_03_corpus_summary}
 
-Full text would contain more information, but it is not consistently available at this scale and would introduce strong availability bias across publishers, fields, and years. Bibliographic metadata alone would be too limited for semantic morphology. Title--abstract records are a practical middle ground: they are available for a large corpus, comparable across fields, and rich enough to represent the central problem, method, and contribution of a paper.
+OpenAlex subfields are granular enough to distinguish research areas, large enough to support distributional measurement, and stable enough for comparison across the 25-year period. They are still administrative and algorithmic classifications. Coverage differences, abstract availability, classification uncertainty, and language filtering affect the sample, so the corpus defines the field distributions studied here rather than the complete universe of scientific production.
 
-Eligibility follows from this design. A retained work must contain enough title--abstract text for document-level representation. The extraction is restricted to English records, articles and preprints, valid metadata, and minimum title and abstract lengths.
+\section{Sampling and Corpus Validation}
+
+Title--abstract records are a compromise between semantic detail and corpus-scale availability. Full text would contain richer evidence, but it is not consistently available at this scale and would introduce strong availability bias across publishers, fields, and years. Bibliographic metadata alone would be too thin for document-level morphology. I therefore use title and abstract text as the input available for a large, comparable, scientific-document corpus.
 
 \begin{figure}[H]
 \centering
 \makebox[\textwidth][c]{\includegraphics[width=1.16\textwidth]{figures/fig_03_openalex_corpus_pipeline.pdf}}
-\caption[OpenAlex filtering and corpus construction pipeline]{OpenAlex filtering and corpus construction pipeline. The first five stages are broad OpenAlex API filters queried on May 2026; the final three are frozen TFM pipeline counts for dataset version \texttt{2000\_2024\_400py}. Box labels report counts.}
+\caption[OpenAlex filtering and corpus construction pipeline]{OpenAlex filtering and corpus construction pipeline for the fixed corpus used in the analysis.}
 \label{fig:openalex-corpus-pipeline}
 \end{figure}
 
 \input{tables/tab_03_corpus_filters}
 
-\section{Why a Balanced Corpus?}
-
-The corpus is balanced because the thesis measures shape, not publication volume. If raw publication volume dominated the analysis, large and text-rich fields could look broader simply because they contribute more papers. The annual cap reduces this risk and makes comparisons more about morphology than size.
-
-For subfield \(s\) and year \(t\), the planned annual sample size is
-
+The corpus is balanced because the thesis measures shape rather than publication volume. For subfield \(s\) and year \(t\), the planned annual sample size is
 \[
-n_{s,t}^{planned} = \min \left( N_{s,t}^{eligible}, 400 \right),
+n_{s,t}^{planned}=\min(N_{s,t}^{eligible},400),
 \]
+where \(N_{s,t}^{eligible}\) is the number of works satisfying the eligibility filters in that subfield-year cell. Capacity from sparse cells is not redistributed to denser cells, so temporal structure is preserved and high-output fields do not dominate the shape estimates.
 
-where \(N_{s,t}^{eligible}\) is the number of works satisfying the eligibility filters in that subfield-year cell. Across the 25-year period, the maximum full-period target is \(400 \times 25 = 10{,}000\) works per subfield. The complete plan contains 2,431,303 planned works. The synchronized corpus retains 2,378,036 works, leaving a total shortfall of 53,267 works.
-
-Capacity from sparse cells is not redistributed to denser cells. When a subfield-year cell contains fewer than 400 eligible works, the missing observations are recorded as shortfall. This preserves temporal structure and prevents large or recent fields from dominating later measures only because they produce more eligible records.
-
-\section{Validation and Coverage}
-
-The synchronized corpus covers all four OpenAlex domains. Physical Sciences contributes the largest number of retained works, followed by Health Sciences, Social Sciences, and Life Sciences.
+Validation checks passed for the required metadata and text conditions: no duplicate work identifiers, no out-of-period rows, no missing taxonomy identifiers, no missing title or abstract fields, no records below the minimum text thresholds, no non-English rows, and no disallowed work types. Of 6,300 checked subfield-year cells, 5,493 reach the annual target and 807 remain below target; these sparse cells are coverage limits rather than validation failures.
 
 \input{tables/tab_03_domain_distribution}
 
-The domain distribution reflects the OpenAlex taxonomy, the annual cap, and eligible title--abstract availability. It should not be read as the true distribution of global scientific output. The sampling design deliberately reshapes observed publication volume to support comparable semantic measurements across subfields and years.
+The domain distribution reflects taxonomy, the annual cap, and title--abstract availability. Physical Sciences contribute the largest number of retained works, followed by Health Sciences, Social Sciences, and Life Sciences. These shares should not be read as the true distribution of global scientific output, because the sampling design deliberately reshapes observed volume to support comparable morphology measurement.
 
-Validation checks the planned design and the required metadata and text conditions. The critical checks passed: no duplicate work identifiers, no rows outside 2000--2024, no rows in 2025 or 2026, no missing subfield, field, domain, or primary-topic identifiers, no missing title or abstract fields, no records below the minimum text thresholds, no non-English rows, and no disallowed work types.
+The balancing design has a cost: the analysis does not represent scientific production volume. A small, consistently sampled subfield and a large, high-output subfield can receive comparable analytical weight. Sparse cells are not filled by borrowing from later years or neighboring subfields, because imputation would add artificial temporal structure; windows that cannot support reliable metrics are excluded from complete-trajectory calculations.
 
-The remaining limitation is coverage rather than validity. Out of 6,300 checked subfield-year cells, 5,493 reach the annual target of 400 works and 807 remain below target. These below-target cells account for the total shortfall of 53,267 works.
+\section{Scientific Document Representation}
 
-\section{From Corpus to Analysis}
+Each retained work is represented by the concatenation of its title and abstract. The active representation model is SPECTER2, a scientific document embedding model evaluated in the SciRepEval framework \parencite{singh2023scirepeval}. I use SPECTER2 because the object of analysis is scientific documents, not generic text, citation-only topology, or topic proportions.
 
-Corpus construction proceeds through taxonomy definition, annual count estimation, corpus planning, sample construction, work retrieval, eligibility filtering, and validation. The resulting title--abstract corpus is the textual basis for the embedding stage.
+The representation step maps each title--abstract record to a dense vector,
+\[
+f_{\theta}(x_i)=z_i\in\mathbb{R}^{768},
+\]
+where \(x_i\) is the title--abstract text of work \(i\), \(f_{\theta}\) is the trained embedding model, and \(z_i\) is the resulting vector. The analysis matrix is
+\[
+Z=(z_1,\ldots,z_n)^\top\in\mathbb{R}^{n\times768},
+\qquad n=2{,}344{,}927.
+\]
+Each row remains aligned with the same work's OpenAlex metadata: work identifier, publication year, subfield, field, and domain. This row alignment is the contract between corpus construction and morphology measurement.
 
-The embedding stage converts the validated corpus into a row-aligned analysis matrix. The analysis subset is smaller than the full corpus because metric computation requires valid embeddings, unambiguous metadata alignment, and sufficient observations per analytical unit. It contains 2,344,927 embedded works across 241 analysis subfields.
+All quantitative geometry is computed before dimensionality reduction. Metrics use the original L2-normalized SPECTER2 vectors and cosine distances; PCA and UMAP are used only for display. This boundary matters because projected maps can be visually useful while altering distances, densities, and neighborhood relations. The representation remains model-dependent and limited by title--abstract coverage, but it supplies a fixed measurement space for relative comparison inside the thesis.
 
-\paragraph{What this establishes.}
-The thesis does not compare raw publication volume. It compares balanced distributions of retained title--abstract records. This makes the later morphology metrics more comparable across fields and years, while keeping the corpus explicit: a controlled OpenAlex sample represented through scientific document embeddings.
+\section{Structural Morphology Metrics}
+
+For a subfield \(s\), let \(Z_s=\{z_i:i\in s\}\) be the set of normalized document embeddings and \(c_s=n_s^{-1}\sum_{i\in s}z_i\) its centroid. The active structural morphology profile contains eight metrics in three families: global dispersion, local density and hubness, and spectral structure. Appendix~\ref{app:metric-formulations} records the formulas.
+
+\input{tables/tab_05_metric_core}
+
+Dispersion metrics describe the distribution of cosine distances from papers to the subfield centroid: typical spread, middle-spread heterogeneity, and the outer semantic periphery. A high median centroid distance means that the typical retained paper sits farther from the subfield center. A high centroid-distance IQR means that the middle of the field is uneven. A high 90th percentile means that the semantic periphery extends farther, even if the center remains stable.
+
+Local-density metrics use within-subfield \(k\)-nearest-neighbor distances \parencite{cover1967nearest}, with \(k=15\) unless fewer non-self neighbors are available. Median kNN distance describes local packing rather than field radius: two subfields can have similar centroid dispersion while one has much closer local neighborhoods. The kNN distance coefficient of variation describes unevenness in local packing. Hubness is measured by the Gini coefficient of directed kNN in-degree counts, so high hubness means that a smaller set of papers appears disproportionately often as neighbors of other papers.
+
+Spectral structure is measured through PCA on normalized embeddings \parencite{jolliffe2016pca}: \(D_{80}\) counts the components required to explain 80 percent of variance, and spectral entropy \parencite{shannon1948communication} measures how evenly variance is distributed across positive-variance directions. These are operational summaries of the variance spectrum. They should not be read as estimates of a field's true dimensionality, but they help distinguish fields whose variation is concentrated in fewer directions from fields whose variation is spread more broadly.
+
+Net semantic displacement is measured separately as early--late centroid drift, the cosine distance between the 2000--2004 and 2020--2024 subfield centroids. It is not part of the structural profile matrix used for static profiles, PCA, clustering, or morphological distance. Its role is complementary: it reports movement of the subfield center after the structural morphology analysis has been defined.
+
+\section{Analytical Workflow}
+
+The workflow has four stages. First, subfield-level structural morphology profiles are computed from row-aligned SPECTER2 embeddings and then aggregated to fields and domains by averaging constituent subfield profiles. Second, static comparisons use robust standardization to compare profiles across domains, fields, and subfields. Third, temporal analyses recompute the same eight structural metrics within five windows: 2000--2004, 2005--2009, 2010--2014, 2015--2019, and 2020--2024. Fourth, relational analyses compute Euclidean distances between robust-scaled field profiles to study morphological similarity, nearest neighbors, convergence, and divergence.
+
+Robust standardization is used because the metric profiles contain outliers by design: unusually broad, compact, sparse, dense, hub-concentrated, or spectrally complex subfields are part of the signal. For metric \(m\), subfield values are centered by the cross-subfield median and scaled by the interquartile range before aggregation or distance calculation, following the same robust-scale logic used in resistant scale estimation \parencite{rousseeuw1993alternatives}. This keeps extreme profiles visible without allowing one metric scale to dominate the profile distance.
+
+Aggregation is descriptive. A field profile is the mean of its constituent subfield profiles after standardization; a domain profile is the corresponding mean across subfields within that domain. These averages support broad comparison, but they are not treated as homogeneous entities. The static chapter therefore moves from domains to fields and subfields, while the temporal chapter checks how the same structural dimensions evolve.
+
+The reproducible pipeline follows the same sequence as the analysis: taxonomy retrieval, annual count estimation, sample planning, work retrieval, corpus validation, embedding validation, row-aligned matrix construction, metric computation, temporal window computation, profile aggregation, and figure/table generation. Central numerical claims come from stored pipeline outputs, not manual case selection. Clustering is run on profile representations rather than projection coordinates.
+
+These operations define the evidential boundary of the thesis. The metrics describe structure under a specific corpus, taxonomy, representation model, and set of geometric summaries. They do not measure publication volume, impact, quality, institutional importance, or causal mechanisms. Their purpose is narrower: to make the shape, change, and relational profiles of scientific fields comparable.

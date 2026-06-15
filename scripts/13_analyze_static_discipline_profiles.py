@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--input",
         default="outputs/04_reduced_metric_core/reduced_interpretable_core_metrics.parquet",
-        help="Reduced 11-metric embedding-space core table.",
+        help="Active 8-metric structural embedding-space core table.",
     )
     parser.add_argument(
         "--output-dir",

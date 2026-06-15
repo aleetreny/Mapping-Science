@@ -1,54 +1,27 @@
 % Chapter 1: Introduction
 
-\section{The Problem}
+\section{Problem and Contribution}
 
-Scientific fields are usually named before they are measured. A label tells us that a paper belongs to a field, a topic model tells us something about its themes, a citation network tells us how it is linked to other work, and a map gives it a position on a page. These views are useful, but none of them directly tells us how the papers of a field are arranged.
+Scientific fields are usually described by names, topics, citation links, publication counts, or positions on maps. These views are useful, but they do not directly measure how the papers of a field are arranged. Two fields can belong to different OpenAlex domains and still have similarly shaped paper distributions; two fields can be close in semantic location and differ sharply in dispersion, local density, hubness, or spectral structure.
 
-Two fields can belong to different domains but have similarly shaped paper distributions. Two fields can be close in semantic location but differ in dispersion, local density, hubness, or temporal movement. A centroid can say where a field is, but it cannot say whether the field is compact, broad, locally dense, fragmented, hub-dominated, or changing through time.
+This thesis treats scientific fields as distributions of embedded documents. I use OpenAlex title--abstract records, represent them with SPECTER2 document embeddings, and measure field morphology in the original 768-dimensional embedding space. By embedding-space morphology I mean the measurable structural shape of a field's paper distribution: its spread around a center, its local neighborhoods, its hub concentration, and its principal directions of variation.
 
-This thesis starts from that gap. It treats each scientific subfield as a distribution of papers in a shared scientific document embedding space and asks what becomes visible when the shape of that distribution is measured directly.
+The active morphology profile has eight structural metrics. Temporal evolution is measured by recomputing those same eight metrics in five-year windows. Net semantic displacement is handled separately through early--late centroid drift: it describes how far a subfield's semantic center moves, not the structural shape used in static profiles, PCA, clustering, or morphological distances.
 
-The central claim is simple: scientific fields have measurable morphology. They have spread, local neighborhoods, hubs, directions of variation, and movement over time. These dimensions do not replace taxonomies, citation maps, topic models, or visual maps. They add a different layer of measurement: not only what a field is called or where it is located, but how its papers occupy semantic space.
-
-\section{The Alternative: Fields as Embedded Paper Distributions}
-
-The thesis represents OpenAlex title--abstract records with SPECTER2 document embeddings. Each retained paper receives a 768-dimensional vector, and each subfield becomes a cloud of papers in the same representation space. Once fields are represented this way, several direct questions become possible.
-
-\begin{enumerate}
-    \item How broadly do the papers of a field spread around their center?
-    \item How close are papers to their nearest neighbors?
-    \item Do some papers become local hubs for many others?
-    \item Is variation concentrated in a few directions or spread across many?
-    \item How does the field move or change between 2000 and 2024?
-    \item Which fields have similar morphology even when they belong to different taxonomic domains?
-\end{enumerate}
-
-These are not questions about publication volume, citation impact, or scientific quality. They are questions about arrangement. A field can be broad but locally regular. It can be compact but hub-concentrated. It can be taxonomically distant from another field while having a similar morphology profile.
+The contribution is a reproducible framework for separating five related but distinct objects of analysis: labels, semantic locations, static shapes, temporal trajectories, and relations between fields. The thesis does not argue that morphology replaces taxonomies, citation maps, topic models, or visual maps. It argues that those tools leave a measurable layer underdescribed: the internal arrangement of papers once they have shared document coordinates.
 
 \section{Research Questions}
 
-The objective is to develop and apply a reproducible framework for measuring field morphology with OpenAlex metadata and SPECTER2 document embeddings \parencite{priem2022openalex,singh2023scirepeval}. The analysis is conditional on a transparent corpus, a defined taxonomy, a specific representation model, and metrics computed in the original embedding space.
+The empirical analysis is organized around three research questions:
 
 \begin{enumerate}
-    \item How can scientific subfields be represented as distributions of papers in a shared scientific embedding space?
-    \item Which interpretable metrics summarize the shape and movement of those distributions?
-    \item How do scientific domains, fields, and subfields differ in static morphology?
-    \item How does morphology change across the 2000--2024 period?
-    \item Does morphological similarity follow OpenAlex taxonomy, or does it reveal additional structure?
-    \item Why should clustering be read as descriptive compression rather than as a new taxonomy of science?
+    \item How can the internal structure of scientific fields be measured using scientific document embeddings?
+    \item How does the internal structure of scientific fields vary across disciplines and evolve over time?
+    \item Which scientific fields converge or diverge in their structural profiles over time?
 \end{enumerate}
 
-\begin{figure}[H]
-\centering
-\caption[Conceptual workflow of embedding-space morphology]{Conceptual workflow of embedding-space morphology. OpenAlex defines comparable analytical units, SPECTER2 supplies document coordinates, and morphology metrics describe the shape and movement of the resulting paper distributions.}
-\label{fig:conceptual_workflow}
-\includegraphics[width=\textwidth]{figures/fig_01_conceptual_workflow.png}
-\end{figure}
+These questions are descriptive rather than causal. A dispersed field is not better than a compact one, a dynamic field is not necessarily more important, and a low morphological distance does not mean that two fields study the same topic. The goal is to define and test a measurement language for field shape.
 
-\section{Contribution and Structure}
+\section{Roadmap}
 
-The thesis makes five contributions. First, it constructs a balanced OpenAlex title--abstract corpus covering 2000--2024, with documented links between works, years, subfields, fields, and domains. Second, it builds a row-aligned SPECTER2 analysis matrix in which each retained work has a 768-dimensional document vector linked to validated metadata. Third, it defines an eleven-metric morphology core covering dispersion, local density, hubness, spectral structure, and temporal movement. Fourth, it applies that framework to static comparison, temporal evolution, morphological similarity, convergence, divergence, and exploratory typologies. Fifth, it keeps taxonomy, semantic location, static shape, temporal movement, and visualization separate.
-
-That separation is the main intellectual point. A domain label captures one kind of organization. A centroid captures another. A visual map communicates selected relationships. Morphology asks a different question: how are the papers of a field arranged?
-
-Chapters 2 to 5 define the basis of the framework: science mapping, corpus construction, SPECTER2 representation, and the metric core. Chapters 6 to 9 apply the framework to static shape, temporal movement, morphological similarity, convergence, divergence, and typological compression. Chapters 10 and 11 return to the larger argument: no single map is enough, because a field has a name, a location, a shape, a trajectory, and relations to other fields.
+Chapter 2 positions the thesis in science mapping and scientific document representation. Chapter 3 describes the corpus, SPECTER2 representation, structural morphology metrics, temporal windows, and workflow. Chapter 4 compares static morphology across domains, fields, and subfields; Chapter 5 examines temporal evolution, dynamic profiles, and centroid drift as a separate displacement indicator; Chapter 6 studies morphological similarity, taxonomy, convergence, and divergence. Chapters 7 and 8 discuss the contribution, limits, and final findings.

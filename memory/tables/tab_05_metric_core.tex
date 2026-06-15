@@ -1,25 +1,22 @@
 \begin{table}[H]
 \centering
-\caption{Reduced embedding-space metric core}
+\caption[Structural embedding-space morphology metrics]{Structural embedding-space morphology metrics}
 \label{tab:metric_core}
 \scriptsize
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth} >{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.29\textwidth} >{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
+\begin{tabular}{@{}p{0.18\textwidth}p{0.18\textwidth}p{0.31\textwidth}p{0.25\textwidth}@{}}
 \hline
-\textbf{Family} & \textbf{Metric} & \textbf{What it captures} & \textbf{High-value interpretation} \\
+\textbf{Metric} & \textbf{Family} & \textbf{Definition} & \textbf{Interpretation} \\
 \hline
-Semantic dispersion & Median centroid distance & Median distance from papers to the subfield centroid & Greater typical semantic dispersion \\
-Semantic dispersion & Centroid-distance IQR & Interquartile range of centroid distances & More heterogeneous radial spread \\
-Semantic dispersion & Centroid-distance P90 & 90th percentile of centroid distances & More distant semantic periphery \\
-Local density & Median kNN distance & Median within-subfield nearest-neighbor distance & Lower local packing density \\
-Local density & kNN distance CV & Coefficient of variation of kNN distances & More uneven local density \\
-Hubness & kNN in-degree Gini & Gini coefficient of kNN in-degree counts & Stronger concentration around semantic hubs \\
-Spectral structure & PCA dim80 & Components needed for 80 percent PCA variance & More distributed variance across directions \\
-Spectral structure & PCA spectral entropy & Normalized entropy of the PCA variance spectrum & Flatter, less axis-dominated structure \\
-Temporal movement & Centroid drift & Distance between early and late centroids & Greater net semantic movement \\
-Temporal movement & Radial expansion slope & Trend in annual distance to the full-period centroid & Expansion away from the period center \\
-Temporal movement & Recent novelty score & Late-period distance from the early semantic core & Recent papers farther from early structure \\
+Centroid median & Global dispersion & Median document distance to the subfield centroid. & Typical spread around the semantic center. \\[0.12cm]
+Centroid IQR & Global dispersion & Interquartile range of document distances to the centroid. & Inequality of radial spread inside the subfield. \\[0.12cm]
+Centroid P90 & Global dispersion & 90th percentile of document distances to the centroid. & Outer-tail dispersion of the subfield cloud. \\[0.12cm]
+kNN median & Local density & Median distance from each document to its local nearest-neighbor set. & Typical local spacing among neighboring papers. \\[0.12cm]
+kNN CV & Local density & Coefficient of variation of local kNN distances. & Unevenness of local density. \\[0.12cm]
+Hub Gini & Hubness & Gini coefficient of kNN indegree counts. & Concentration of local-neighborhood centrality. \\[0.12cm]
+PCA D80 & Spectral structure & Number of principal components needed to explain 80\% variance. & Effective dimensionality of the subfield cloud. \\[0.12cm]
+PCA entropy & Spectral structure & Entropy of the normalized PCA spectrum. & Evenness of variance across latent directions. \\[0.12cm]
 \hline
 \end{tabular}
-\par\vspace{0.2cm}
-\footnotesize\textit{Note.} Metric names are shortened thesis labels.
+\par\vspace{0.12cm}
+\footnotesize\textit{Note.} These eight metrics define the active structural morphology profile. Net semantic displacement is measured separately with early--late centroid drift and is not included in the profile matrix.
 \end{table}

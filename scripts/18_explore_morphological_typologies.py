@@ -19,13 +19,13 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Explore and write an exploratory typology of subfield morphology "
-            "from the reduced eleven-metric embedding-space core."
+            "from the active eight-metric structural embedding-space core."
         )
     )
     parser.add_argument(
         "--input-path",
         default="outputs/04_reduced_metric_core/reduced_interpretable_core_metrics.csv",
-        help="Reduced eleven-metric morphology table; CSV is preferred for portability.",
+        help="Active eight-metric structural morphology table; CSV is preferred for portability.",
     )
     parser.add_argument(
         "--output-dir",
@@ -97,4 +97,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

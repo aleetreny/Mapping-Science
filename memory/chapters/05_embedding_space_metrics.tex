@@ -1,91 +1,18 @@
-% Chapter 5: Embedding-Space Morphological Metrics
+% Deprecated standalone chapter draft.
+% The active thesis now defines the measurement framework in Chapter 6 and
+% Appendix A. This file is retained only as an editorial note.
 
-\section{From Embedded Paper Distributions to Field Indicators}
+\section{Deprecated Draft: Embedding-Space Morphological Metrics}
 
-The row-aligned SPECTER2 matrix becomes analytically useful when each subfield is treated as a distribution of papers in a shared semantic space. A compact field and a fragmented field may contain the same number of papers. Their difference lies in how those papers occupy the embedding space.
+This chapter draft is not included by \texttt{memory/memoria.tex}. The active
+thesis specification uses eight structural morphology metrics: centroid-distance
+median, centroid-distance IQR, centroid-distance P90, median kNN distance, kNN
+distance coefficient of variation, kNN in-degree Gini, PCA \(D_{80}\), and PCA
+spectral entropy.
 
-Metric computation uses the original 768-dimensional SPECTER2 coordinate system. Non-zero vectors are L2-normalized, and distances are cosine distances. This fixes vector scale while preserving the original embedding dimensions; no UMAP projection or other low-dimensional map enters the quantitative metrics.
+Centroid drift is retained separately as net semantic displacement between the
+2000--2004 and 2020--2024 centroid positions. It is not part of the structural
+profile matrices used for PCA, clustering, morphology distances, nearest
+neighbors, convergence, divergence, or dynamic profile displacement.
 
-Let \(Z_s = \{z_i : i \in s\}\) denote the set of normalized embeddings for subfield \(s\), with \(n_s = |Z_s|\). The subfield centroid is
-
-\[
-c_s = \frac{1}{n_s}\sum_{i \in s} z_i.
-\]
-
-Distances to this centroid are computed as cosine distances to the centroid direction,
-
-\[
-r_i = d(z_i, c_s),
-\]
-
-where \(d(\cdot,\cdot)\) denotes cosine distance. The metrics summarize the distribution of these distances, local neighborhoods, the spread of variance across principal directions, and temporal movement across 2000--2024.
-
-\section{Why These Eleven Metrics? A Grammar of Field Shape}
-
-The eleven metrics are not a random list. They form a reduced measurement core. Each family answers a different question about the shape of an embedded paper distribution.
-
-\begin{figure}[H]
-\centering
-\caption[Metric families as field-shape grammar]{Metric families as a grammar of field shape. The eleven metrics keep dispersion, local density, hubness, spectral structure, and temporal movement separate.}
-\label{fig:metric_family_schematic}
-\includegraphics[width=\textwidth]{figures/fig_05_metric_family_schematic.png}
-\end{figure}
-
-\input{tables/tab_05_metric_core}
-
-The metric families are read as follows. Dispersion asks how broadly papers spread around the field center. Local density asks how tightly papers are packed into nearest-neighbor neighborhoods. Hubness asks whether a few papers appear disproportionately often as neighbors of many others. Spectral structure asks whether variation is concentrated in a few principal directions or spread across many. Temporal movement asks whether the field moves, expands, or changes relative to its earlier configuration.
-
-The individual metrics answer more specific questions:
-
-\begin{enumerate}
-    \item \textbf{Median centroid distance}: how far the typical paper is from the field center.
-    \item \textbf{Centroid-distance IQR}: whether the middle of the field is homogeneous or unevenly spread.
-    \item \textbf{Centroid-distance P90}: how far the outer semantic periphery reaches.
-    \item \textbf{Median kNN distance}: how tightly papers are packed into local neighborhoods.
-    \item \textbf{kNN distance CV}: whether local density is uniform or uneven.
-    \item \textbf{kNN in-degree Gini}: whether some papers act as local hubs for many others.
-    \item \textbf{PCA \(D_{80}\)}: how many principal directions are needed to explain most variation.
-    \item \textbf{PCA spectral entropy}: whether variation is concentrated or broadly distributed.
-    \item \textbf{Centroid drift}: how much the field center moves between early and late periods.
-    \item \textbf{Radial expansion slope}: whether papers move away from or toward the full-period center over time.
-    \item \textbf{Recent novelty score}: whether recent papers are far from the early semantic core.
-\end{enumerate}
-
-More metrics would not necessarily make the framework better. A larger battery could look more sophisticated while repeating the same information. The aim is a small, interpretable set that covers non-equivalent aspects of field shape.
-
-\section{Operational Definitions}
-
-The compact notation below states the implemented definitions; Appendix~\ref{app:metric-formulations} records the full formula set. Semantic dispersion is measured from the centroid-distance distribution \(\{r_i : i \in s\}\). The median distance describes the typical radial position of papers around the subfield center, the interquartile range describes middle-spread heterogeneity, and the 90th percentile captures the outer semantic periphery.
-
-Local density is computed from within-subfield nearest-neighbor distances. Let \(N_k(i)\) be the \(k\)-nearest-neighbor set of paper \(i\), with \(k = 15\) unless fewer non-self neighbors are available. The median kNN distance measures typical local packing; smaller values indicate tighter neighborhoods. The coefficient of variation of all directed kNN distances measures unevenness in local density. Hubness is captured by the Gini coefficient of the in-degree counts \(h_j = \sum_{i \in s}\mathbf{1}\{j \in N_k(i)\}\). High \(\texttt{knn\_indegree\_gini}\) values indicate that a small subset of papers appears disproportionately often as nearest neighbors, a known issue in high-dimensional spaces \parencite{radovanovic2010hubness}.
-
-Spectral structure is measured with PCA on the normalized embeddings of each subfield. Let \(\lambda_1,\ldots,\lambda_p\) be the PCA explained-variance values, with \(p \leq 768\) depending on the number of available observations and positive-variance components. The 80 percent dimensionality proxy and normalized spectral entropy are
-
-\[
-D_{80}(s)=\min\left\{m:\frac{\sum_{j\leq m}\lambda_j}{\sum_{j\leq p}\lambda_j}\geq 0.80\right\},
-\qquad
-H(s)=-\frac{\sum_{j\leq q}p_j\log p_j}{\log q}.
-\]
-
-Here \(q\) is the number of positive-variance components and \(p_j = \lambda_j / \sum_{\ell\leq q}\lambda_\ell\). Higher \(D_{80}\) values mean that more principal components are needed to explain the same share of variance. This is an operational PCA proxy, not a claim about the true intrinsic dimension of a field. Higher entropy indicates a flatter variance spectrum and less dominance by a few directions.
-
-Temporal morphology is measured with three indicators. For the full thesis window, the early period is 2000--2004 and the late period is 2020--2024. The implemented definitions are
-
-\[
-\begin{aligned}
-\Delta_c(s) &= d(c_s^{early}, c_s^{late}), &
-a_{s,t} &= \beta_0 + \beta_1(t-\bar{t}) + \varepsilon_t,\\
-R(s) &= \widetilde{d}_{late\to early} - \widetilde{d}_{early\to early}.
-\end{aligned}
-\]
-
-Centroid drift is \(\Delta_c(s)\), the cosine distance between early and late centroids. Radial expansion is the fitted \(\hat{\beta}_1\), where \(a_{s,t}\) is the annual median distance to the full-period centroid. In the recent-novelty score \(R(s)\), the two tilded terms are median late-period and early-period distances to the early centroid. These temporal metrics describe movement and radial change; they do not identify causes.
-
-\section{How to Read the Metric Core}
-
-Metric values are comparative. A high centroid-distance median indicates greater semantic dispersion relative to other subfields measured in the same embedding geometry. A high kNN median distance indicates sparse local neighborhoods. A high kNN in-degree Gini indicates concentration of neighborhood attention around fewer papers. A high \(D_{80}\) or spectral entropy indicates that variation is spread across more directions. Positive radial expansion and recent novelty indicate movement away from earlier or full-period semantic structure.
-
-The metrics do not measure field size, publication volume, citation impact, research quality, or institutional importance. They describe reproducible structure in a model-defined semantic space. A compact field is not better than a dispersed one, and a high-novelty field is not automatically more important. The metrics give language to shape; interpretation still requires substantive care.
-
-\paragraph{What this establishes.}
-The eleven metrics are the measurement language of the thesis. They describe different parts of field shape: spread, local packing, hub concentration, spectral structure, and movement. The rest of the thesis asks what scientific structure becomes visible when fields are compared through this language.
+The active formula reference is Appendix~\ref{app:metric-formulations}.

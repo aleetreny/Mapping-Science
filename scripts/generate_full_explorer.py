@@ -1,4 +1,4 @@
-import os
+﻿import os
 import shutil
 import json
 import re
@@ -26,6 +26,7 @@ def main():
     
     # 1. Define Paths
     typologies_path = ROOT / "outputs/09_morphological_typologies/subfield_typology_assignments.csv"
+    centroid_drift_path = ROOT / "outputs/04_reduced_metric_core/centroid_drift_early_late.csv"
     dist_matrix_path = ROOT / "outputs/07_morphological_similarity/matrices/subfield_static_morphological_distance_matrix.csv"
     umap_figures_dir = ROOT / "outputs/08_visualization/per_subfield_umap_smooth_density/figures"
     target_comp_dir = ROOT / "tmp_shape_stability_exploration/figures/method_comparison"
@@ -42,7 +43,19 @@ def main():
         return
         
     df_typo = pd.read_csv(typologies_path)
+    if centroid_drift_path.exists():
+        df_drift = pd.read_csv(centroid_drift_path)
+        df_typo = df_typo.merge(
+            df_drift[["subfield_id", "embedding_centroid_drift_early_late"]],
+            on="subfield_id",
+            how="left",
+        )
+    else:
+        df_typo["embedding_centroid_drift_early_late"] = np.nan
     print(f"Loaded {len(df_typo)} subfield typology rows.")
+
+    density_q = df_typo["embedding_knn_median_distance"].quantile([0.33, 0.66])
+    hubness_q = df_typo["embedding_knn_indegree_gini"].quantile([0.33, 0.66])
     
     # Load distance matrix for programmatically identifying overlap neighbors
     df_dist = None
@@ -129,27 +142,21 @@ def main():
         else:
             drift_lbl = "Highly Dynamic Shift"
             
-        # Recent Topic Activity (2020-2024)
-        novelty = row["embedding_recent_novelty_score"]
-        if novelty < -0.0080:
-            novelty_lbl = "Consolidated / Lower Novelty"
-        elif novelty < -0.0040:
-            novelty_lbl = "Moderate / Stable Novelty"
-        elif novelty < 0.0050:
-            novelty_lbl = "High Novelty"
+        knn_distance = row["embedding_knn_median_distance"]
+        if knn_distance <= density_q.loc[0.33]:
+            density_lbl = "Dense Local Neighborhoods"
+        elif knn_distance <= density_q.loc[0.66]:
+            density_lbl = "Moderate Local Density"
         else:
-            novelty_lbl = "Very High Novelty (Highly Active)"
-            
-        # Vocabulary Growth
-        expansion = row["embedding_radial_expansion_slope"]
-        if expansion < -0.00075:
-            expansion_lbl = "Contraction (Highly Focused)"
-        elif expansion < -0.00045:
-            expansion_lbl = "Muted / Slight Contraction"
-        elif expansion < 0.00000:
-            expansion_lbl = "Stable / No Expansion"
+            density_lbl = "Sparse Local Neighborhoods"
+
+        hubness = row["embedding_knn_indegree_gini"]
+        if hubness <= hubness_q.loc[0.33]:
+            hubness_lbl = "Diffuse Neighbor Attention"
+        elif hubness <= hubness_q.loc[0.66]:
+            hubness_lbl = "Moderate Hubness"
         else:
-            expansion_lbl = "Moderate Expansion"
+            hubness_lbl = "Concentrated Hubs"
             
         # Put into JS-friendly database object
         subfield_data[sf_id] = {
@@ -159,8 +166,8 @@ def main():
             "n": "3,000 papers",
             "complexity": complexity,
             "drift": drift_lbl,
-            "novelty": novelty_lbl,
-            "expansion": expansion_lbl
+            "density": density_lbl,
+            "hubness": hubness_lbl
         }
         
     print(f"Copied {copied_umaps} UMAP baseline figures to frontend folder.")
@@ -205,7 +212,7 @@ def main():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manifold Explorer — Scientific Subfield Atlas</title>
+    <title>Manifold Explorer â€” Scientific Subfield Atlas</title>
     
     <!-- Google Fonts for retro-academic typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -834,7 +841,7 @@ def main():
                 </div>
                 <div class="metric-cell" onclick="openHelp('topology')">
                     <span class="metric-label">Visual Shape on Map <span class="help-indicator">[?]</span></span>
-                    <span id="metric-shape" class="metric-value">T4 - Temporal Novelty (Dynamic)</span>
+                    <span id="metric-shape" class="metric-value">Spectrally Complex Profiles</span>
                 </div>
                 <div class="metric-cell" onclick="openHelp('overlap')">
                     <span class="metric-label">Overlap with <span class="help-indicator">[?]</span></span>
@@ -852,13 +859,13 @@ def main():
                     <span class="metric-label">Shift Over Time <span class="help-indicator">[?]</span></span>
                     <span id="metric-drift" class="metric-value">Moderate Historical Shift</span>
                 </div>
-                <div class="metric-cell" onclick="openHelp('novelty')">
-                    <span class="metric-label">New Topic Activity (2020-2024) <span class="help-indicator">[?]</span></span>
-                    <span id="metric-novelty" class="metric-value">Very High Novelty (Highly Active)</span>
+                <div class="metric-cell" onclick="openHelp('density')">
+                    <span class="metric-label">Local Density <span class="help-indicator">[?]</span></span>
+                    <span id="metric-density" class="metric-value">Moderate Local Density</span>
                 </div>
-                <div class="metric-cell" onclick="openHelp('expansion')">
-                    <span class="metric-label">Vocabulary Growth <span class="help-indicator">[?]</span></span>
-                    <span id="metric-expansion" class="metric-value">Moderate Expansion</span>
+                <div class="metric-cell" onclick="openHelp('hubness')">
+                    <span class="metric-label">Hubness <span class="help-indicator">[?]</span></span>
+                    <span id="metric-hubness" class="metric-value">Moderate Hubness</span>
                 </div>
             </div>
         </div>
@@ -869,7 +876,7 @@ def main():
                 This interactive web portal serves as the diagnostic companion and visual atlas for the Master's Thesis, presenting the comparative shape stability of embedding manifolds across the complete corpus of <strong>241 scientific subfields</strong>. The visualizations map the structural distribution and historical development of scientific topics over a 25-year timeline spanning from <strong>2000 to 2024</strong>. The taxonomic structure is grounded in the standard <strong>Scopus All Science Journal Classification (ASJC)</strong> system, where the corpus is hierarchically organized into 26 high-level <strong>Fields</strong> (representing broad parent disciplines) containing 241 specialized <strong>Subfields</strong>. To guarantee statistical robustness and comparability across disciplines, each projection is derived from a stable, randomly aligned sample of <strong>N = 3,000 papers</strong> represented in the high-dimensional space by the <strong>768-dimensional SPECTER2</strong> document encoder.
             </p>
             <p style="line-height: 1.7; text-align: justify; margin-bottom: 1.25rem; font-size: 0.95rem;">
-                By contrasting linear principal components (PCA) against non-linear manifold and diffusion-based techniques (t-SNE, UMAP, and PHATE), this explorer allows researchers to audit how different algorithms preserve local semantic density versus global topological relations. To make these high-dimensional space properties intuitive, the qualitative indices in the card above translate complex metrics (such as Ward morphological typologies, PCA D80 complexity, historical centroid drift, and radial terminology growth) into standardized qualitative segments. 
+                By contrasting linear principal components (PCA) against non-linear manifold and diffusion-based techniques (t-SNE, UMAP, and PHATE), this explorer allows researchers to audit how different algorithms preserve local semantic density versus global topological relations. To make these high-dimensional space properties intuitive, the qualitative indices in the card above translate structural morphology metrics and separate centroid displacement into standardized qualitative segments.
             </p>
             <p style="line-height: 1.7; text-align: justify; font-style: italic; color: #555; font-size: 0.92rem; border-left: 3px solid var(--accent-color); padding-left: 1rem; margin-top: 1rem;">
                 Methodological Note: The cards in the "Embedding Space Characteristics" panel are interactive. You can click on any metric cell to open the documentation pop-up, which details the underlying mathematical purpose and lists the definitions of all possible classification categories.
@@ -878,7 +885,7 @@ def main():
     </div>
 
     <footer>
-        TFM — Visual Shape Stability Explorer v1.0 — © 2026
+        TFM â€” Visual Shape Stability Explorer v1.0 â€” Â© 2026
     </footer>
 </div>
 
@@ -1087,7 +1094,7 @@ def main():
             if (method !== "UMAP") {
                 // Graceful fallback to UMAP baseline which always exists
                 mapImg.src = `figures/method_comparison/${safeStem}/UMAP.png`;
-                statusBar.innerHTML = `⚠️ <strong>Method Notice:</strong> The selected ${method} projection is pending computation for this subfield. Displaying UMAP thesis baseline projection.`;
+                statusBar.innerHTML = `âš ï¸ <strong>Method Notice:</strong> The selected ${method} projection is pending computation for this subfield. Displaying UMAP thesis baseline projection.`;
                 statusBar.style.display = "block";
             } else {
                 mapImg.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23eae9e5'/><text x='50' y='50' font-family='sans-serif' font-size='4' fill='%23555' text-anchor='middle'>Map Not Available</text></svg>";
@@ -1105,8 +1112,8 @@ def main():
             document.getElementById("metric-n").innerText = data.n;
             document.getElementById("metric-complexity").innerText = data.complexity;
             document.getElementById("metric-drift").innerText = data.drift;
-            document.getElementById("metric-novelty").innerText = data.novelty;
-            document.getElementById("metric-expansion").innerText = data.expansion;
+            document.getElementById("metric-density").innerText = data.density;
+            document.getElementById("metric-hubness").innerText = data.hubness;
         }
     }
 
@@ -1125,11 +1132,11 @@ def main():
         },
         "topology": {
             title: "Visual Shape on Map",
-            desc: "The visual shape formed by the subfield's papers when mapped in 2D space, computed using hierarchical clustering of 11 topological metrics.",
+            desc: "The visual shape formed by the subfield's papers when mapped in 2D space, alongside the eight-metric structural morphology typology.",
             options: [
-                "<strong>T1 - Broad Sparse Continents</strong>: Wide, spread-out clusters representing broad, mature fields with diffuse topic structures.",
-                "<strong>T4 - Temporal Novelty (Dynamic)</strong>: Active clusters showing clear historical expansion paths with distinct emerging cores.",
-                "<strong>T5 - Uneven Dispersion Outliers</strong>: Scattered, highly fragmented clusters containing small isolated groups of highly specialized research."
+                "<strong>Broad dispersed profiles</strong>: Fields with comparatively broad centroid spread.",
+                "<strong>Spectrally complex profiles</strong>: Fields with broad profile structure in the PCA spectrum.",
+                "<strong>Uneven dispersion outliers</strong>: Fields with uneven centroid spread and local variability."
             ]
         },
         "overlap": {
@@ -1148,7 +1155,7 @@ def main():
             title: "Papers Analyzed",
             desc: "The number of representative scientific publications sampled from the thesis corpus for this subfield.",
             options: [
-                "<strong>3,000 papers</strong>: A highly stable sample size extracted from 2000–2024 rows to ensure robust and comparable mapping layouts across all methods."
+                "<strong>3,000 papers</strong>: A highly stable sample size extracted from 2000â€“2024 rows to ensure robust and comparable mapping layouts across all methods."
             ]
         },
         "complexity": {
@@ -1163,32 +1170,30 @@ def main():
         },
         "drift": {
             title: "Shift Over Time",
-            desc: "How fast and far the core focus of the scientific field has moved or shifted historically from 2000 to 2024.",
+            desc: "Net semantic displacement, measured separately from the structural morphology profile.",
             options: [
-                "<strong>Static (Highly Stable)</strong>: The field's core research questions and terminology have remained completely unchanged for 25 years.",
+                "<strong>Static (Highly Stable)</strong>: The field centroid has moved very little in the embedding space.",
                 "<strong>Low Historical Shift</strong>: Mild conceptual movement, with stable baselines and incremental progress.",
-                "<strong>Moderate Historical Shift</strong>: Noticeable evolution, with older topics giving way to modern methodologies.",
-                "<strong>Highly Dynamic Shift</strong>: Radical focus shifts, indicating rapid scientific revolutions and conceptual rebranding."
+                "<strong>Moderate Historical Shift</strong>: Noticeable centroid displacement between early and late periods.",
+                "<strong>Highly Dynamic Shift</strong>: Large centroid displacement relative to most subfields."
             ]
         },
-        "novelty": {
-            title: "New Topic Activity (2020-2024)",
-            desc: "The density of brand-new, active, or emerging scientific topics appearing recently in the years 2020–2024.",
+        "density": {
+            title: "Local Density",
+            desc: "Typical nearest-neighbor distance inside the subfield. Lower distances indicate denser local neighborhoods.",
             options: [
-                "<strong>Consolidated / Lower Novelty</strong>: Research is focused on mature, highly established theories with few recent disruptions.",
-                "<strong>Moderate / Stable Novelty</strong>: Healthy, steady introduction of new research questions without massive volatility.",
-                "<strong>High Novelty</strong>: Fast-paced research with many hot, active emerging subjects.",
-                "<strong>Very High Novelty (Highly Active)</strong>: Explosive growth of bleeding-edge emerging trends, typical of rapidly expanding modern disciplines."
+                "<strong>Dense Local Neighborhoods</strong>: Papers have close nearest neighbors.",
+                "<strong>Moderate Local Density</strong>: Local packing is near the corpus middle.",
+                "<strong>Sparse Local Neighborhoods</strong>: Papers are farther from their nearest neighbors."
             ]
         },
-        "expansion": {
-            title: "Vocabulary Growth",
-            desc: "Whether the scientific vocabulary is expanding (introducing new terminology) or contracting (focusing on a standardized, mature set of terms).",
+        "hubness": {
+            title: "Hubness",
+            desc: "How concentrated nearest-neighbor attention is around a small subset of papers.",
             options: [
-                "<strong>Contraction (Highly Focused)</strong>: Terminology is consolidating around a standard, highly specific set of key terms.",
-                "<strong>Muted / Slight Contraction</strong>: Minor vocabulary focusing, typical of stabilizing fields.",
-                "<strong>Stable / No Expansion</strong>: Perfectly balanced terminology, indicating mature, steady conceptual consensus.",
-                "<strong>Moderate Expansion</strong>: Active introduction of new specialized keywords and mathematical jargon."
+                "<strong>Diffuse Neighbor Attention</strong>: Neighbor links are comparatively evenly distributed.",
+                "<strong>Moderate Hubness</strong>: Hub concentration is near the corpus middle.",
+                "<strong>Concentrated Hubs</strong>: A smaller set of papers appears unusually often as nearest neighbors."
             ]
         }
     };
@@ -1236,7 +1241,7 @@ def main():
     <div class="win98-modal">
         <div class="win98-title-bar">
             <span id="modal-title">Help Topics</span>
-            <button class="win98-close-btn" onclick="closeModal()">×</button>
+            <button class="win98-close-btn" onclick="closeModal()">Ã—</button>
         </div>
         <div class="win98-modal-body">
             <div class="win98-help-content" id="modal-content">
@@ -1267,3 +1272,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

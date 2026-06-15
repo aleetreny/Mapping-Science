@@ -1,83 +1,15 @@
-% Chapter 9: Exploratory Morphological Typologies
+% Deprecated standalone chapter draft.
+% The active thesis now discusses static and dynamic clustering in Chapters 7
+% and 8. This file is retained only as an editorial note.
 
-\section{Why Clustering? Compression, Not Taxonomy}
+\section{Deprecated Draft: Exploratory Morphological Typologies}
 
-The previous chapters described morphology as continuous relations: full-period shape differences, temporal movement, pairwise similarity, convergence, and divergence. Clustering compresses those relations into a small vocabulary. It is used here as description, not as a discovery of natural kinds.
+This chapter draft is not included by \texttt{memory/memoria.tex}. The active
+static typology uses Ward hierarchical clustering, Euclidean distance, robust
+median/IQR scaling, and \(k=5\) over the eight structural morphology metrics.
+The rebuilt silhouette is \(0.174\), and the selected static group sizes are
+11, 40, 44, 64, and 82 subfields.
 
-This distinction matters because clustering is used to make long lists of metric profiles readable. A cluster solution can summarize repeated patterns, but it does not define natural categories or replace the continuous profile space from which it was built.
-
-Three representations remain distinct. Static morphology clusters the 241 analysis subfields by eleven robust-scaled full-period metrics. Dynamic morphology clusters subfields by how their windowed structural metrics move over time. Semantic-location clustering, reported mainly in Appendix~\ref{app:additional-figures}, clusters subfield centroid embeddings and hybrid centroid--morphology representations as sensitivity checks. Neither OpenAlex labels nor projection coordinates assign clusters; PCA, PCoA, and UMAP appear only as visual summaries.
-
-\section{Static Morphology: Weak Groups in a Continuous Space}
-
-The static typology uses Ward hierarchical clustering \parencite{ward1963hierarchical}, Euclidean distance, robust median/IQR scaling, and \(k=5\). Its silhouette \parencite{rousseeuw1987silhouettes} is \(0.133\), so the result is read as a set of reference profiles in a continuous space rather than as separated classes.
-
-\begin{figure}[H]
-\centering
-\caption[Static and dynamic clustering diagnostics]{Static and dynamic clustering diagnostics: silhouette, subsample stability where estimated, and cluster-size balance.}
-\label{fig:static_dynamic_diagnostics}
-\includegraphics[width=\textwidth]{figures/fig_09_static_dynamic_diagnostics.png}
-\end{figure}
-
-The contrast between weak static clustering and clearer dynamic clustering supports one of the main empirical claims: fields are easier to summarize by how they change than by their full-period shape.
-
-\input{tables/tab_09_typology_summary}
-
-The five static groups are named by their mean morphology profiles, not by domain composition. T1 Broad sparse profiles is the largest group, with high nearest-neighbor and centroid distances but comparatively low local unevenness. T2 Compact low-dispersion profiles is compact in distance terms while retaining comparatively high dimensionality and hub concentration. T3 Low-dimensional locally uneven profiles combines lower spectral dimensionality with uneven local neighborhoods and some centroid movement. T4 Temporal novelty profiles is defined by strong full-period drift, radial expansion, and recent novelty. T5 Uneven dispersion outliers is small and irregular, with high centroid IQR, high kNN variability, and elevated hubness.
-
-\begin{figure}[H]
-\centering
-\caption[Static typology profile heatmap]{Static morphology typology mean profiles across the eleven reduced morphology metrics.}
-\label{fig:typology_profile_heatmap}
-\includegraphics[width=\textwidth]{figures/fig_09_typology_profile_heatmap.png}
-\end{figure}
-
-The static heatmap is useful because it shows recurring combinations of dispersion, local density, hubness, spectral structure, and temporal novelty. The low silhouette keeps the interpretation anchored in continuity rather than clean separation.
-
-\section{Dynamic Morphology: Clearer Patterns of Change}
-
-The dynamic typology asks whether subfields are easier to group by direction of change than by full-period shape. The unit is the set of subfields with complete five-window structural trajectories, giving 240 complete cases. Each subfield is represented by the linear slopes of eight windowed structural metrics. The selected solution uses average-link hierarchical clustering with correlation distance at \(k=4\). It has silhouette \(=0.396\), mean subsample ARI \(=0.725\), AMI \(=0.048\) against the static morphology typology, and AMI \(=0.093\) against OpenAlex domains. ARI and AMI are chance-adjusted partition-comparison diagnostics \parencite{hubert1985comparing,vinh2010information}; subsample agreement is used as a stability check, not as proof of natural classes \parencite{vonluxburg2010clustering}.
-
-\input{tables/tab_09_dynamic_typology_summary}
-
-These diagnostics justify moving the temporal result into the main chapter. Dynamic morphology produces a clearer and more stable typology than static morphology, but the low agreement with both static typologies and OpenAlex domains shows that it is not simply recovering either full-period shape or taxonomy. The four groups describe movement.
-
-D1 Compacting locally uneven trajectories contains 93 subfields. Its average slope profile shows falling centroid and nearest-neighbor distances, alongside increasing kNN variability and hub concentration. D2 Broadening hub-diffusing trajectories contains 58 subfields and moves in almost the opposite direction on several dimensions: centroid and kNN distances rise, while hubness and spectral complexity fall. D3 Smoothing sparse-neighborhood trajectories contains 54 subfields; nearest-neighbor distance rises, but local unevenness and hubness decline while spectral spread increases. D4 Dimensionalizing hub-concentrating trajectories is smaller, with 35 subfields; PCA dimensionality and hubness rise while outer centroid spread and local variability fall.
-
-\begin{figure}[H]
-\centering
-\caption[Dynamic temporal typology profile heatmap]{Dynamic temporal-trajectory typology profiles. Values are mean standardized linear slopes of the eight windowed structural metrics.}
-\label{fig:dynamic_typology_profile_heatmap}
-\includegraphics[width=\textwidth]{figures/fig_09_dynamic_typology_profile_heatmap.png}
-\end{figure}
-
-Figure~\ref{fig:dynamic_movement_cards} restates the heatmap as four movement cards. This view makes the temporal typology easier to read without changing the underlying estimates: D1 contracts in territory and neighborhood distance while becoming more locally uneven; D2 expands while diffusing hubness; D3 smooths sparse-neighborhood structure; and D4 increases dimensionality and hub concentration. The cards translate slope estimates into interpretable movement verbs.
-
-\begin{figure}[H]
-\centering
-\caption[Dynamic morphology movement cards]{Dynamic morphology movement cards. Each card summarizes the mean direction of change in territory, neighborhood distance, hubness, and dimensionality for one temporal trajectory group.}
-\label{fig:dynamic_movement_cards}
-\includegraphics[width=\textwidth]{figures/fig_09_dynamic_movement_cards.png}
-\end{figure}
-
-Subfields are therefore easier to group by how their morphology changes than by their full-period shape. The dynamic groups remain exploratory, but they supply a second morphology-based vocabulary: compacting, broadening, smoothing, and dimensionalizing tendencies.
-
-\section{Shape, Movement, and Location Are Not the Same}
-
-Figure~\ref{fig:static_dynamic_projection_comparison} projects the static and dynamic spaces with PCA, PCoA, and UMAP. The static panels use robust-scaled eleven-metric profiles; the dynamic panels use standardized temporal slope vectors. PCoA uses Euclidean distance for static morphology and correlation distance for temporal trajectories, matching the selected clustering geometries \parencite{gower1966distance}.
-
-\begin{figure}[H]
-\centering
-\caption[Static and dynamic typologies under alternative projections]{Static and dynamic typologies under alternative projections. Clustering assignments come from the selected static Ward and dynamic average-correlation solutions, not from the plotted coordinates.}
-\label{fig:static_dynamic_projection_comparison}
-\includegraphics[width=\textwidth]{figures/fig_09_static_dynamic_projection_comparison.png}
-\end{figure}
-
-The contrast is stable enough to be useful but not categorical. Static typologies remain visibly continuous and overlapping under PCA and PCoA; UMAP separates some local neighborhoods more strongly and is read cautiously. Dynamic panels show clearer regional structure under PCA and especially correlation-based PCoA, consistent with the stronger diagnostics in Figure~\ref{fig:static_dynamic_diagnostics}.
-
-Domain composition is retained as a supporting diagnostic in Appendix~\ref{app:additional-figures}. Static typologies have visible domain tendencies: T1 and T4 are strongly Physical Sciences, while T3 has more Health Sciences and Social Sciences. Dynamic typologies also carry domain tendencies, but they are less taxonomy-driven than a topic-location partition would be. D1 is mixed between Health Sciences and Physical Sciences, D2 is mostly Physical Sciences with Social Sciences present, D3 is mostly Social Sciences, and D4 is distributed across all four domains.
-
-The semantic-location checks in Appendix~\ref{app:additional-figures} define the boundary of the claim. Clustering subfield centroid embeddings separates somewhat more clearly than static morphology, with silhouette \(=0.236\) for the selected balanced \(k=3\) centroid solution. It also aligns more strongly with OpenAlex domains (AMI \(=0.471\)) than with the morphology typology (AMI \(=0.084\)). A Ward \(k=5\) centroid variant aligns even more strongly with domains (AMI \(=0.569\)) while still agreeing weakly with morphology (AMI \(=0.095\)). The hybrid centroid--morphology check is stable, with silhouette \(=0.247\), cluster sizes \(91/77/73\), and mean subsample ARI \(=0.951\), but that stability comes with domain-like structure: AMI is \(0.591\) against OpenAlex domains, \(0.505\) against centroid clusters, and only \(0.092\) against morphology.
-
-\paragraph{What this result means.}
-Static morphology is hard to divide into clean groups, but temporal trajectories are easier to summarize. This suggests that fields may be more clearly distinguished by how they change than by their full-period shape. The clusters remain descriptive summaries, so the value is compression rather than classification.
+Dynamic clustering is based on standardized slopes of the same eight structural
+metrics across five temporal windows. The selected temporal solution remains a
+descriptive summary of movement patterns rather than a natural taxonomy.
