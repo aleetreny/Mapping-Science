@@ -421,46 +421,41 @@ def plot_pipeline_figure() -> None:
 
 def _make_eda_plot(core: pd.DataFrame, style: str) -> plt.Figure:
     metric_titles = {
-        "embedding_distance_to_centroid_median": "a) Centroid-Distance Median",
-        "embedding_distance_to_centroid_iqr": "b) Centroid-Distance IQR",
-        "embedding_distance_to_centroid_p90": "c) Centroid-Distance P90",
-        "embedding_knn_median_distance": "d) Median kNN Distance",
-        "embedding_knn_distance_cv": "e) kNN Distance CV",
-        "embedding_knn_indegree_gini": "f) kNN In-Degree Gini",
-        "embedding_pca_dim_80": "g) PCA D80",
-        "embedding_pca_spectral_entropy": "h) PCA Spectral Entropy",
+        "embedding_distance_to_centroid_median": "Centroid-Distance Median",
+        "embedding_distance_to_centroid_iqr": "Centroid-Distance IQR",
+        "embedding_distance_to_centroid_p90": "Centroid-Distance P90",
+        "embedding_knn_median_distance": "Median kNN Distance",
+        "embedding_knn_distance_cv": "kNN Distance CV",
+        "embedding_knn_indegree_gini": "kNN In-Degree Gini",
+        "embedding_pca_dim_80": "PCA D80",
+        "embedding_pca_spectral_entropy": "PCA Spectral Entropy",
     }
     fig, axes = plt.subplots(2, 4, figsize=(12.0, 7.0), constrained_layout=True)
     for i, (ax, metric) in enumerate(zip(axes.ravel(), METRICS)):
         values = pd.to_numeric(core[metric], errors="coerce").dropna()
         counts, bins, patches = ax.hist(values, bins=min(28, max(8, values.nunique())), color="#4c78a8", edgecolor="white", linewidth=0.4)
-        median = float(values.median())
         
-        # Stop vertical median line before the text region in 'clean' styles
-        if "clean" in style:
-            ax.axvline(median, color="#222222", linestyle="--", linewidth=1.0, ymax=0.80)
-        else:
-            ax.axvline(median, color="#222222", linestyle="--", linewidth=1.0)
+        # Median vertical line removed as requested ("quitame la barra de la media")
         
         # Increase Y-limit to leave space above the highest bar
         max_y = float(np.max(counts)) if len(counts) > 0 else 10.0
         ax.set_ylim(0, max_y * 1.35)
         
-        # Render titles inside the subplot area
-        if style == "centered":
+        # Render titles inside the subplot area, regular font weight (fontweight="normal")
+        if style == "centered_box":
             ax.text(0.5, 0.88, metric_titles[metric], transform=ax.transAxes,
-                    ha="center", va="center", fontsize=11.0, fontweight="bold",
+                    ha="center", va="center", fontsize=11.0, fontweight="normal",
                     bbox=dict(boxstyle="square,pad=0.2", facecolor="#ffffff", edgecolor="#e5e7eb", alpha=0.9, linewidth=0.6))
+        elif style == "left_box":
+            ax.text(0.05, 0.88, metric_titles[metric], transform=ax.transAxes,
+                    ha="left", va="center", fontsize=11.0, fontweight="normal",
+                    bbox=dict(boxstyle="square,pad=0.2", facecolor="#ffffff", edgecolor="#e5e7eb", alpha=0.9, linewidth=0.6))
+        elif style == "centered":
+            ax.text(0.5, 0.88, metric_titles[metric], transform=ax.transAxes,
+                    ha="center", va="center", fontsize=11.0, fontweight="normal")
         elif style == "left":
             ax.text(0.05, 0.88, metric_titles[metric], transform=ax.transAxes,
-                    ha="left", va="center", fontsize=11.0, fontweight="bold",
-                    bbox=dict(boxstyle="square,pad=0.2", facecolor="#ffffff", edgecolor="#e5e7eb", alpha=0.9, linewidth=0.6))
-        elif style == "centered_nobox" or style == "centered_clean":
-            ax.text(0.5, 0.88, metric_titles[metric], transform=ax.transAxes,
-                    ha="center", va="center", fontsize=11.0, fontweight="bold")
-        elif style == "left_nobox" or style == "left_clean":
-            ax.text(0.05, 0.88, metric_titles[metric], transform=ax.transAxes,
-                    ha="left", va="center", fontsize=11.0, fontweight="bold")
+                    ha="left", va="center", fontsize=11.0, fontweight="normal")
         
         # Only label Y axis on the leftmost subplots
         if i % 4 == 0:
@@ -481,13 +476,13 @@ def plot_eda(core: pd.DataFrame) -> dict[str, float]:
         diagnostics[f"{metric}_median"] = float(values.median())
         diagnostics[f"{metric}_skew"] = float(values.skew())
         
-    for style in ["centered", "left", "centered_nobox", "left_nobox", "centered_clean", "left_clean"]:
+    for style in ["centered", "left", "centered_box", "left_box"]:
         fig = _make_eda_plot(core, style)
         savefig(fig, f"fig_06_structural_metric_raw_distributions_{style}")
         plt.close(fig)
         
-    # Set default main figure as centered_clean
-    fig = _make_eda_plot(core, "centered_clean")
+    # Set default main figure as centered
+    fig = _make_eda_plot(core, "centered")
     savefig(fig, "fig_06_structural_metric_raw_distributions")
     plt.close(fig)
 
