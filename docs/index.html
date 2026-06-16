@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manifold Explorer — Scientific Subfield Atlas</title>
+    <title>Science Map Explorer - Scientific Subfield Atlas</title>
 
     <!-- Google Fonts for retro-academic typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -408,6 +408,17 @@
             border-bottom: 1px solid var(--border-color);
         }
 
+        .metric-explanation-banner {
+            background: #ffffe0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            color: #555;
+            font-family: var(--code-font);
+            font-size: 0.78rem;
+            line-height: 1.45;
+            padding: 0.65rem 1.5rem;
+        }
+
         @media (max-width: 768px) {
             .metrics-grid {
                 grid-template-columns: 1fr;
@@ -462,6 +473,40 @@
 
         .description-section p {
             margin-bottom: 1rem;
+        }
+
+        .description-section h2,
+        .description-section h3 {
+            font-family: var(--code-font);
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.65rem;
+            font-size: 0.95rem;
+        }
+
+        .description-section h3 {
+            margin-top: 1.15rem;
+        }
+
+        .process-list {
+            margin: 0.6rem 0 1.2rem 1.3rem;
+            padding-left: 0.9rem;
+        }
+
+        .process-list li {
+            margin-bottom: 0.55rem;
+        }
+
+        .method-note {
+            line-height: 1.7;
+            text-align: left;
+            font-style: italic;
+            color: #555;
+            font-size: 0.92rem;
+            border-left: 3px solid var(--accent-color);
+            padding-left: 1rem;
+            margin-top: 1rem;
         }
 
         /* Footer */
@@ -992,8 +1037,8 @@
 
 <div class="container">
     <header>
-        <h1>Manifold Explorer</h1>
-        <div class="subtitle">Comparative Analysis of Embedding Spaces & Morphology Stability in the Scientific Subfields</div>
+        <h1>Science Map Explorer</h1>
+        <div class="subtitle">A public companion to a thesis on scientific field morphology</div>
     </header>
 
     <div class="workspace-grid">
@@ -1341,35 +1386,46 @@
             <!-- Tab Navigation Header -->
             <div class="metrics-tabs" role="tablist">
                 <button type="button" class="metric-tab-btn active" id="tab-btn-qualitative" onclick="switchMetricTab('qualitative')" role="tab" aria-selected="true" aria-controls="metric-panel-qualitative">Qualitative Overview</button>
-                <button type="button" class="metric-tab-btn" id="tab-btn-quantitative" onclick="switchMetricTab('quantitative')" role="tab" aria-selected="false" aria-controls="metric-panel-quantitative">Quantitative Core (9 Metrics)</button>
+                <button type="button" class="metric-tab-btn" id="tab-btn-quantitative" onclick="switchMetricTab('quantitative')" role="tab" aria-selected="false" aria-controls="metric-panel-quantitative">Quantitative Core (8 Metrics + Drift)</button>
             </div>
 
             <!-- Tab Content 1: Qualitative (default) -->
             <div id="metric-panel-qualitative" class="metric-panel active" role="tabpanel">
+                <div class="metric-explanation-banner">
+                    These labels translate metrics computed in the original 768-dimensional embedding space. The 2D map is only a projection, so a label may not always look obvious from the drawing alone.
+                </div>
                 <div class="metrics-grid">
                     <div class="metric-cell" onclick="openHelp('parent')">
                         <span class="metric-label">Parent Field <span class="help-indicator">[?]</span></span>
                         <span id="metric-parent" class="metric-value">Computer Science</span>
                     </div>
-                    <div class="metric-cell" onclick="openHelp('topology')">
-                        <span class="metric-label">Visual Shape on Map <span class="help-indicator">[?]</span></span>
-                        <span id="metric-shape" class="metric-value">Spectrally complex profiles</span>
-                    </div>
                     <div class="metric-cell" onclick="openHelp('overlap')">
-                        <span class="metric-label">Overlap with <span class="help-indicator">[?]</span></span>
+                        <span class="metric-label">Closest Fields <span class="help-indicator">[?]</span></span>
                         <span id="metric-overlap" class="metric-value">Signal Processing & AI</span>
                     </div>
-                    <div class="metric-cell" onclick="openHelp('n')">
-                        <span class="metric-label">Papers Analyzed <span class="help-indicator">[?]</span></span>
-                        <span id="metric-n" class="metric-value">3,000 papers</span>
+                    <div class="metric-cell" onclick="openHelp('topology')">
+                        <span class="metric-label">Structural Profile <span class="help-indicator">[?]</span></span>
+                        <span id="metric-shape" class="metric-value">Spectrally complex profiles</span>
+                    </div>
+                    <div class="metric-cell" onclick="openHelp('footprint')">
+                        <span class="metric-label">Embedding Footprint <span class="help-indicator">[?]</span></span>
+                        <span id="metric-footprint" class="metric-value">Wide footprint</span>
                     </div>
                     <div class="metric-cell" onclick="openHelp('complexity')">
                         <span class="metric-label">Topic Diversity <span class="help-indicator">[?]</span></span>
-                        <span id="metric-complexity" class="metric-value">Medium Complexity</span>
+                        <span id="metric-complexity" class="metric-value">Low Complexity (High Focus)</span>
                     </div>
                     <div class="metric-cell" onclick="openHelp('drift')">
-                        <span class="metric-label">Shift Over Time <span class="help-indicator">[?]</span></span>
-                        <span id="metric-drift" class="metric-value">Moderate Historical Shift</span>
+                        <span class="metric-label">Centroid Drift <span class="help-indicator">[?]</span></span>
+                        <span id="metric-drift" class="metric-value">Highly Dynamic Shift</span>
+                    </div>
+                    <div class="metric-cell" onclick="openHelp('localDensity')">
+                        <span class="metric-label">Local Density <span class="help-indicator">[?]</span></span>
+                        <span id="metric-local-density" class="metric-value">Loose neighborhoods</span>
+                    </div>
+                    <div class="metric-cell" onclick="openHelp('hotspots')">
+                        <span class="metric-label">Hotspot Pattern <span class="help-indicator">[?]</span></span>
+                        <span id="metric-hotspots" class="metric-value">Even clusters</span>
                     </div>
                 </div>
             </div>
@@ -1404,20 +1460,31 @@
 
         <!-- Academic Description Section -->
         <div class="description-section">
+            <h2>What This Website Shows</h2>
             <p style="line-height: 1.7; text-align: justify; margin-bottom: 1.25rem; font-size: 0.95rem;">
-                This interactive web portal serves as the diagnostic companion and visual atlas for the Master's Thesis, presenting the comparative shape stability of embedding manifolds across the complete corpus of <strong>241 scientific subfields</strong>. The visualizations map the structural distribution and historical development of scientific topics over a 25-year timeline spanning from <strong>2000 to 2024</strong>. The taxonomic structure is grounded in the standard <strong>Scopus All Science Journal Classification (ASJC)</strong> system, where the corpus is hierarchically organized into 26 high-level <strong>Fields</strong> (representing broad parent disciplines) containing 241 specialized <strong>Subfields</strong>. To guarantee statistical robustness and comparability across disciplines, each projection is derived from a stable, randomly aligned sample of <strong>N = 3,000 papers</strong> represented in the high-dimensional space by the <strong>768-dimensional SPECTER2</strong> document encoder.
+                This website is a public visual companion to my Master's thesis. It lets you explore how scientific subfields look when their papers are represented as points in a shared scientific document space. Each point starts as a paper title and abstract. SPECTER2 converts that text into a <strong>768-dimensional vector</strong>, and papers assigned to the same OpenAlex subfield form a document cloud.
             </p>
+
+            <h3>How the Maps Are Made</h3>
+            <ol class="process-list">
+                <li>OpenAlex records are filtered to papers with usable titles and abstracts from <strong>2000 to 2024</strong>.</li>
+                <li>Each paper is embedded with <strong>SPECTER2</strong>, so it becomes a numerical point in the original 768-dimensional space.</li>
+                <li>The thesis metrics are calculated from those high-dimensional document clouds: dispersion, local density, hubness, spectral structure, and centroid drift.</li>
+                <li>The map shown here is then drawn by projecting a sample of papers into two dimensions with PCA, t-SNE, UMAP, or PHATE.</li>
+            </ol>
+
             <p style="line-height: 1.7; text-align: justify; margin-bottom: 1.25rem; font-size: 0.95rem;">
-                By contrasting linear principal components (PCA) against non-linear manifold and diffusion-based techniques (t-SNE, UMAP, and PHATE), this explorer allows researchers to audit how different algorithms preserve local semantic density versus global topological relations. To make these high-dimensional space properties intuitive, the qualitative indices in the card above translate the active structural morphology metrics, PCA D80 complexity, and separate historical centroid drift into standardized qualitative segments.
+                The important point is that the numbers and labels are not measured from the flat picture on the screen. They are computed before the 2D map is drawn, in the original 768-dimensional representation. The map is useful because it gives an intuitive view of clusters, gaps, and dense regions, but it necessarily loses information. For this reason, a subfield may have a high-dimensional metric value that does not look perfectly obvious in the 2D projection.
             </p>
-            <p style="line-height: 1.7; text-align: justify; font-style: italic; color: #555; font-size: 0.92rem; border-left: 3px solid var(--accent-color); padding-left: 1rem; margin-top: 1rem;">
-                Methodological Note: The cards in the "Embedding Space Characteristics" panel are interactive. You can click on any metric cell to open the documentation pop-up, which details the underlying mathematical purpose and lists the definitions of all possible classification categories.
+
+            <p class="method-note">
+                Reading note: the explorer works best by comparing a few related subfields instead of reading one map in isolation. Look for simple contrasts such as compact versus broad, dense versus loose, or stable versus moving. These differences are descriptive, so they should be read as patterns in the literature, not as rankings of better or worse disciplines.
             </p>
         </div>
     </div>
 
     <footer>
-        TFM — Visual Shape Stability Explorer v1.0 — © 2026
+        TFM - Visual Scientific Field Atlas v1.1 - 2026
     </footer>
 </div>
 
@@ -7015,6 +7082,70 @@ const rawMetricsData = {
         menu.appendChild(item);
     }
 
+    const qualitativeMetricCache = {};
+
+    function getSortedMetricValues(metricKey) {
+        if (!qualitativeMetricCache[metricKey]) {
+            qualitativeMetricCache[metricKey] = Object.values(rawMetricsData)
+                .map(item => item[metricKey])
+                .filter(value => Number.isFinite(value))
+                .sort((a, b) => a - b);
+        }
+        return qualitativeMetricCache[metricKey];
+    }
+
+    function getPercentileRank(metricKey, value) {
+        const values = getSortedMetricValues(metricKey);
+        if (!values.length || !Number.isFinite(value)) return 0.5;
+
+        let lower = 0;
+        let equal = 0;
+        values.forEach(candidate => {
+            if (candidate < value) lower += 1;
+            if (candidate === value) equal += 1;
+        });
+
+        return (lower + equal / 2) / values.length;
+    }
+
+    function averageMetricRanks(metrics, metricKeys) {
+        const ranks = metricKeys.map(key => getPercentileRank(key, metrics[key]));
+        return ranks.reduce((sum, rank) => sum + rank, 0) / ranks.length;
+    }
+
+    function labelByBand(score, lowLabel, midLabel, highLabel) {
+        if (score < 0.33) return lowLabel;
+        if (score < 0.67) return midLabel;
+        return highLabel;
+    }
+
+    function deriveQualitativeLabels(subfieldId) {
+        const metrics = rawMetricsData[subfieldId];
+        if (!metrics) {
+            return {
+                footprint: "Balanced footprint",
+                localDensity: "Balanced neighborhoods",
+                hotspots: "Mixed clusters"
+            };
+        }
+
+        const footprintScore = averageMetricRanks(metrics, [
+            "embedding_distance_to_centroid_median",
+            "embedding_distance_to_centroid_p90"
+        ]);
+        const densityScore = getPercentileRank("embedding_knn_median_distance", metrics.embedding_knn_median_distance);
+        const hotspotScore = averageMetricRanks(metrics, [
+            "embedding_knn_distance_cv",
+            "embedding_knn_indegree_gini"
+        ]);
+
+        return {
+            footprint: labelByBand(footprintScore, "Compact footprint", "Balanced footprint", "Wide footprint"),
+            localDensity: labelByBand(densityScore, "Tight neighborhoods", "Balanced neighborhoods", "Loose neighborhoods"),
+            hotspots: labelByBand(hotspotScore, "Even clusters", "Mixed clusters", "Hub-heavy hotspots")
+        };
+    }
+
     function updateViewer() {
         const subfieldSelect = document.getElementById("subfield-select");
         const methodSelect = document.getElementById("method-select");
@@ -7055,12 +7186,15 @@ const rawMetricsData = {
         // Update Metrics Card
         const data = subfieldData[subfieldId];
         if (data) {
+            const qualitativeLabels = deriveQualitativeLabels(subfieldId);
             document.getElementById("metric-parent").innerText = data.parent;
-            document.getElementById("metric-shape").innerText = data.topology;
             document.getElementById("metric-overlap").innerText = data.overlap;
-            document.getElementById("metric-n").innerText = data.n;
+            document.getElementById("metric-shape").innerText = data.topology;
+            document.getElementById("metric-footprint").innerText = qualitativeLabels.footprint;
             document.getElementById("metric-complexity").innerText = data.complexity;
             document.getElementById("metric-drift").innerText = data.drift;
+            document.getElementById("metric-local-density").innerText = qualitativeLabels.localDensity;
+            document.getElementById("metric-hotspots").innerText = qualitativeLabels.hotspots;
         }
 
         // Update Quantitative Metrics Comparison
@@ -7081,8 +7215,8 @@ const rawMetricsData = {
             ]
         },
         "topology": {
-            title: "Visual Shape on Map",
-            desc: "The visual shape formed by the subfield's papers when mapped in 2D space, summarized with the active structural morphology typology.",
+            title: "Structural Profile",
+            desc: "A plain-language category based on the subfield's high-dimensional morphology metrics. It is shown next to the map, but it is not measured from the 2D picture itself.",
             options: [
                 "<strong>Broad dispersed profiles</strong>: Fields with comparatively broad centroid spread.",
                 "<strong>Compact dense profiles</strong>: Fields with comparatively tight global and local neighborhoods.",
@@ -7092,8 +7226,8 @@ const rawMetricsData = {
             ]
         },
         "overlap": {
-            title: "Overlap with",
-            desc: "The closest neighbor fields in the high-dimensional embedding space, indicating strong interdisciplinary topic sharing.",
+            title: "Closest Fields",
+            desc: "Fields that sit closest to the selected subfield in the high-dimensional representation. This suggests similar document-space structure, not necessarily collaboration or citation links.",
             options: [
                 "<strong>Signal Processing & AI</strong>: Strong overlap with machine learning and pattern analysis.",
                 "<strong>Computer Vision & EE</strong>: Linked to digital image processing and electronic engineering.",
@@ -7101,6 +7235,15 @@ const rawMetricsData = {
                 "<strong>Condensed Matter Physics & Chemistry</strong>: Intersecting solid-state physics and physical chemistry.",
                 "<strong>Astrophysics & Particle Physics</strong>: Connected to high-energy cosmic physics and atomic structure.",
                 "<strong>Applied Psychology & HCI</strong>: Overlapping behavioral science and computer usability."
+            ]
+        },
+        "footprint": {
+            title: "Embedding Footprint",
+            desc: "A plain-language reading of how much semantic space the subfield occupies in the original embedding space. It is derived from global dispersion and outer boundary radius, not from the visible 2D map area.",
+            options: [
+                "<strong>Compact footprint</strong>: Papers stay close to the field center; the subfield is tightly focused.",
+                "<strong>Balanced footprint</strong>: Papers cover a moderate range of topics without becoming too scattered.",
+                "<strong>Wide footprint</strong>: Papers spread across a broad semantic area; the subfield reaches many topic zones."
             ]
         },
         "n": {
@@ -7112,7 +7255,7 @@ const rawMetricsData = {
         },
         "complexity": {
             title: "Topic Diversity",
-            desc: "The internal complexity of the subfield. High diversity means many separate topics are covered; low diversity means highly focused, homogeneous research.",
+            desc: "The internal complexity of the subfield in the high-dimensional document space. High diversity means many topic directions are needed; low diversity means the papers are more concentrated around fewer directions.",
             options: [
                 "<strong>Low Complexity (High Focus)</strong>: Extremely cohesive field dedicated to a narrow, concentrated set of subjects.",
                 "<strong>Medium Complexity</strong>: Balanced field with a few well-defined, interconnected research streams.",
@@ -7121,18 +7264,36 @@ const rawMetricsData = {
             ]
         },
         "drift": {
-            title: "Shift Over Time",
-            desc: "How fast and far the core focus of the scientific field has moved or shifted historically from 2000 to 2024.",
+            title: "Centroid Drift",
+            desc: "How far the average position of the subfield moves between the early period and the late period. It measures semantic displacement of the center, not the internal shape of the cloud.",
             options: [
-                "<strong>Static (Highly Stable)</strong>: The field's core research questions and terminology have remained completely unchanged for 25 years.",
-                "<strong>Low Historical Shift</strong>: Mild conceptual movement, with stable baselines and incremental progress.",
-                "<strong>Moderate Historical Shift</strong>: Noticeable evolution, with older topics giving way to modern methodologies.",
-                "<strong>Highly Dynamic Shift</strong>: Radical focus shifts, indicating rapid scientific revolutions and conceptual rebranding."
+                "<strong>Static (Highly Stable)</strong>: The field center moves very little between 2000-2004 and 2020-2024.",
+                "<strong>Low Historical Shift</strong>: Mild movement of the field center over time.",
+                "<strong>Moderate Historical Shift</strong>: Clear movement of the field center across the period.",
+                "<strong>Highly Dynamic Shift</strong>: Strong movement of the field center in the embedding space."
+            ]
+        },
+        "localDensity": {
+            title: "Local Density",
+            desc: "A simple reading of whether papers sit close to similar papers or are more separated from their nearest neighbors in the original embedding space.",
+            options: [
+                "<strong>Tight neighborhoods</strong>: Papers are close to nearby papers, forming dense local topic groups.",
+                "<strong>Balanced neighborhoods</strong>: Papers have a moderate local spacing.",
+                "<strong>Loose neighborhoods</strong>: Papers are more separated from their nearest neighbors, so local topic groups are less dense."
+            ]
+        },
+        "hotspots": {
+            title: "Hotspot Pattern",
+            desc: "A simple reading of whether the document cloud is evenly distributed or shaped by a few dense or central areas. It combines density unevenness and hubness concentration in the embedding space.",
+            options: [
+                "<strong>Even clusters</strong>: The map is comparatively balanced, without one dominant hotspot.",
+                "<strong>Mixed clusters</strong>: The map combines ordinary areas with a few stronger clusters.",
+                "<strong>Hub-heavy hotspots</strong>: A small number of dense or central areas shape the subfield strongly."
             ]
         },
         "embedding_distance_to_centroid_median": {
             title: "Global Dispersion (Median Distance)",
-            desc: "Tells us how spread out the papers are from the central topic. A high value means the subfield has papers on many different themes (sparse), while a low value means papers are very focused around a single core concept (compact).",
+            desc: "Measures how far papers are from the subfield center in the original embedding space. A high value means broader spread; a low value means a more compact cloud.",
             options: [
                 "<strong>Low Dispersion</strong>: Very focused subfield, most research covers a narrow, unified topic.",
                 "<strong>High Dispersion</strong>: Broad subfield, research covers many different areas or sub-themes."
@@ -7140,7 +7301,7 @@ const rawMetricsData = {
         },
         "embedding_distance_to_centroid_iqr": {
             title: "Dispersion Spread (IQR)",
-            desc: "Measures the variance or inequality in how papers are spread. It shows whether papers are evenly distributed or if some are very close to the center while others are scattered far away.",
+            desc: "Measures how uneven the distances to the subfield center are. It shows whether papers have similar spread or whether some stay near the center while others are much farther away.",
             options: [
                 "<strong>Low IQR</strong>: Papers are evenly clustered at a similar distance from the center.",
                 "<strong>High IQR</strong>: Uneven topic spread, combining a tight central core with highly scattered outlier papers."
@@ -7148,7 +7309,7 @@ const rawMetricsData = {
         },
         "embedding_distance_to_centroid_p90": {
             title: "Outer Boundary Radius (P90)",
-            desc: "Represents the maximum boundary of the subfield. It shows how far the most extreme outlier papers are from the main topic, defining the semantic borders of the discipline.",
+            desc: "Measures the outer part of the cloud. It shows how far the more distant papers are from the subfield center.",
             options: [
                 "<strong>Narrow Boundary</strong>: Well-defined, self-contained discipline with few outlier papers.",
                 "<strong>Wide Boundary</strong>: High level of interdisciplinary sprawl, reaching far into neighboring fields."
@@ -7156,9 +7317,9 @@ const rawMetricsData = {
         },
         "embedding_knn_median_distance": {
             title: "Local Semantic Density (kNN Median)",
-            desc: "Measures how close papers are to their immediate neighbors. A low value means papers form tight, dense local neighborhoods (high specialized density), whereas a high value means papers are isolated from each other.",
+            desc: "Measures how close papers are to their nearest neighbors in the original embedding space. A low value means tighter local neighborhoods; a high value means looser local spacing.",
             options: [
-                "<strong>High Density (Low Distance)</strong>: Papers are very similar to their immediate neighbors, indicating highly collaborative or crowded topic niches.",
+                "<strong>High Density (Low Distance)</strong>: Papers are very similar to their immediate neighbors, forming tight topic neighborhoods.",
                 "<strong>Low Density (High Distance)</strong>: Papers are relatively unique and isolated from immediate neighbors."
             ]
         },
@@ -7172,15 +7333,15 @@ const rawMetricsData = {
         },
         "embedding_knn_indegree_gini": {
             title: "Hubness Concentration (Gini Index)",
-            desc: "Measures if a few papers act as major 'hubs' (being the nearest neighbors to many other papers). A high index means a small set of papers dominates the topic landscape, acting as central reference points.",
+            desc: "Measures whether a few papers appear as nearest neighbors to many other papers. A high value means neighbor relations concentrate around fewer points.",
             options: [
                 "<strong>Low Hubness</strong>: Uniform semantic space; no single paper dominates the local neighborhood.",
-                "<strong>High Hubness</strong>: A few landmark papers act as powerful gravitational hubs for the entire subfield."
+                "<strong>High Hubness</strong>: A few papers act as central nearest-neighbor points for many others."
             ]
         },
         "embedding_pca_dim_80": {
             title: "Intrinsic Dimensionality (PCA D80)",
-            desc: "The number of independent dimensions (directions) needed to describe 80% of the topic's variation. A high value means the subfield is multidimensional and complex, requiring many different concepts to explain.",
+            desc: "The number of PCA directions needed to describe 80% of the subfield's variation in the embedding space. A high value means the cloud needs more directions to summarize its variation.",
             options: [
                 "<strong>Low Dimensionality</strong>: Simple topic structure; research can be summarized using a few main concepts.",
                 "<strong>High Dimensionality</strong>: High conceptual complexity; the subfield spans many independent ideas and terminologies."
@@ -7188,7 +7349,7 @@ const rawMetricsData = {
         },
         "embedding_pca_spectral_entropy": {
             title: "Spectral Entropy (PCA)",
-            desc: "Measures the randomness or complexity of the topic dimensions. High entropy means the subfield's variance is spread flatly across many directions, whereas low entropy means a few dominant directions capture most of the field.",
+            desc: "Measures how evenly variation is spread across PCA directions. High entropy means variation is distributed across many directions; low entropy means a few directions dominate.",
             options: [
                 "<strong>Low Entropy</strong>: Focused directionality; a few main themes govern the entire field.",
                 "<strong>High Entropy</strong>: Maximum complexity; variance is evenly distributed in all directions with no dominant theme."
@@ -7196,7 +7357,7 @@ const rawMetricsData = {
         },
         "embedding_centroid_drift_early_late": {
             title: "Historical Centroid Drift",
-            desc: "Measures how much the center of the subfield shifted between the early years (2000-2004) and the late years (2020-2024). A high value indicates a major paradigm shift or evolution in the main topic of research.",
+            desc: "Measures how much the subfield center shifts between 2000-2004 and 2020-2024. A high value indicates stronger semantic movement, not a causal explanation.",
             options: [
                 "<strong>Stable Centroid (Low Drift)</strong>: The core topic has remained constant over the last 25 years.",
                 "<strong>Dynamic Shift (High Drift)</strong>: The core focus of the subfield has evolved or migrated significantly over time."
@@ -7258,7 +7419,7 @@ const rawMetricsData = {
         },
         "embedding_knn_indegree_gini": {
             label: "Hubness Concentration (Gini)",
-            desc: "Gini index of nearest neighbor indegrees, measuring central hubs presence."
+            desc: "Gini index of nearest-neighbor indegrees, measuring hubness concentration."
         },
         "embedding_pca_dim_80": {
             label: "Intrinsic Dimensionality (PCA D80)",
@@ -7266,11 +7427,11 @@ const rawMetricsData = {
         },
         "embedding_pca_spectral_entropy": {
             label: "Spectral Entropy (PCA)",
-            desc: "Eigenvalue distribution entropy, measuring vocabulary complexity."
+            desc: "Entropy of the PCA variance spectrum, measuring how evenly variation is spread."
         },
         "embedding_centroid_drift_early_late": {
             label: "Historical Centroid Drift",
-            desc: "Distance between 2000-2004 and 2020-2024 centroids, measuring temporal shift."
+            desc: "Distance between 2000-2004 and 2020-2024 centroids, measuring semantic movement."
         }
     };
 
