@@ -21,5 +21,6 @@ The active thesis does not include growth prediction, regression targets,
 classification, dashboards, UMAP-derived metrics as main evidence, or mixed
 UMAP-plus-embedding clustering.
 
-Historical explorations are preserved in `archive/legacy_exploration/` for
-auditability.
+Historical explorations, audit notes, and intermediate literature-review files
+are preserved locally in ignored folders. They are not part of the public thesis
+repository.

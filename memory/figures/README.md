@@ -1,33 +1,27 @@
-# Figures Folder Naming Convention and Guidelines
+# Figures Folder Naming Convention
 
-This folder contains all image assets and plots exported from the active research pipeline to be compiled into the thesis chapters.
+This folder contains only the figures currently compiled into the thesis, plus
+the UMAP atlas images used by Appendix B. Superseded variants and diagnostics are
+kept locally in `memory/legacy/`, which is ignored by Git.
 
 ## Naming Convention
 
-All figures exported into this folder must adhere to a chapter-centric naming system:
+Active chapter figures follow the current thesis chapter numbering:
 
 ```text
 fig_[chapter_num]_[descriptive_snake_case_name].[ext]
 ```
 
-### Examples by Chapter
-- **Chapter 5: Embedding-Space Morphological Metrics**
-  - `fig_05_reduced_core_spearman_heatmap.png`
-  - `fig_05_reduced_core_histograms.png`
-- **Chapter 6: Static Comparison of Scientific Disciplines**
-  - `fig_06_domain_morphological_profiles.png`
-- **Chapter 7: Temporal Evolution of Scientific Morphology**
-  - `fig_07_subfield_dispersion_trajectories.png`
-  - `fig_07_top_shifting_disciplines.png`
-- **Chapter 8: Morphological Similarity, Convergence and Divergence**
-  - `fig_08_subfield_morphological_similarity_heatmap.png`
-- **Chapter 9: Exploratory Morphological Typologies**
-  - `fig_09_exploratory_clustering_dendrogram.png`
-  - `fig_09_cluster_umap_projection.png`
-- **Appendix C: Additional Figures**
-  - `fig_C_diagnostic_knn_cv_distribution.png`
+## Active Figure Set
+
+- Chapter 3: OpenAlex corpus construction pipeline
+- Chapter 4: static structural morphology profiles and diagnostics
+- Chapter 5: temporal evolution, centroid drift, and dynamic typology
+- Chapter 6: field-pair morphology, convergence, and divergence
+- Appendix B: selected UMAP atlas images in `umap_atlas/`
 
 ## Best Practices
-- **Format**: Preferred formats are high-resolution PNG or vector PDF (if available).
-- **Legibility**: Ensure axis labels, legends, and annotations are readable at thesis page scale.
-- **Source**: Document which Python visualization script generated the figure.
+- Prefer PDF for figures included in LaTeX, with PNG retained only as a useful
+  preview of the same active figure.
+- Move exploratory variants, old diagnostics, and unused images to the ignored
+  legacy folder instead of keeping them in the public thesis tree.

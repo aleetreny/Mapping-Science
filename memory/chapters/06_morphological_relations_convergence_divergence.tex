@@ -8,7 +8,7 @@ Chapters 4 and 5 compared field profiles one by one. This chapter compares field
 \centering
 \caption[Pairwise field morphological distances]{Pairwise morphological distance between fields using the eight structural metrics. Lower values indicate more similar robust-scaled morphology profiles.}
 \label{fig:field_static_distance_heatmap}
-\includegraphics[width=\textwidth]{figures/fig_08_field_static_distance_heatmap.pdf}
+\includegraphics[width=\textwidth]{figures/fig_06_field_static_distance_heatmap.pdf}
 \end{figure}
 
 The closest pairs are mostly cross-domain. The minimum is Agricultural and Biological Sciences with Environmental Science (\(0.530\)), followed by Energy with Immunology and Microbiology (\(0.562\)) and Decision Sciences with Neuroscience (\(0.575\)). These distances indicate similar structural profiles, not shared content.
@@ -21,7 +21,7 @@ The domain-pair summary gives a useful contextual check. Within-domain field pai
 \centering
 \caption[Domain-pair morphological distance structure]{Domain-pair morphological distance structure. Panel A reports median field-pair distances by OpenAlex domain pair; Panel B counts within-domain and cross-domain nearest neighbors.}
 \label{fig:domain_pair_distance_structure}
-\includegraphics[width=\textwidth]{figures/fig_08_domain_pair_distance_structure.pdf}
+\includegraphics[width=\textwidth]{figures/fig_06_domain_pair_distance_structure.pdf}
 \end{figure}
 
 The idea of a bridge is useful here because it shows where taxonomy and morphology do not fully coincide. Some fields sit near a field from another domain because their document clouds have a similar balance of compactness, dispersion, local density, and spectral structure. The result is not a failure of the OpenAlex taxonomy. It is a reminder that a field can belong to one administrative domain while having a structural profile closer to another part of the map.
@@ -40,7 +40,7 @@ The temporal picture is not global convergence. Across all 325 field pairs, mean
 \centering
 \caption[Temporal field-pair distance trajectories]{Mean field-pair morphological distance across five-year windows using the eight windowed structural metrics.}
 \label{fig:temporal_distance_trajectories}
-\includegraphics[width=0.88\textwidth]{figures/fig_08_temporal_distance_trajectories.pdf}
+\includegraphics[width=0.88\textwidth]{figures/fig_06_temporal_distance_trajectories.pdf}
 \end{figure}
 
 Selective convergence remains visible: 97 field pairs decrease in distance, while 228 increase. The strongest convergences tend to involve shared declines in local distance and spectral dimensionality. Materials Science and Mathematics move from \(1.75\) to \(0.85\). Decision Sciences and Environmental Science move from \(1.67\) to \(0.82\). Economics, Econometrics and Finance and Psychology move from \(1.53\) to \(0.70\). The diverging side has a clearer protagonist: Computer Science appears in nine of the ten largest field-level Euclidean divergences.
@@ -51,7 +51,7 @@ This combination is important. The mean curve in Figure~\ref{fig:temporal_distan
 \centering
 \caption[Strongest field-level convergence and divergence pairs]{Strongest field-level convergence and divergence under Euclidean profile distance. Open markers are initial distances and filled markers are final distances; labels show final-minus-initial change.}
 \label{fig:field_convergence_divergence_pairs}
-\includegraphics[width=\textwidth]{figures/fig_08_field_convergence_divergence_pairs.pdf}
+\includegraphics[width=\textwidth]{figures/fig_06_field_convergence_divergence_pairs.pdf}
 \end{figure}
 
 The same distance change can come from different metric movements. Some convergences reflect both fields becoming locally denser or lower-dimensional. Some divergences occur because one field changes sharply while the other follows the population average. Computer Science is the clearest case. Its large drops in PCA dimensionality and spectral entropy separate its windowed profile from many fields that also become locally denser but do not move in the same spectral direction.

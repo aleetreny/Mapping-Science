@@ -60,7 +60,7 @@ All quantitative geometry is computed in the original 768-dimensional space, usi
 
 For a subfield \(s\), let \(Z_s=\{z_i:i\in s\}\) be the set of normalized document embeddings and \(c_s=n_s^{-1}\sum_{i\in s}z_i\) its centroid. The subfield is therefore treated as a cloud of document vectors around a center. The active structural morphology profile contains eight metrics grouped into four families: global dispersion, local density, hubness, and spectral structure. Appendix~\ref{app:metric-formulations} records the formulas.
 
-\input{tables/tab_05_metric_core}
+\input{tables/tab_03_metric_core}
 
 The four families are needed because a document cloud can differ in several ways. Global dispersion concerns the overall spread around the subfield center. Local density concerns spacing among nearby papers. Hubness concerns whether a small number of papers repeatedly appear as nearest neighbors. Spectral structure concerns how many main directions are needed to describe variation. A field can be broad but locally dense, compact but hub-concentrated, or similar in dispersion while different in spectral structure. For this reason, the metrics are kept as a profile rather than collapsed into one score.
 

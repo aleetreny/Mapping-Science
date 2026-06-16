@@ -32,6 +32,8 @@ warehouse/*.duckdb.tmp
 # Generated research artifacts
 research/results/
 research/__pycache__/
+research/final_outputs/
+research/literature_review/
 
 # Generated document/content outputs
 *.grobid-xml
@@ -49,6 +51,7 @@ archive/legacy_embeddings/
 # Local scratch and generated previews
 frontend/
 scratch/
+memory/legacy/
 tmp_shape_stability_exploration/
 tmp_visual_exploration/
 tmp_visual_preview/
@@ -71,3 +74,5 @@ memory/*.blg
 memory/*.fdb_latexmk
 memory/*.fls
 memory/*.synctex.gz
+memory/*.xmpi
+memory/output.xmpdata
