@@ -364,7 +364,7 @@ hmargin=3cm
 {\large\bfseries\uppercase{Summary}}
 \end{center}
 
-Scientific fields are often described with labels, topic summaries, citation links, or positions on maps. These views are useful, but they do not show how the papers inside a field are arranged. This thesis measures fields as document clouds in a scientific embedding space and studies their shape, change over time, and relations.
+\noindent Scientific fields are often described with labels, topic summaries, citation links, or positions on maps. These views are useful, but they do not show how the papers inside a field are arranged. This thesis measures fields as document clouds in a scientific embedding space and studies their shape, change over time, and relations.
 
 The empirical corpus is built from OpenAlex title--abstract records for 2000--2024. Each paper is represented by its title and abstract, and SPECTER2 converts this text into a vector in the original 768-dimensional space. The text-eligible corpus contains 2,378,036 works across 252 subfields. The row-aligned analysis subset contains 2,344,927 embedded works across 241 analysis subfields. PCA and UMAP are used only for display, not for computing the metrics.
 
@@ -372,10 +372,10 @@ Papers assigned to the same subfield form a document cloud. The thesis describes
 
 The results show that broad domains have tendencies but do not determine field shape. Physical Sciences are generally more dispersed and spectrally extended, while Health Sciences are more locally dense and hub-concentrated. At field level, 17 of 26 fields have their nearest morphological neighbor outside their own OpenAlex domain. Mean field-pair morphological distance rises from 1.44 in 2000--2004 to 1.81 in 2020--2024. Most field pairs diverge over time, although a substantial minority show selective convergence.
 
-The contribution is a reproducible way to compare field structure across fields, time windows, and field pairs under one fixed representation. This gives field comparison a clearer object of analysis than a label, a centroid, or a visual map alone.
+The thesis also includes a public code repository and an interactive web viewer, which support reproducibility and allow selected maps to be inspected outside the written document.
 
 \begingroup\sloppy
-\textbf{Keywords:} science mapping; scientometrics; scientific document embeddings; SPECTER2; OpenAlex; research-field morphology; temporal evolution.
+\noindent\textbf{Keywords:} science mapping; scientometrics; scientific document embeddings; research-field morphology; high-dimensional data analysis; dimensionality reduction; unsupervised learning.
 \par\endgroup
 
 \vfill

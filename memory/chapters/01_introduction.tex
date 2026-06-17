@@ -6,7 +6,7 @@ Scientific fields are usually named, counted, linked through citations, summariz
 
 I treat scientific fields as distributions of embedded scientific documents. Each paper is represented by its title and abstract. SPECTER2 converts that text into a vector in a shared 768-dimensional scientific-document space. Papers assigned to the same OpenAlex subfield then form a document cloud. Eight morphology metrics describe the shape of this cloud, grouped into global dispersion, local density, hubness, and spectral structure.
 
-These metrics set up the empirical sequence. Static analyses compare field and subfield profiles. Five-year windows show how those profiles change over time. Relational analyses compare distances between field profiles and identify convergence or divergence. Centroid drift remains separate because it measures movement of a cloud's center, not its internal shape. The contribution is a reproducible comparison of field structure across fields, time windows, and field pairs under one fixed representation.
+These metrics define the empirical sequence: static profiles, five-year changes, and pairwise convergence or divergence. Centroid drift remains separate because it measures movement of a cloud's center, not its internal shape. The contribution is a reproducible comparison of field structure, supported by a public code repository and an interactive web viewer.
 
 \section{Research Questions}
 
