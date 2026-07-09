@@ -25,6 +25,7 @@ from src.umap_maps import UMAP_OUTPUT_COLUMNS
 
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 from matplotlib.lines import Line2D
 
 
@@ -347,20 +348,36 @@ def category_manifest_frame(rows: list[dict[str, Any]]) -> pd.DataFrame:
     return frame[MANIFEST_COLUMNS]
 
 
+def categorical_colormap(n_labels: int) -> ListedColormap:
+    if n_labels <= 0:
+        return ListedColormap(["#26547c"])
+    base_names = ["tab20", "tab20b", "tab20c"]
+    colors: list[Any] = []
+    for name in base_names:
+        cmap = plt.get_cmap(name)
+        colors.extend(cmap(i) for i in range(cmap.N))
+    if n_labels <= len(colors):
+        return ListedColormap(colors[:n_labels])
+    fallback = plt.get_cmap("hsv", n_labels)
+    return ListedColormap([fallback(i) for i in range(n_labels)])
+
+
 def color_codes(
     frame: pd.DataFrame,
     color_column: str,
     *,
     max_legend_categories: int,
-) -> tuple[np.ndarray | str, list[str], bool]:
+) -> tuple[np.ndarray | str, list[str], bool, ListedColormap | None]:
     if color_column not in frame.columns:
-        return "#26547c", [], False
+        return "#26547c", [], False, None
     values = frame[color_column].fillna("Unknown").astype(str)
     categories = pd.Categorical(values)
     labels = [str(label) for label in categories.categories]
     if len(labels) <= 1 or len(labels) > max_legend_categories:
-        return "#26547c", [], False
-    return categories.codes, labels, True
+        if len(labels) > 1:
+            return categories.codes, labels, False, categorical_colormap(len(labels))
+        return "#26547c", [], False, None
+    return categories.codes, labels, True, categorical_colormap(len(labels))
 
 
 def plot_category_panels(
@@ -375,15 +392,16 @@ def plot_category_panels(
     color_column: str,
     output_path: str | Path,
     dpi: int,
-    max_legend_categories: int = 25,
+    max_legend_categories: int = 50,
     density_method: str = DEFAULT_DENSITY_METHOD,
     density_grid_size: int = DEFAULT_DENSITY_GRID_SIZE,
     density_sigma: float = DEFAULT_DENSITY_SIGMA,
     density_vmax_percentile: float = DEFAULT_DENSITY_VMAX_PERCENTILE,
+    axis_label: str = "UMAP",
 ) -> dict[str, Any]:
     coordinates = np.asarray(coordinates, dtype=float)
     xlim, ylim = coordinate_limits(coordinates)
-    colors, labels, legend_included = color_codes(
+    colors, labels, legend_included, categorical_cmap = color_codes(
         coordinate_frame,
         color_column,
         max_legend_categories=max_legend_categories,
@@ -392,13 +410,17 @@ def plot_category_panels(
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5), dpi=dpi)
+    has_large_legend = legend_included and len(labels) > 18
+    fig_height = 5.8 if has_large_legend else 5
+    fig, axes = plt.subplots(1, 2, figsize=(12, fig_height), dpi=dpi)
     try:
         scatter = axes[0].scatter(
             coordinates[:, 0],
             coordinates[:, 1],
             c=colors,
-            cmap="tab20" if legend_included else None,
+            cmap=categorical_cmap,
+            vmin=-0.5 if categorical_cmap is not None else None,
+            vmax=(len(labels) - 0.5) if categorical_cmap is not None else None,
             s=2,
             alpha=0.45,
             linewidths=0,
@@ -406,36 +428,53 @@ def plot_category_panels(
         )
         axes[0].set_xlim(xlim)
         axes[0].set_ylim(ylim)
-        axes[0].set_xlabel("UMAP 1")
-        axes[0].set_ylabel("UMAP 2")
-        axes[0].set_title(
-            f"A. Scatter - {level}: {group_name}\n"
-            f"n={n_used:,}, years {year_min}-{year_max}",
-            fontsize=10,
-        )
+        axes[0].set_xlabel(f"{axis_label} 1")
+        axes[0].set_ylabel(f"{axis_label} 2")
+        axes[0].set_title("A. Scatter", fontsize=10)
         if legend_included:
-            color_values = np.linspace(0, 1, max(len(labels), 1))
             handles = [
                 Line2D(
                     [0],
                     [0],
                     marker="o",
                     color="none",
-                    markerfacecolor=scatter.cmap(color_value),
+                    markerfacecolor=scatter.cmap(label_index),
+                    markeredgecolor="#333333",
+                    markeredgewidth=0.12,
                     markersize=4,
                     label=label,
                 )
-                for label, color_value in zip(labels, color_values)
+                for label_index, label in enumerate(labels)
             ]
-            axes[0].legend(
-                handles=handles,
-                title=color_column,
-                loc="best",
-                fontsize=5,
-                title_fontsize=6,
-                frameon=False,
-                markerscale=1.0,
-            )
+            if has_large_legend:
+                legend_columns = 4 if len(labels) > 30 else 3
+                axes[0].legend(
+                    handles=handles,
+                    title=None,
+                    loc="upper center",
+                    bbox_to_anchor=(0.5, -0.14),
+                    fontsize=3.8,
+                    frameon=False,
+                    markerscale=0.95,
+                    ncol=legend_columns,
+                    columnspacing=0.9,
+                    handletextpad=0.3,
+                    labelspacing=0.24,
+                    borderaxespad=0.0,
+                )
+            else:
+                axes[0].legend(
+                    handles=handles,
+                    title=None,
+                    loc="best",
+                    fontsize=4.7,
+                    frameon=False,
+                    markerscale=1.0,
+                    ncol=1,
+                    columnspacing=0.9,
+                    handletextpad=0.35,
+                    labelspacing=0.28,
+                )
 
         density_artist, density_method = plot_density_panel(
             axes[1],
@@ -447,12 +486,20 @@ def plot_category_panels(
             density_sigma=density_sigma,
             density_vmax_percentile=density_vmax_percentile,
         )
+        axes[1].set_xlabel(f"{axis_label} 1")
+        axes[1].set_ylabel(f"{axis_label} 2")
         axes[1].set_title("B. Density", fontsize=10)
         fig.colorbar(density_artist, ax=axes[1], fraction=0.046, pad=0.04)
         for ax in axes:
             ax.grid(False)
-        fig.tight_layout()
-        fig.savefig(output_path)
+        if has_large_legend:
+            fig.tight_layout(rect=[0, 0.16, 1, 1])
+        else:
+            fig.tight_layout()
+        if has_large_legend:
+            fig.savefig(output_path, bbox_inches="tight", pad_inches=0.08)
+        else:
+            fig.savefig(output_path)
         return {
             "density_method": density_method,
             "legend_included": legend_included,

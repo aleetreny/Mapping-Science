@@ -40,7 +40,9 @@
 
         /* Centered Container */
         .container {
-            max-width: 1000px;
+            width: min(100%, 1160px);
+            max-width: 1160px;
+            box-sizing: border-box;
             margin: 0 auto;
             background-color: #ffffff;
             border: 2px solid var(--border-color);
@@ -85,7 +87,8 @@
             padding: 1.25rem;
             display: flex;
             flex-wrap: nowrap;
-            gap: 1rem;
+            column-gap: 1.35rem;
+            row-gap: 1rem;
             align-items: flex-end;
             justify-content: center;
         }
@@ -99,14 +102,26 @@
         }
 
         .control-group.subfield-control {
-            flex: 1 1 535px;
-            width: min(535px, 100%);
-            max-width: 535px;
+            flex: 1 1 500px;
+            width: min(500px, 100%);
+            max-width: 500px;
+        }
+
+        .control-group.unit-control {
+            flex: 0 0 215px;
+            width: 215px;
+            margin-right: 0.65rem;
+        }
+
+        .control-group.unit-control select {
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
         }
 
         .control-group.method-control {
-            flex: 0 0 300px;
-            width: 300px;
+            flex: 0 0 260px;
+            width: 260px;
         }
 
         .control-group.method-control select {
@@ -115,6 +130,7 @@
             max-width: 100%;
         }
 
+        .control-group.unit-control::after,
         .control-group.method-control::after {
             content: "v";
             position: absolute;
@@ -156,6 +172,12 @@
 
         .control-group select:focus {
             outline: 1px solid var(--accent-color);
+        }
+
+        .control-group select:disabled {
+            color: #666666;
+            cursor: default;
+            background: #f7f7f7;
         }
 
         .native-subfield-select {
@@ -308,6 +330,7 @@
             }
 
             .control-group.subfield-control,
+            .control-group.unit-control,
             .control-group.method-control {
                 flex: 1 1 100%;
                 width: 100%;
@@ -378,6 +401,114 @@
             height: auto;
             display: block;
             background: #ffffff;
+            opacity: 1;
+            transition: opacity 180ms ease;
+        }
+
+        .map-image-container img.is-loading {
+            opacity: 0.58;
+        }
+
+        .viewer-tools {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            padding: 0.65rem 0.75rem;
+            border: 1px solid var(--border-color);
+            background: #f7f6f2;
+            font-family: var(--code-font);
+            font-size: 0.78rem;
+            text-align: left;
+        }
+
+        .compare-toggle-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .compare-toggle-label input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: var(--active-title-bg);
+        }
+
+        .compare-select-native {
+            display: none;
+        }
+
+        .compare-select {
+            flex: 1 1 320px;
+            width: min(420px, 100%);
+            max-width: 460px;
+            height: 34px;
+            font-family: var(--code-font);
+            font-size: 0.78rem;
+            padding: 0.25rem 0.55rem;
+            border: 2px solid;
+            border-color: #808080 white white #808080;
+            background-color: #ffffff;
+            color: var(--text-color);
+            box-shadow: inset 1px 1px 0px #d8d8d8;
+            min-width: 0;
+            appearance: auto;
+        }
+
+        .compare-select:disabled {
+            background: #eeeeee;
+            color: #777777;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 1rem;
+            align-items: start;
+            min-width: 0;
+        }
+
+        .map-grid.is-comparing {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+
+        .map-panel {
+            min-width: 0;
+        }
+
+        .map-panel[hidden],
+        .map-panel-title[hidden] {
+            display: none;
+        }
+
+        .map-panel-title {
+            font-family: var(--code-font);
+            font-size: 0.76rem;
+            line-height: 1.35;
+            text-align: left;
+            padding: 0.45rem 0.6rem;
+            border: 1px solid var(--border-color);
+            border-bottom: 0;
+            background: #f0ede6;
+            overflow-wrap: anywhere;
+        }
+
+        .map-grid.is-comparing .map-image-container {
+            padding: 0.5rem;
+        }
+
+        @media (max-width: 980px) {
+            .map-grid.is-comparing {
+                grid-template-columns: minmax(0, 1fr);
+            }
         }
 
         /* Premium Ledger Card Layout */
@@ -760,6 +891,24 @@
                 max-height: min(360px, 55vh);
             }
 
+            .viewer-tools {
+                justify-content: flex-start;
+                gap: 0.55rem;
+                padding: 0.55rem 0.65rem;
+            }
+
+            .compare-select {
+                flex-basis: 100%;
+                width: 100%;
+                max-width: none;
+            }
+
+            .map-grid,
+            .map-grid.is-comparing {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 0.75rem;
+            }
+
             .custom-select-group {
                 font-size: 0.64rem;
                 padding: 0.35rem 0.5rem 0.25rem;
@@ -1044,9 +1193,16 @@
     <div class="workspace-grid">
         <!-- Controls Panel -->
         <div class="controls-panel">
+            <div class="control-group unit-control">
+                <label for="unit-select">Study Unit</label>
+                <select id="unit-select" onchange="handleUnitChange()">
+                    <option value="subfield" selected>Subfield</option>
+                    <option value="field">Field</option>
+                </select>
+            </div>
             <div class="control-group subfield-control">
-                <label for="subfield-picker-button">Scientific Subfield</label>
-                <select id="subfield-select" class="native-subfield-select" onchange="updateViewer()" aria-hidden="true" tabindex="-1">
+                <label id="discipline-picker-label" for="subfield-picker-button">Scientific Subfield</label>
+                <select id="subfield-select" class="native-subfield-select" onchange="handlePrimarySelectionChange()" aria-hidden="true" tabindex="-1">
                     <optgroup label="Agricultural and Biological Sciences">
                         <option value="1102" data-stem="1102__Agronomy_and_Crop_Science">1102 - Agronomy and Crop Science</option>
                         <option value="1103" data-stem="1103__Animal_Science_and_Zoology">1103 - Animal Science and Zoology</option>
@@ -1374,8 +1530,30 @@
             <div id="status-bar" class="status-message-banner">
                 <!-- Status message here -->
             </div>
-            <div class="map-image-container">
-                <img id="map-image" src="" alt="Scientific Projection Map">
+            <div class="viewer-tools">
+                <label class="compare-toggle-label" for="compare-toggle">
+                    <input type="checkbox" id="compare-toggle" onchange="toggleComparison()">
+                    Compare
+                </label>
+                <select id="compare-select" class="compare-select-native" onchange="syncCompareSearchFromSelect(); updateComparison()" disabled>
+                    <option value="">Select a comparison</option>
+                </select>
+                <input id="compare-search" class="compare-select" list="compare-datalist" placeholder="Search comparison..." oninput="handleCompareSearchInput()" onchange="handleCompareSearchCommit()" onblur="handleCompareSearchCommit()" onkeydown="handleCompareSearchKeydown(event)" disabled>
+                <datalist id="compare-datalist"></datalist>
+            </div>
+            <div id="map-grid" class="map-grid">
+                <div class="map-panel" id="primary-map-panel">
+                    <div class="map-panel-title" id="primary-map-title" hidden></div>
+                    <div class="map-image-container">
+                        <img id="map-image" src="" alt="Scientific Projection Map">
+                    </div>
+                </div>
+                <div class="map-panel comparison-map-panel" id="compare-map-panel" hidden>
+                    <div class="map-panel-title" id="compare-map-title"></div>
+                    <div class="map-image-container">
+                        <img id="compare-map-image" src="" alt="Comparison Scientific Projection Map">
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1396,11 +1574,11 @@
                 </div>
                 <div class="metrics-grid">
                     <div class="metric-cell" onclick="openHelp('parent')">
-                        <span class="metric-label">Parent Field <span class="help-indicator">[?]</span></span>
+                        <span class="metric-label"><span id="metric-parent-label">Parent Field</span> <span class="help-indicator">[?]</span></span>
                         <span id="metric-parent" class="metric-value">Computer Science</span>
                     </div>
                     <div class="metric-cell" onclick="openHelp('overlap')">
-                        <span class="metric-label">Closest Fields <span class="help-indicator">[?]</span></span>
+                        <span class="metric-label"><span id="metric-overlap-label">Closest Fields</span> <span class="help-indicator">[?]</span></span>
                         <span id="metric-overlap" class="metric-value">Signal Processing & AI</span>
                     </div>
                     <div class="metric-cell" onclick="openHelp('topology')">
@@ -1445,7 +1623,7 @@
                         <thead>
                             <tr style="background: #f0ede6; border-bottom: 2px solid var(--border-color); font-size: 0.72rem;">
                                 <th style="padding: 0.45rem 0.6rem; border-right: 1px solid var(--border-color); font-weight: bold; text-transform: uppercase; width: 48%;">Metric (Click for Help)</th>
-                                <th style="padding: 0.45rem 0.6rem; border-right: 1px solid var(--border-color); font-weight: bold; text-transform: uppercase; text-align: right; width: 14%;">Subfield Value</th>
+                                <th id="quant-value-header" style="padding: 0.45rem 0.6rem; border-right: 1px solid var(--border-color); font-weight: bold; text-transform: uppercase; text-align: right; width: 14%;">Subfield Value</th>
                                 <th style="padding: 0.45rem 0.6rem; border-right: 1px solid var(--border-color); font-weight: bold; text-transform: uppercase; text-align: right; width: 14%;">Reference Median</th>
                                 <th style="padding: 0.45rem 0.6rem; font-weight: bold; text-transform: uppercase; text-align: right; width: 24%;">Relative Shift</th>
                             </tr>
@@ -1488,6 +1666,7 @@
     </footer>
 </div>
 
+<script src="site-assets/data/field_payload.js"></script>
 <script>
     // Generated raw metrics and statistics
 // Generated raw metrics and taxonomy metadata
@@ -6803,20 +6982,170 @@ const rawMetricsData = {
 };
 
 
+    const fieldPayload = window.fieldWebPayload || {};
+    const rawFieldMetricsData = fieldPayload.rawFieldMetricsData || {};
+    const fieldData = fieldPayload.fieldData || {};
+    const fieldNames = fieldPayload.fieldNames || {};
+    const fieldImageStems = fieldPayload.fieldImageStems || {};
+
+    const figureRoots = ["site-assets/figures", "figures"];
+    let activeUnit = "subfield";
+    let initialSubfieldOptionsHtml = "";
+    const lastSelectedByUnit = { subfield: "1707", field: "17" };
+    const qualitativeMetricCache = { subfield: {}, field: {} };
+
+    function getUnitConfig(unit = activeUnit) {
+        if (unit === "field") {
+            return {
+                unit: "field",
+                singularLabel: "Field",
+                pluralLabel: "Fields",
+                pickerLabel: "Scientific Field",
+                selectPlaceholder: "Select a field",
+                noResults: "No fields found",
+                defaultId: "17",
+                rawData: rawFieldMetricsData,
+                displayData: fieldData,
+                names: fieldNames
+            };
+        }
+
+        return {
+            unit: "subfield",
+            singularLabel: "Subfield",
+            pluralLabel: "Subfields",
+            pickerLabel: "Scientific Subfield",
+            selectPlaceholder: "Select a subfield",
+            noResults: "No subfields found",
+            defaultId: "1707",
+            rawData: rawMetricsData,
+            displayData: subfieldData,
+            names: subfieldNames
+        };
+    }
+
+    function getPrimarySelect() {
+        return document.getElementById("subfield-select");
+    }
+
     function getSelectedSubfieldOption() {
-        const subfieldSelect = document.getElementById("subfield-select");
-        return subfieldSelect.options[subfieldSelect.selectedIndex];
+        const select = getPrimarySelect();
+        return select ? select.options[select.selectedIndex] : null;
+    }
+
+    function findPrimaryOptionByValue(value) {
+        const select = getPrimarySelect();
+        if (!select) return null;
+        return Array.from(select.options).find(option => option.value === String(value)) || null;
     }
 
     function getSubfieldLabel(option) {
         if (!option) return "";
-        return subfieldNames[option.value] || option.getAttribute("data-full-name") || option.text.replace(/^\d+\s+-\s+/, "");
+        const config = getUnitConfig();
+        return config.names[option.value] || option.getAttribute("data-full-name") || option.text.replace(/^\d+\s+-\s+/, "");
+    }
+
+    function getDisplayLabel(id, unit = activeUnit) {
+        const config = getUnitConfig(unit);
+        return config.names[String(id)] || String(id);
+    }
+
+    function formatOptionLabel(option) {
+        return option ? `${option.value} - ${getSubfieldLabel(option)}` : getUnitConfig().selectPlaceholder;
+    }
+
+    function optionExists(select, value) {
+        return Array.from(select.options).some(option => option.value === String(value));
+    }
+
+    function buildFieldOptions(select, preferredId) {
+        select.innerHTML = "";
+        const grouped = {};
+        Object.keys(fieldNames).forEach(id => {
+            const metrics = rawFieldMetricsData[id] || {};
+            const domain = metrics.domain || "Other Fields";
+            if (!grouped[domain]) grouped[domain] = [];
+            grouped[domain].push({ id, name: fieldNames[id] || metrics.field || id });
+        });
+
+        Object.keys(grouped).sort((a, b) => a.localeCompare(b)).forEach(domain => {
+            const group = document.createElement("optgroup");
+            group.label = domain;
+            grouped[domain]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .forEach(item => {
+                    const option = document.createElement("option");
+                    option.value = item.id;
+                    option.dataset.stem = fieldImageStems[item.id] || "";
+                    option.textContent = `${item.id} - ${item.name}`;
+                    option.selected = item.id === preferredId;
+                    group.appendChild(option);
+                });
+            select.appendChild(group);
+        });
+    }
+
+    function rebuildPrimarySelectForUnit() {
+        const select = getPrimarySelect();
+        if (!select) return;
+        const config = getUnitConfig();
+        const preferred = lastSelectedByUnit[activeUnit] || config.defaultId;
+
+        if (activeUnit === "field") {
+            buildFieldOptions(select, preferred);
+        } else {
+            select.innerHTML = initialSubfieldOptionsHtml;
+        }
+
+        const nextValue = optionExists(select, preferred) ? preferred : config.defaultId;
+        if (optionExists(select, nextValue)) {
+            select.value = nextValue;
+        } else if (select.options.length) {
+            select.selectedIndex = 0;
+        }
+        lastSelectedByUnit[activeUnit] = select.value;
+    }
+
+    function setMethodAvailability() {
+        const methodSelect = document.getElementById("method-select");
+        if (!methodSelect) return;
+        methodSelect.disabled = false;
+        methodSelect.title = "";
+    }
+
+    function updateUnitLabels() {
+        const config = getUnitConfig();
+        const pickerLabel = document.getElementById("discipline-picker-label");
+        if (pickerLabel) pickerLabel.textContent = config.pickerLabel;
+
+        const searchInput = document.getElementById("subfield-picker-search");
+        if (searchInput) searchInput.placeholder = `Search ${config.pluralLabel.toLowerCase()}...`;
+    }
+
+    function handleUnitChange() {
+        const select = getPrimarySelect();
+        if (select) lastSelectedByUnit[activeUnit] = select.value;
+
+        const unitSelect = document.getElementById("unit-select");
+        activeUnit = unitSelect ? unitSelect.value : "subfield";
+        rebuildPrimarySelectForUnit();
+        setMethodAvailability();
+        updateUnitLabels();
+        rebuildSubfieldPickerOptions();
+        populateCompareSelect(true);
+        updateViewer();
+    }
+
+    function handlePrimarySelectionChange() {
+        const select = getPrimarySelect();
+        if (select) lastSelectedByUnit[activeUnit] = select.value;
+        updateViewer();
     }
 
     function updateSubfieldPickerSelection() {
-        const subfieldSelect = document.getElementById("subfield-select");
+        const select = getPrimarySelect();
         const selectedOption = getSelectedSubfieldOption();
-        const label = selectedOption ? `${selectedOption.value} - ${getSubfieldLabel(selectedOption)}` : "Select a subfield";
+        const label = formatOptionLabel(selectedOption);
         const valueNode = document.getElementById("subfield-picker-value");
         if (valueNode) {
             valueNode.textContent = label;
@@ -6824,7 +7153,7 @@ const rawMetricsData = {
         }
 
         document.querySelectorAll(".custom-select-option").forEach((item) => {
-            const isSelected = item.dataset.value === subfieldSelect.value;
+            const isSelected = select && item.dataset.value === select.value;
             item.classList.toggle("is-selected", isSelected);
             item.setAttribute("aria-selected", isSelected ? "true" : "false");
         });
@@ -6873,7 +7202,6 @@ const rawMetricsData = {
         picker.classList.add("is-open");
         button.setAttribute("aria-expanded", "true");
 
-        // Reset search
         const searchInput = document.getElementById("subfield-picker-search");
         if (searchInput) {
             searchInput.value = "";
@@ -6922,68 +7250,48 @@ const rawMetricsData = {
         const optionsContainer = document.getElementById("subfield-picker-options-container");
         if (!optionsContainer) return;
 
-        // Filter group containers
         const groupContainers = optionsContainer.querySelectorAll(".custom-select-group-container");
         let totalVisible = 0;
         groupContainers.forEach(container => {
             let hasVisibleOption = false;
             const options = container.querySelectorAll(".custom-select-option");
             options.forEach(opt => {
-                const text = opt.textContent.toLowerCase();
-                const matches = text.includes(query);
+                const matches = opt.textContent.toLowerCase().includes(query);
+                opt.style.display = matches ? "block" : "none";
                 if (matches) {
-                    opt.style.display = "block";
                     hasVisibleOption = true;
                     totalVisible++;
-                } else {
-                    opt.style.display = "none";
                 }
             });
             container.style.display = hasVisibleOption ? "block" : "none";
         });
 
-        // Filter direct options (if any)
         const directOptions = Array.from(optionsContainer.children).filter(child => child.classList.contains("custom-select-option"));
         directOptions.forEach(opt => {
-            const text = opt.textContent.toLowerCase();
-            const matches = text.includes(query);
-            if (matches) {
-                opt.style.display = "block";
-                totalVisible++;
-            } else {
-                opt.style.display = "none";
-            }
+            const matches = opt.textContent.toLowerCase().includes(query);
+            opt.style.display = matches ? "block" : "none";
+            if (matches) totalVisible++;
         });
 
-        // Toggle no results message
         const noResults = document.getElementById("subfield-picker-no-results");
         if (noResults) {
             noResults.style.display = totalVisible === 0 ? "block" : "none";
         }
     }
 
-    function initSubfieldPicker() {
-        const subfieldSelect = document.getElementById("subfield-select");
-        const picker = document.getElementById("subfield-picker");
-        const button = document.getElementById("subfield-picker-button");
-        const menu = document.getElementById("subfield-picker-menu");
+    function rebuildSubfieldPickerOptions() {
+        const select = getPrimarySelect();
         const optionsContainer = document.getElementById("subfield-picker-options-container");
-        const searchInput = document.getElementById("subfield-picker-search");
-        if (!subfieldSelect || !picker || !button || !menu || !optionsContainer) return;
+        if (!select || !optionsContainer) return;
 
-        const noResults = document.getElementById("subfield-picker-no-results");
         optionsContainer.innerHTML = "";
-        if (noResults) {
-            optionsContainer.appendChild(noResults);
-        } else {
-            const nr = document.createElement("div");
-            nr.id = "subfield-picker-no-results";
-            nr.className = "custom-select-no-results";
-            nr.textContent = "No subfields found";
-            optionsContainer.appendChild(nr);
-        }
+        const noResults = document.createElement("div");
+        noResults.id = "subfield-picker-no-results";
+        noResults.className = "custom-select-no-results";
+        noResults.textContent = getUnitConfig().noResults;
+        optionsContainer.appendChild(noResults);
 
-        Array.from(subfieldSelect.children).forEach((child) => {
+        Array.from(select.children).forEach((child) => {
             if (child.tagName === "OPTGROUP") {
                 const groupContainer = document.createElement("div");
                 groupContainer.className = "custom-select-group-container";
@@ -6994,13 +7302,28 @@ const rawMetricsData = {
                 groupContainer.appendChild(group);
 
                 Array.from(child.children).forEach((option) => {
-                    appendSubfieldPickerOption(groupContainer, option, subfieldSelect);
+                    appendSubfieldPickerOption(groupContainer, option, select);
                 });
                 optionsContainer.appendChild(groupContainer);
             } else if (child.tagName === "OPTION") {
-                appendSubfieldPickerOption(optionsContainer, child, subfieldSelect);
+                appendSubfieldPickerOption(optionsContainer, child, select);
             }
         });
+
+        updateSubfieldPickerSelection();
+    }
+
+    function initSubfieldPicker() {
+        const picker = document.getElementById("subfield-picker");
+        const button = document.getElementById("subfield-picker-button");
+        const menu = document.getElementById("subfield-picker-menu");
+        const optionsContainer = document.getElementById("subfield-picker-options-container");
+        const searchInput = document.getElementById("subfield-picker-search");
+        if (!picker || !button || !menu || !optionsContainer) return;
+
+        rebuildSubfieldPickerOptions();
+        if (picker.dataset.initialized === "true") return;
+        picker.dataset.initialized = "true";
 
         button.addEventListener("click", toggleSubfieldPicker);
         button.addEventListener("keydown", (event) => {
@@ -7034,9 +7357,7 @@ const rawMetricsData = {
         }
 
         menu.addEventListener("keydown", (event) => {
-            if (event.target === searchInput) {
-                return;
-            }
+            if (event.target === searchInput) return;
 
             if (event.key === "ArrowDown") {
                 event.preventDefault();
@@ -7061,41 +7382,40 @@ const rawMetricsData = {
                 positionSubfieldPicker();
             }
         });
-
-        updateSubfieldPickerSelection();
     }
 
-    function appendSubfieldPickerOption(menu, option, subfieldSelect) {
+    function appendSubfieldPickerOption(menu, option, select) {
         const item = document.createElement("button");
         const label = `${option.value} - ${getSubfieldLabel(option)}`;
         item.type = "button";
         item.className = "custom-select-option";
         item.setAttribute("role", "option");
         item.dataset.value = option.value;
+        item.dataset.stem = option.getAttribute("data-stem") || "";
         item.textContent = label;
         item.title = label;
         item.addEventListener("click", () => {
-            subfieldSelect.value = option.value;
+            select.value = option.value;
             closeSubfieldPicker();
-            updateViewer();
+            handlePrimarySelectionChange();
         });
         menu.appendChild(item);
     }
 
-    const qualitativeMetricCache = {};
-
-    function getSortedMetricValues(metricKey) {
-        if (!qualitativeMetricCache[metricKey]) {
-            qualitativeMetricCache[metricKey] = Object.values(rawMetricsData)
+    function getSortedMetricValues(metricKey, unit = activeUnit) {
+        const config = getUnitConfig(unit);
+        const cache = qualitativeMetricCache[unit] || (qualitativeMetricCache[unit] = {});
+        if (!cache[metricKey]) {
+            cache[metricKey] = Object.values(config.rawData)
                 .map(item => item[metricKey])
                 .filter(value => Number.isFinite(value))
                 .sort((a, b) => a - b);
         }
-        return qualitativeMetricCache[metricKey];
+        return cache[metricKey];
     }
 
-    function getPercentileRank(metricKey, value) {
-        const values = getSortedMetricValues(metricKey);
+    function getPercentileRank(metricKey, value, unit = activeUnit) {
+        const values = getSortedMetricValues(metricKey, unit);
         if (!values.length || !Number.isFinite(value)) return 0.5;
 
         let lower = 0;
@@ -7108,8 +7428,8 @@ const rawMetricsData = {
         return (lower + equal / 2) / values.length;
     }
 
-    function averageMetricRanks(metrics, metricKeys) {
-        const ranks = metricKeys.map(key => getPercentileRank(key, metrics[key]));
+    function averageMetricRanks(metrics, metricKeys, unit = activeUnit) {
+        const ranks = metricKeys.map(key => getPercentileRank(key, metrics[key], unit));
         return ranks.reduce((sum, rank) => sum + rank, 0) / ranks.length;
     }
 
@@ -7119,8 +7439,9 @@ const rawMetricsData = {
         return highLabel;
     }
 
-    function deriveQualitativeLabels(subfieldId) {
-        const metrics = rawMetricsData[subfieldId];
+    function deriveQualitativeLabels(unitId) {
+        const config = getUnitConfig();
+        const metrics = config.rawData[unitId];
         if (!metrics) {
             return {
                 footprint: "Balanced footprint",
@@ -7132,12 +7453,12 @@ const rawMetricsData = {
         const footprintScore = averageMetricRanks(metrics, [
             "embedding_distance_to_centroid_median",
             "embedding_distance_to_centroid_p90"
-        ]);
-        const densityScore = getPercentileRank("embedding_knn_median_distance", metrics.embedding_knn_median_distance);
+        ], activeUnit);
+        const densityScore = getPercentileRank("embedding_knn_median_distance", metrics.embedding_knn_median_distance, activeUnit);
         const hotspotScore = averageMetricRanks(metrics, [
             "embedding_knn_distance_cv",
             "embedding_knn_indegree_gini"
-        ]);
+        ], activeUnit);
 
         return {
             footprint: labelByBand(footprintScore, "Compact footprint", "Balanced footprint", "Wide footprint"),
@@ -7146,66 +7467,359 @@ const rawMetricsData = {
         };
     }
 
-    function updateViewer() {
-        const subfieldSelect = document.getElementById("subfield-select");
+    function getStemForId(id, unit = activeUnit) {
+        if (unit === "field") {
+            return fieldImageStems[String(id)] || "";
+        }
+        const option = findPrimaryOptionByValue(id);
+        return option ? option.getAttribute("data-stem") : "";
+    }
+
+    function getActiveMethod() {
         const methodSelect = document.getElementById("method-select");
+        return methodSelect ? methodSelect.value : "UMAP";
+    }
 
-        const subfieldId = subfieldSelect.value;
-        const method = methodSelect.value;
+    function imageEntriesFor(unit, id, method, label) {
+        const stem = getStemForId(id, unit);
+        if (!stem) return [];
 
-        const selectedOption = getSelectedSubfieldOption();
-        const safeStem = selectedOption.getAttribute("data-stem");
-        const subfieldLabel = getSubfieldLabel(selectedOption);
-
-        // Update Title
-        document.getElementById("viewer-title").innerText = `${method} PROJECTION - ${subfieldLabel}`;
-        updateSubfieldPickerSelection();
-
-        // Hide status bar initially
-        const statusBar = document.getElementById("status-bar");
-        statusBar.style.display = "none";
-
-        // Update Map Image Path
-        const imagePath = `site-assets/figures/method_comparison/${safeStem}/${method}.png`;
-        const mapImg = document.getElementById("map-image");
-
-        // Set error handler before changing src
-        mapImg.onerror = function() {
+        if (unit === "field") {
+            const entries = figureRoots.map(root => ({
+                src: `${root}/field_method_comparison/${stem}/${method}.png`,
+                notice: ""
+            }));
             if (method !== "UMAP") {
-                // Graceful fallback to UMAP baseline which always exists
-                mapImg.src = `site-assets/figures/method_comparison/${safeStem}/UMAP.png`;
-                statusBar.innerHTML = `⚠️ <strong>Method Notice:</strong> The selected ${method} projection is pending computation for this subfield. Displaying UMAP thesis baseline projection.`;
-                statusBar.style.display = "block";
-            } else {
-                mapImg.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23eae9e5'/><text x='50' y='50' font-family='sans-serif' font-size='4' fill='%23555' text-anchor='middle'>Map Not Available</text></svg>";
+                figureRoots.forEach(root => {
+                    entries.push({
+                        src: `${root}/field_method_comparison/${stem}/UMAP.png`,
+                        notice: `Method Notice: the ${method} projection is pending for ${label}. Displaying the UMAP baseline.`
+                    });
+                });
             }
-        };
-
-        mapImg.src = imagePath;
-
-        // Update Metrics Card
-        const data = subfieldData[subfieldId];
-        if (data) {
-            const qualitativeLabels = deriveQualitativeLabels(subfieldId);
-            document.getElementById("metric-parent").innerText = data.parent;
-            document.getElementById("metric-overlap").innerText = data.overlap;
-            document.getElementById("metric-shape").innerText = data.topology;
-            document.getElementById("metric-footprint").innerText = qualitativeLabels.footprint;
-            document.getElementById("metric-complexity").innerText = data.complexity;
-            document.getElementById("metric-drift").innerText = data.drift;
-            document.getElementById("metric-local-density").innerText = qualitativeLabels.localDensity;
-            document.getElementById("metric-hotspots").innerText = qualitativeLabels.hotspots;
+            figureRoots.forEach(root => {
+                entries.push({
+                    src: `${root}/field_umap/${stem}.png`,
+                    notice: method === "UMAP" ? "" : `Method Notice: the ${method} projection is pending for ${label}. Displaying the UMAP baseline.`
+                });
+            });
+            return entries;
         }
 
-        // Update Quantitative Metrics Comparison
+        const entries = figureRoots.map(root => ({
+            src: `${root}/method_comparison/${stem}/${method}.png`,
+            notice: ""
+        }));
+        if (method !== "UMAP") {
+            figureRoots.forEach(root => {
+                entries.push({
+                    src: `${root}/method_comparison/${stem}/UMAP.png`,
+                    notice: `Method Notice: the ${method} projection is pending for ${label}. Displaying the UMAP baseline.`
+                });
+            });
+        }
+        return entries;
+    }
+
+    function placeholderMapSvg(message) {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="430" viewBox="0 0 800 430"><rect width="800" height="430" fill="#eae9e5"/><text x="400" y="215" font-family="Arial, sans-serif" font-size="18" fill="#555" text-anchor="middle">${message}</text></svg>`;
+        return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+    }
+
+    function setImageFromEntries(img, entries, statusBar) {
+        if (!img) return;
+        const token = `${Date.now()}-${Math.random()}`;
+        img.dataset.loadToken = token;
+        img.classList.add("is-loading");
+        let index = 0;
+        const tryNext = () => {
+            if (img.dataset.loadToken !== token) return;
+            if (index >= entries.length) {
+                img.src = placeholderMapSvg("Map Not Available");
+                img.classList.remove("is-loading");
+                if (statusBar) {
+                    statusBar.textContent = "Map asset not available for this selection.";
+                    statusBar.style.display = "block";
+                }
+                return;
+            }
+
+            const entry = entries[index];
+            const loader = new Image();
+            loader.onload = () => {
+                if (img.dataset.loadToken !== token) return;
+                img.src = entry.src;
+                img.classList.remove("is-loading");
+                if (statusBar && entry.notice) {
+                    statusBar.textContent = entry.notice;
+                    statusBar.style.display = "block";
+                }
+            };
+            loader.onerror = () => {
+                index += 1;
+                tryNext();
+            };
+            loader.src = entry.src;
+        };
+        tryNext();
+    }
+
+    function comparisonSortRank(id, currentId) {
+        const config = getUnitConfig();
+        const current = config.rawData[currentId] || {};
+        const candidate = config.rawData[id] || {};
+        if (config.unit === "field") {
+            return candidate.domain === current.domain ? 0 : 1;
+        }
+        if (candidate.field === current.field) return 0;
+        if (candidate.domain === current.domain) return 1;
+        return 2;
+    }
+
+    function syncCompareSearchFromSelect() {
+        const compareSelect = document.getElementById("compare-select");
+        const compareSearch = document.getElementById("compare-search");
+        if (!compareSelect || !compareSearch) return;
+        const selected = compareSelect.selectedOptions && compareSelect.selectedOptions[0];
+        compareSearch.value = selected ? selected.textContent : "";
+        compareSearch.title = compareSearch.value;
+    }
+
+    function normalizeCompareSearchText(value) {
+        return String(value || "")
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function findCompareOptionBySearch(query, exactOnly = false) {
+        const compareSelect = document.getElementById("compare-select");
+        if (!compareSelect) return null;
+        const normalized = normalizeCompareSearchText(query);
+        if (!normalized) return null;
+        const options = Array.from(compareSelect.options).filter(option => option.value);
+        const exact = options.find(option =>
+            normalizeCompareSearchText(option.value) === normalized ||
+            normalizeCompareSearchText(option.textContent) === normalized
+        );
+        if (exact || exactOnly) return exact || null;
+        const prefix = options.find(option => {
+            const label = normalizeCompareSearchText(option.textContent);
+            return normalizeCompareSearchText(option.value).startsWith(normalized) || label.startsWith(normalized);
+        });
+        if (prefix) return prefix;
+        const tokens = normalized.split(" ").filter(Boolean);
+        return options.find(option => {
+            const label = normalizeCompareSearchText(option.textContent);
+            return tokens.every(token => label.includes(token));
+        }) || null;
+    }
+
+    function handleCompareSearchInput() {
+        const compareSearch = document.getElementById("compare-search");
+        const compareSelect = document.getElementById("compare-select");
+        if (!compareSearch || !compareSelect) return;
+        const option = findCompareOptionBySearch(compareSearch.value, false);
+        compareSearch.title = option ? option.textContent : "";
+        if (option && option.value !== compareSelect.value) {
+            compareSelect.value = option.value;
+            updateComparison();
+        }
+    }
+
+    function handleCompareSearchKeydown(event) {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        handleCompareSearchCommit();
+    }
+
+    function handleCompareSearchCommit() {
+        const compareSearch = document.getElementById("compare-search");
+        const compareSelect = document.getElementById("compare-select");
+        if (!compareSearch || !compareSelect) return;
+        const option = findCompareOptionBySearch(compareSearch.value, false);
+        if (option) {
+            compareSelect.value = option.value;
+            syncCompareSearchFromSelect();
+            updateComparison();
+        } else {
+            syncCompareSearchFromSelect();
+        }
+    }
+
+    function populateCompareSelect(forceDefault = false) {
+        const compareSelect = document.getElementById("compare-select");
+        const compareSearch = document.getElementById("compare-search");
+        const compareDatalist = document.getElementById("compare-datalist");
+        const primarySelect = getPrimarySelect();
+        if (!compareSelect || !primarySelect) return;
+
+        const config = getUnitConfig();
+        const currentId = primarySelect.value;
+        const previous = forceDefault ? "" : compareSelect.value;
+        const entries = Object.keys(config.names)
+            .filter(id => id !== currentId)
+            .map(id => ({
+                id,
+                label: getDisplayLabel(id),
+                rank: comparisonSortRank(id, currentId)
+            }))
+            .sort((a, b) => a.rank - b.rank || a.label.localeCompare(b.label));
+
+        compareSelect.innerHTML = "";
+        if (compareDatalist) compareDatalist.innerHTML = "";
+        entries.forEach(entry => {
+            const label = `${entry.id} - ${entry.label}`;
+            const option = document.createElement("option");
+            option.value = entry.id;
+            option.dataset.stem = getStemForId(entry.id);
+            option.textContent = label;
+            compareSelect.appendChild(option);
+
+            if (compareDatalist) {
+                const suggestion = document.createElement("option");
+                suggestion.value = label;
+                compareDatalist.appendChild(suggestion);
+            }
+        });
+
+        const hasPrevious = entries.some(entry => entry.id === previous);
+        if (hasPrevious) {
+            compareSelect.value = previous;
+        } else if (entries.length) {
+            compareSelect.value = entries[0].id;
+        }
+
+        const toggle = document.getElementById("compare-toggle");
+        const disabled = !(toggle && toggle.checked);
+        compareSelect.disabled = disabled;
+        if (compareSearch) {
+            compareSearch.disabled = disabled;
+            compareSearch.placeholder = `Search ${config.pluralLabel.toLowerCase()}...`;
+        }
+        syncCompareSearchFromSelect();
+    }
+
+    function refreshViewerTitle() {
+        const config = getUnitConfig();
+        const select = getPrimarySelect();
+        const method = getActiveMethod();
+        const currentLabel = select ? getDisplayLabel(select.value) : "";
+        const compareToggle = document.getElementById("compare-toggle");
+        const compareSelect = document.getElementById("compare-select");
+        const isComparing = compareToggle && compareToggle.checked && compareSelect && compareSelect.value;
+        const title = isComparing
+            ? `${config.singularLabel.toUpperCase()} COMPARISON - ${currentLabel} vs ${getDisplayLabel(compareSelect.value)}`
+            : `${method} PROJECTION - ${currentLabel}`;
+        document.getElementById("viewer-title").innerText = title;
+    }
+
+    function updateMetricsPanel(unitId) {
+        const config = getUnitConfig();
+        const data = config.displayData[unitId];
+        const parentLabel = document.getElementById("metric-parent-label");
+        const overlapLabel = document.getElementById("metric-overlap-label");
+        if (parentLabel) parentLabel.textContent = config.unit === "field" ? "Domain" : "Parent Field";
+        if (overlapLabel) overlapLabel.textContent = config.unit === "field" ? "Closest Fields" : "Closest Fields";
+
+        if (!data) return;
+        const qualitativeLabels = deriveQualitativeLabels(unitId);
+        document.getElementById("metric-parent").innerText = data.parent;
+        document.getElementById("metric-overlap").innerText = data.overlap;
+        document.getElementById("metric-shape").innerText = data.topology;
+        document.getElementById("metric-footprint").innerText = qualitativeLabels.footprint;
+        document.getElementById("metric-complexity").innerText = data.complexity;
+        document.getElementById("metric-drift").innerText = data.drift;
+        document.getElementById("metric-local-density").innerText = qualitativeLabels.localDensity;
+        document.getElementById("metric-hotspots").innerText = qualitativeLabels.hotspots;
+    }
+
+    function updateComparison() {
+        const compareToggle = document.getElementById("compare-toggle");
+        const compareSelect = document.getElementById("compare-select");
+        const compareSearch = document.getElementById("compare-search");
+        const comparePanel = document.getElementById("compare-map-panel");
+        const mapGrid = document.getElementById("map-grid");
+        const primaryTitle = document.getElementById("primary-map-title");
+        const compareTitle = document.getElementById("compare-map-title");
+        const statusBar = document.getElementById("status-bar");
+        const primarySelect = getPrimarySelect();
+        if (!compareToggle || !compareSelect || !comparePanel || !mapGrid || !primarySelect) return;
+
+        const enabled = compareToggle.checked;
+        compareSelect.disabled = !enabled;
+        if (compareSearch) compareSearch.disabled = !enabled;
+        comparePanel.hidden = !enabled;
+        mapGrid.classList.toggle("is-comparing", enabled);
+        if (primaryTitle) primaryTitle.hidden = !enabled;
+        if (!enabled) {
+            refreshViewerTitle();
+            return;
+        }
+
+        if (!compareSelect.value || compareSelect.value === primarySelect.value) {
+            populateCompareSelect(true);
+        }
+
+        const method = getActiveMethod();
+        const config = getUnitConfig();
+        const currentLabel = getDisplayLabel(primarySelect.value);
+        const compareId = compareSelect.value;
+        const compareLabel = getDisplayLabel(compareId);
+        if (primaryTitle) primaryTitle.textContent = `A. ${config.singularLabel}: ${currentLabel}`;
+        if (compareTitle) compareTitle.textContent = `B. ${config.singularLabel}: ${compareLabel}`;
+
+        const compareImg = document.getElementById("compare-map-image");
+        setImageFromEntries(
+            compareImg,
+            imageEntriesFor(activeUnit, compareId, method, compareLabel),
+            statusBar
+        );
+        refreshViewerTitle();
+    }
+
+    function toggleComparison() {
+        populateCompareSelect(false);
+        updateComparison();
+    }
+
+    function updateViewer() {
+        const select = getPrimarySelect();
+        if (!select) return;
+        lastSelectedByUnit[activeUnit] = select.value;
+        setMethodAvailability();
+        updateSubfieldPickerSelection();
+
+        const statusBar = document.getElementById("status-bar");
+        if (statusBar) {
+            statusBar.style.display = "none";
+            statusBar.textContent = "";
+        }
+
+        const unitId = select.value;
+        const method = getActiveMethod();
+        const label = getDisplayLabel(unitId);
+        const mapImg = document.getElementById("map-image");
+        setImageFromEntries(
+            mapImg,
+            imageEntriesFor(activeUnit, unitId, method, label),
+            statusBar
+        );
+
+        updateMetricsPanel(unitId);
         updateQuantitativeMetrics();
+        populateCompareSelect(false);
+        updateComparison();
+        refreshViewerTitle();
     }
 
     // 100% Real scientific categories definitions for Interactive Help
     const helpData = {
         "parent": {
-            title: "Parent Field",
-            desc: "The broad, high-level scientific discipline to which this specific subfield belongs.",
+            title: "Parent / Domain",
+            desc: "The broad context for the selected unit: parent field for subfields, domain for fields.",
             options: [
                 "<strong>Computer Science</strong>: Fields focusing on algorithms, computing systems, and data processing.",
                 "<strong>Immunology & Microbiology</strong>: Fields studying biological immune systems, viruses, and microorganisms.",
@@ -7226,8 +7840,8 @@ const rawMetricsData = {
             ]
         },
         "overlap": {
-            title: "Closest Fields",
-            desc: "Fields that sit closest to the selected subfield in the high-dimensional representation. This suggests similar document-space structure, not necessarily collaboration or citation links.",
+            title: "Closest Units",
+            desc: "Units that sit closest to the selected item in the high-dimensional representation. This suggests similar document-space structure, not necessarily collaboration or citation links.",
             options: [
                 "<strong>Signal Processing & AI</strong>: Strong overlap with machine learning and pattern analysis.",
                 "<strong>Computer Vision & EE</strong>: Linked to digital image processing and electronic engineering.",
@@ -7471,61 +8085,70 @@ const rawMetricsData = {
     }
 
     function updateQuantitativeMetrics() {
-        const subfieldSelect = document.getElementById("subfield-select");
-        if (!subfieldSelect) return;
-        const subfieldId = subfieldSelect.value;
-
-        // Retrieve raw metrics for subfield
-        const metrics = rawMetricsData[subfieldId];
+        const select = getPrimarySelect();
+        if (!select) return;
+        const unitId = select.value;
+        const config = getUnitConfig();
+        const metrics = config.rawData[unitId];
         if (!metrics) return;
 
         const currentDomain = metrics.domain;
         const currentField = metrics.field;
-
-        // Update scope label names dynamically in the select dropdown
-        const domainOption = document.getElementById("quant-scope-domain-option");
-        if (domainOption) domainOption.textContent = `Same Domain (${currentDomain})`;
-        const fieldOption = document.getElementById("quant-scope-field-option");
-        if (fieldOption) fieldOption.textContent = `Same Field (${currentField})`;
-
         const compareScopeSelect = document.getElementById("quant-compare-scope-select");
+        const allOption = compareScopeSelect ? compareScopeSelect.querySelector('option[value="all"]') : null;
+        const domainOption = document.getElementById("quant-scope-domain-option");
+        const fieldOption = document.getElementById("quant-scope-field-option");
+        const valueHeader = document.getElementById("quant-value-header");
+
+        if (allOption) allOption.textContent = `All ${config.pluralLabel} (N=${Object.keys(config.rawData).length})`;
+        if (domainOption) domainOption.textContent = `Same Domain (${currentDomain || "..."})`;
+        if (fieldOption) {
+            if (config.unit === "field") {
+                fieldOption.disabled = true;
+                fieldOption.hidden = true;
+                fieldOption.textContent = "Same Field (not applicable)";
+            } else {
+                fieldOption.disabled = false;
+                fieldOption.hidden = false;
+                fieldOption.textContent = `Same Field (${currentField || "..."})`;
+            }
+        }
+        if (valueHeader) valueHeader.textContent = `${config.singularLabel} Value`;
+
+        if (compareScopeSelect && config.unit === "field" && compareScopeSelect.value === "field") {
+            compareScopeSelect.value = "domain";
+        }
+
         const compareScope = compareScopeSelect ? compareScopeSelect.value : "all";
         const tbody = document.getElementById("metrics-comparison-tbody");
         if (!tbody) return;
-
         tbody.innerHTML = "";
 
-        // Filter subfields based on selected comparison scope
-        let scopeSubfields = [];
-        Object.keys(rawMetricsData).forEach(id => {
-            const s = rawMetricsData[id];
-            if (compareScope === "all") {
-                scopeSubfields.push(s);
-            } else if (compareScope === "domain" && s.domain === currentDomain) {
-                scopeSubfields.push(s);
-            } else if (compareScope === "field" && s.field === currentField) {
-                scopeSubfields.push(s);
-            }
+        const scopeUnits = Object.values(config.rawData).filter(item => {
+            if (compareScope === "all") return true;
+            if (compareScope === "domain") return item.domain === currentDomain;
+            if (compareScope === "field") return item.field === currentField;
+            return true;
         });
 
-        // Compute median dynamically for each metric over the scope
         function calculateMedian(arr, key) {
-            const vals = arr.map(item => item[key]).filter(v => v !== undefined && v !== null).sort((a, b) => a - b);
+            const vals = arr
+                .map(item => item[key])
+                .filter(v => Number.isFinite(v))
+                .sort((a, b) => a - b);
             if (vals.length === 0) return 0;
             const mid = Math.floor(vals.length / 2);
             return vals.length % 2 !== 0 ? vals[mid] : (vals[mid - 1] + vals[mid]) / 2;
         }
 
-        // Iterate through the active nine metrics: eight structural metrics plus centroid drift.
         Object.keys(metricMetadata).forEach(metricKey => {
             const meta = metricMetadata[metricKey];
             const val = metrics[metricKey];
-            const refVal = calculateMedian(scopeSubfields, metricKey);
+            const refVal = calculateMedian(scopeUnits, metricKey);
+            if (!Number.isFinite(val)) return;
 
-            // Row for values
             const row = document.createElement("tr");
 
-            // Name cell is clickable and opens the Help Modal
             const nameCell = document.createElement("td");
             nameCell.innerHTML = `<strong>${meta.label}</strong> <span style="font-size:0.75rem; color:var(--accent-color); cursor:pointer;">[?]</span>`;
             nameCell.style.borderRight = "1px solid var(--border-color)";
@@ -7558,7 +8181,18 @@ const rawMetricsData = {
 
     // Initial load
     window.onload = function() {
+        const select = getPrimarySelect();
+        initialSubfieldOptionsHtml = select ? select.innerHTML : "";
+        if (select && select.value) {
+            lastSelectedByUnit.subfield = select.value;
+        }
+        const unitSelect = document.getElementById("unit-select");
+        activeUnit = unitSelect ? unitSelect.value : "subfield";
+        rebuildPrimarySelectForUnit();
+        setMethodAvailability();
+        updateUnitLabels();
         initSubfieldPicker();
+        populateCompareSelect(true);
         updateViewer();
     };
 </script>
