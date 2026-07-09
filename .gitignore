@@ -60,6 +60,17 @@ mobile_view.png
 latex_test_output.txt
 final_micro_revision_prompt_tfm.md
 
+# Thesis defence presentation: keep sources public, hide the private
+# speaker script and local build artifacts
+defense_presentation/guion_defensa.md
+defense_presentation/assets/def_*.png
+defense_presentation/*.aux
+defense_presentation/*.log
+defense_presentation/*.nav
+defense_presentation/*.out
+defense_presentation/*.snm
+defense_presentation/*.toc
+
 # LaTeX build artifacts for memory/
 memory/*.aux
 memory/*.log
