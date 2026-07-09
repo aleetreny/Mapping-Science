@@ -446,26 +446,17 @@
             display: none;
         }
 
-        .compare-select {
+        #compare-picker {
             flex: 1 1 320px;
             width: min(420px, 100%);
             max-width: 460px;
-            height: 34px;
-            font-family: var(--code-font);
-            font-size: 0.78rem;
-            padding: 0.25rem 0.55rem;
-            border: 2px solid;
-            border-color: #808080 white white #808080;
-            background-color: #ffffff;
-            color: var(--text-color);
-            box-shadow: inset 1px 1px 0px #d8d8d8;
-            min-width: 0;
-            appearance: auto;
         }
 
-        .compare-select:disabled {
-            background: #eeeeee;
+        .custom-select-button:disabled {
+            background-color: #eeeeee;
             color: #777777;
+            cursor: not-allowed;
+            box-shadow: none;
         }
 
         .map-grid {
@@ -897,7 +888,7 @@
                 padding: 0.55rem 0.65rem;
             }
 
-            .compare-select {
+            #compare-picker {
                 flex-basis: 100%;
                 width: 100%;
                 max-width: none;
@@ -1535,11 +1526,23 @@
                     <input type="checkbox" id="compare-toggle" onchange="toggleComparison()">
                     Compare
                 </label>
-                <select id="compare-select" class="compare-select-native" onchange="syncCompareSearchFromSelect(); updateComparison()" disabled>
+                <select id="compare-select" class="compare-select-native" onchange="updateComparison()" style="display: none;">
                     <option value="">Select a comparison</option>
                 </select>
-                <input id="compare-search" class="compare-select" list="compare-datalist" placeholder="Search comparison..." oninput="handleCompareSearchInput()" onchange="handleCompareSearchCommit()" onblur="handleCompareSearchCommit()" onkeydown="handleCompareSearchKeydown(event)" disabled>
-                <datalist id="compare-datalist"></datalist>
+                <div class="custom-select" id="compare-picker">
+                    <button type="button" class="custom-select-button" id="compare-picker-button" aria-haspopup="listbox" aria-expanded="false" disabled>
+                        <span class="custom-select-value" id="compare-picker-value">Select a comparison</span>
+                        <span class="custom-select-caret" aria-hidden="true">v</span>
+                    </button>
+                    <div class="custom-select-menu" id="compare-picker-menu" role="listbox">
+                        <div class="custom-select-search-container">
+                            <input type="text" id="compare-picker-search" class="custom-select-search-input" placeholder="Search comparison..." autocomplete="off" disabled>
+                        </div>
+                        <div class="custom-select-options-container" id="compare-picker-options-container">
+                            <div class="custom-select-no-results" id="compare-picker-no-results">No comparisons found</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div id="map-grid" class="map-grid">
                 <div class="map-panel" id="primary-map-panel">
@@ -7152,7 +7155,7 @@ const rawMetricsData = {
             valueNode.title = label;
         }
 
-        document.querySelectorAll(".custom-select-option").forEach((item) => {
+        document.querySelectorAll("#subfield-picker .custom-select-option").forEach((item) => {
             const isSelected = select && item.dataset.value === select.value;
             item.classList.toggle("is-selected", isSelected);
             item.setAttribute("aria-selected", isSelected ? "true" : "false");
@@ -7188,7 +7191,7 @@ const rawMetricsData = {
 
     function centerSelectedSubfieldInMenu() {
         const container = document.getElementById("subfield-picker-options-container");
-        const selected = document.querySelector(".custom-select-option.is-selected");
+        const selected = document.querySelector("#subfield-picker .custom-select-option.is-selected");
         if (!container || !selected) return;
 
         const targetTop = selected.offsetTop - (container.clientHeight / 2) + (selected.offsetHeight / 2);
@@ -7229,7 +7232,7 @@ const rawMetricsData = {
     }
 
     function focusRelativeSubfieldOption(direction) {
-        const options = Array.from(document.querySelectorAll(".custom-select-option")).filter(opt => opt.style.display !== "none");
+        const options = Array.from(document.querySelectorAll("#subfield-picker .custom-select-option")).filter(opt => opt.style.display !== "none");
         if (!options.length) return;
         const activeIndex = options.indexOf(document.activeElement);
         if (activeIndex === 0 && direction === -1) {
@@ -7344,7 +7347,7 @@ const rawMetricsData = {
             searchInput.addEventListener("keydown", (event) => {
                 if (event.key === "ArrowDown") {
                     event.preventDefault();
-                    const options = Array.from(document.querySelectorAll(".custom-select-option")).filter(opt => opt.style.display !== "none");
+                    const options = Array.from(document.querySelectorAll("#subfield-picker .custom-select-option")).filter(opt => opt.style.display !== "none");
                     if (options.length > 0) {
                         options[0].focus();
                     }
@@ -7576,15 +7579,6 @@ const rawMetricsData = {
         return 2;
     }
 
-    function syncCompareSearchFromSelect() {
-        const compareSelect = document.getElementById("compare-select");
-        const compareSearch = document.getElementById("compare-search");
-        if (!compareSelect || !compareSearch) return;
-        const selected = compareSelect.selectedOptions && compareSelect.selectedOptions[0];
-        compareSearch.value = selected ? selected.textContent : "";
-        compareSearch.title = compareSearch.value;
-    }
-
     function normalizeCompareSearchText(value) {
         return String(value || "")
             .toLowerCase()
@@ -7594,65 +7588,205 @@ const rawMetricsData = {
             .trim();
     }
 
-    function findCompareOptionBySearch(query, exactOnly = false) {
-        const compareSelect = document.getElementById("compare-select");
-        if (!compareSelect) return null;
-        const normalized = normalizeCompareSearchText(query);
-        if (!normalized) return null;
-        const options = Array.from(compareSelect.options).filter(option => option.value);
-        const exact = options.find(option =>
-            normalizeCompareSearchText(option.value) === normalized ||
-            normalizeCompareSearchText(option.textContent) === normalized
-        );
-        if (exact || exactOnly) return exact || null;
-        const prefix = options.find(option => {
-            const label = normalizeCompareSearchText(option.textContent);
-            return normalizeCompareSearchText(option.value).startsWith(normalized) || label.startsWith(normalized);
-        });
-        if (prefix) return prefix;
-        const tokens = normalized.split(" ").filter(Boolean);
-        return options.find(option => {
-            const label = normalizeCompareSearchText(option.textContent);
-            return tokens.every(token => label.includes(token));
-        }) || null;
+    function closeComparePicker() {
+        const picker = document.getElementById("compare-picker");
+        const button = document.getElementById("compare-picker-button");
+        if (!picker || !button) return;
+        picker.classList.remove("is-open");
+        button.setAttribute("aria-expanded", "false");
     }
 
-    function handleCompareSearchInput() {
-        const compareSearch = document.getElementById("compare-search");
-        const compareSelect = document.getElementById("compare-select");
-        if (!compareSearch || !compareSelect) return;
-        const option = findCompareOptionBySearch(compareSearch.value, false);
-        compareSearch.title = option ? option.textContent : "";
-        if (option && option.value !== compareSelect.value) {
-            compareSelect.value = option.value;
-            updateComparison();
+    function positionComparePicker() {
+        const button = document.getElementById("compare-picker-button");
+        const menu = document.getElementById("compare-picker-menu");
+        if (!button || !menu) return;
+
+        const gutter = 12;
+        const rect = button.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom - gutter;
+        const spaceAbove = rect.top - gutter;
+        const preferredHeight = 320;
+        const openBelow = spaceBelow >= 190 || spaceBelow >= spaceAbove;
+        const availableHeight = Math.max(180, Math.min(preferredHeight, openBelow ? spaceBelow : spaceAbove));
+
+        menu.style.left = "0";
+        menu.style.width = "100%";
+        menu.style.top = openBelow ? "calc(100% + 0.35rem)" : `-${availableHeight + 4}px`;
+        menu.style.maxHeight = `${availableHeight}px`;
+    }
+
+    function centerSelectedCompareInMenu() {
+        const container = document.getElementById("compare-picker-options-container");
+        const selected = document.querySelector("#compare-picker .custom-select-option.is-selected");
+        if (!container || !selected) return;
+
+        const targetTop = selected.offsetTop - (container.clientHeight / 2) + (selected.offsetHeight / 2);
+        container.scrollTop = Math.max(0, targetTop);
+    }
+
+    function openComparePicker() {
+        const picker = document.getElementById("compare-picker");
+        const button = document.getElementById("compare-picker-button");
+        if (!picker || !button) return;
+        if (button.disabled) return;
+        picker.classList.add("is-open");
+        button.setAttribute("aria-expanded", "true");
+
+        const searchInput = document.getElementById("compare-picker-search");
+        if (searchInput) {
+            searchInput.value = "";
+            filterCompareOptions("");
+        }
+
+        positionComparePicker();
+        centerSelectedCompareInMenu();
+
+        if (searchInput) {
+            setTimeout(() => {
+                searchInput.focus();
+            }, 50);
         }
     }
 
-    function handleCompareSearchKeydown(event) {
-        if (event.key !== "Enter") return;
-        event.preventDefault();
-        handleCompareSearchCommit();
-    }
-
-    function handleCompareSearchCommit() {
-        const compareSearch = document.getElementById("compare-search");
-        const compareSelect = document.getElementById("compare-select");
-        if (!compareSearch || !compareSelect) return;
-        const option = findCompareOptionBySearch(compareSearch.value, false);
-        if (option) {
-            compareSelect.value = option.value;
-            syncCompareSearchFromSelect();
-            updateComparison();
+    function toggleComparePicker() {
+        const picker = document.getElementById("compare-picker");
+        if (!picker) return;
+        const button = document.getElementById("compare-picker-button");
+        if (button && button.disabled) return;
+        if (picker.classList.contains("is-open")) {
+            closeComparePicker();
         } else {
-            syncCompareSearchFromSelect();
+            openComparePicker();
         }
+    }
+
+    function focusRelativeCompareOption(direction) {
+        const options = Array.from(document.querySelectorAll("#compare-picker .custom-select-option")).filter(opt => opt.style.display !== "none");
+        if (!options.length) return;
+        const activeIndex = options.indexOf(document.activeElement);
+        if (activeIndex === 0 && direction === -1) {
+            const searchInput = document.getElementById("compare-picker-search");
+            if (searchInput) {
+                searchInput.focus();
+                return;
+            }
+        }
+        const selectedIndex = options.findIndex((item) => item.classList.contains("is-selected"));
+        const currentIndex = activeIndex >= 0 ? activeIndex : selectedIndex;
+        const nextIndex = Math.max(0, Math.min(options.length - 1, currentIndex + direction));
+        options[nextIndex].focus();
+    }
+
+    function filterCompareOptions(query) {
+        query = normalizeCompareSearchText(query);
+        const optionsContainer = document.getElementById("compare-picker-options-container");
+        if (!optionsContainer) return;
+
+        const options = optionsContainer.querySelectorAll(".custom-select-option");
+        let totalVisible = 0;
+        options.forEach(opt => {
+            const label = normalizeCompareSearchText(opt.textContent);
+            const value = normalizeCompareSearchText(opt.dataset.value);
+            const matches = label.includes(query) || value.includes(query);
+            opt.style.display = matches ? "block" : "none";
+            if (matches) totalVisible++;
+        });
+
+        const noResults = document.getElementById("compare-picker-no-results");
+        if (noResults) {
+            noResults.style.display = totalVisible === 0 ? "block" : "none";
+        }
+    }
+
+    function updateComparePickerSelection() {
+        const compareSelect = document.getElementById("compare-select");
+        const valueNode = document.getElementById("compare-picker-value");
+        if (!compareSelect) return;
+        const selectedOption = compareSelect.options[compareSelect.selectedIndex];
+        const label = selectedOption ? selectedOption.textContent : "Select a comparison";
+        if (valueNode) {
+            valueNode.textContent = label;
+            valueNode.title = label;
+        }
+
+        document.querySelectorAll("#compare-picker .custom-select-option").forEach((item) => {
+            const isSelected = item.dataset.value === compareSelect.value;
+            item.classList.toggle("is-selected", isSelected);
+            item.setAttribute("aria-selected", isSelected ? "true" : "false");
+        });
+    }
+
+    function initComparePicker() {
+        const picker = document.getElementById("compare-picker");
+        const button = document.getElementById("compare-picker-button");
+        const menu = document.getElementById("compare-picker-menu");
+        const searchInput = document.getElementById("compare-picker-search");
+        if (!picker || !button || !menu) return;
+
+        if (picker.dataset.initialized === "true") return;
+        picker.dataset.initialized = "true";
+
+        button.addEventListener("click", toggleComparePicker);
+        button.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowDown") {
+                event.preventDefault();
+                openComparePicker();
+                focusRelativeCompareOption(0);
+            } else if (event.key === "Escape") {
+                closeComparePicker();
+            }
+        });
+
+        if (searchInput) {
+            searchInput.addEventListener("input", (event) => {
+                filterCompareOptions(event.target.value);
+            });
+
+            searchInput.addEventListener("keydown", (event) => {
+                if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    const options = Array.from(document.querySelectorAll("#compare-picker .custom-select-option")).filter(opt => opt.style.display !== "none");
+                    if (options.length > 0) {
+                        options[0].focus();
+                    }
+                } else if (event.key === "Escape") {
+                    event.preventDefault();
+                    closeComparePicker();
+                    button.focus();
+                }
+            });
+        }
+
+        menu.addEventListener("keydown", (event) => {
+            if (event.target === searchInput) return;
+
+            if (event.key === "ArrowDown") {
+                event.preventDefault();
+                focusRelativeCompareOption(1);
+            } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                focusRelativeCompareOption(-1);
+            } else if (event.key === "Escape") {
+                closeComparePicker();
+                button.focus();
+            }
+        });
+
+        document.addEventListener("click", (event) => {
+            if (!picker.contains(event.target)) {
+                closeComparePicker();
+            }
+        });
+
+        window.addEventListener("resize", () => {
+            if (picker.classList.contains("is-open")) {
+                positionComparePicker();
+            }
+        });
     }
 
     function populateCompareSelect(forceDefault = false) {
         const compareSelect = document.getElementById("compare-select");
-        const compareSearch = document.getElementById("compare-search");
-        const compareDatalist = document.getElementById("compare-datalist");
         const primarySelect = getPrimarySelect();
         if (!compareSelect || !primarySelect) return;
 
@@ -7669,7 +7803,6 @@ const rawMetricsData = {
             .sort((a, b) => a.rank - b.rank || a.label.localeCompare(b.label));
 
         compareSelect.innerHTML = "";
-        if (compareDatalist) compareDatalist.innerHTML = "";
         entries.forEach(entry => {
             const label = `${entry.id} - ${entry.label}`;
             const option = document.createElement("option");
@@ -7677,12 +7810,6 @@ const rawMetricsData = {
             option.dataset.stem = getStemForId(entry.id);
             option.textContent = label;
             compareSelect.appendChild(option);
-
-            if (compareDatalist) {
-                const suggestion = document.createElement("option");
-                suggestion.value = label;
-                compareDatalist.appendChild(suggestion);
-            }
         });
 
         const hasPrevious = entries.some(entry => entry.id === previous);
@@ -7692,14 +7819,50 @@ const rawMetricsData = {
             compareSelect.value = entries[0].id;
         }
 
+        const optionsContainer = document.getElementById("compare-picker-options-container");
+        if (optionsContainer) {
+            optionsContainer.innerHTML = "";
+            const noResults = document.createElement("div");
+            noResults.id = "compare-picker-no-results";
+            noResults.className = "custom-select-no-results";
+            noResults.textContent = config.noResults;
+            optionsContainer.appendChild(noResults);
+
+            entries.forEach(entry => {
+                const item = document.createElement("button");
+                const label = `${entry.id} - ${entry.label}`;
+                item.type = "button";
+                item.className = "custom-select-option";
+                item.setAttribute("role", "option");
+                item.dataset.value = entry.id;
+                item.dataset.stem = getStemForId(entry.id);
+                item.textContent = label;
+                item.title = label;
+                item.addEventListener("click", () => {
+                    compareSelect.value = entry.id;
+                    closeComparePicker();
+                    updateComparison();
+                });
+                optionsContainer.appendChild(item);
+            });
+        }
+
         const toggle = document.getElementById("compare-toggle");
         const disabled = !(toggle && toggle.checked);
         compareSelect.disabled = disabled;
-        if (compareSearch) {
-            compareSearch.disabled = disabled;
-            compareSearch.placeholder = `Search ${config.pluralLabel.toLowerCase()}...`;
+        
+        const pickerButton = document.getElementById("compare-picker-button");
+        if (pickerButton) {
+            pickerButton.disabled = disabled;
         }
-        syncCompareSearchFromSelect();
+
+        const pickerSearch = document.getElementById("compare-picker-search");
+        if (pickerSearch) {
+            pickerSearch.disabled = disabled;
+            pickerSearch.placeholder = `Search ${config.pluralLabel.toLowerCase()}...`;
+        }
+
+        updateComparePickerSelection();
     }
 
     function refreshViewerTitle() {
@@ -7739,7 +7902,6 @@ const rawMetricsData = {
     function updateComparison() {
         const compareToggle = document.getElementById("compare-toggle");
         const compareSelect = document.getElementById("compare-select");
-        const compareSearch = document.getElementById("compare-search");
         const comparePanel = document.getElementById("compare-map-panel");
         const mapGrid = document.getElementById("map-grid");
         const primaryTitle = document.getElementById("primary-map-title");
@@ -7750,12 +7912,19 @@ const rawMetricsData = {
 
         const enabled = compareToggle.checked;
         compareSelect.disabled = !enabled;
-        if (compareSearch) compareSearch.disabled = !enabled;
+        
+        const pickerButton = document.getElementById("compare-picker-button");
+        if (pickerButton) pickerButton.disabled = !enabled;
+        
+        const pickerSearch = document.getElementById("compare-picker-search");
+        if (pickerSearch) pickerSearch.disabled = !enabled;
+
         comparePanel.hidden = !enabled;
         mapGrid.classList.toggle("is-comparing", enabled);
         if (primaryTitle) primaryTitle.hidden = !enabled;
         if (!enabled) {
             refreshViewerTitle();
+            updateComparePickerSelection();
             return;
         }
 
@@ -7778,6 +7947,7 @@ const rawMetricsData = {
             statusBar
         );
         refreshViewerTitle();
+        updateComparePickerSelection();
     }
 
     function toggleComparison() {
@@ -8192,6 +8362,7 @@ const rawMetricsData = {
         setMethodAvailability();
         updateUnitLabels();
         initSubfieldPicker();
+        initComparePicker();
         populateCompareSelect(true);
         updateViewer();
     };
