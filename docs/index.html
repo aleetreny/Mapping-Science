@@ -1613,7 +1613,7 @@
 
             <!-- Tab Content 2: Quantitative -->
             <div id="metric-panel-quantitative" class="metric-panel" role="tabpanel" style="display: none; padding: 1rem 1.5rem; background: #ffffff;">
-                <div class="quant-controls" style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <div class="quant-controls" id="quant-controls" style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                     <span style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #555;">Comparison Scope:</span>
                     <select id="quant-compare-scope-select" onchange="updateQuantitativeMetrics()" style="font-family: var(--code-font); font-size: 0.8rem; height: 30px; padding: 0.2rem 0.5rem; border: 2px solid; border-color: #808080 white white #808080; background-color: #ffffff; color: var(--text-color); cursor: pointer; width: 100%; max-width: 320px; box-shadow: inset 1px 1px 0px #d8d8d8; outline: none; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                         <option value="all">All Subfields (N=241)</option>
@@ -1627,8 +1627,8 @@
                             <tr style="background: #f0ede6; border-bottom: 2px solid var(--border-color); font-size: 0.72rem;">
                                 <th style="padding: 0.45rem 0.6rem; border-right: 1px solid var(--border-color); font-weight: bold; text-transform: uppercase; width: 48%;">Metric (Click for Help)</th>
                                 <th id="quant-value-header" style="padding: 0.45rem 0.6rem; border-right: 1px solid var(--border-color); font-weight: bold; text-transform: uppercase; text-align: right; width: 14%;">Subfield Value</th>
-                                <th style="padding: 0.45rem 0.6rem; border-right: 1px solid var(--border-color); font-weight: bold; text-transform: uppercase; text-align: right; width: 14%;">Reference Median</th>
-                                <th style="padding: 0.45rem 0.6rem; font-weight: bold; text-transform: uppercase; text-align: right; width: 24%;">Relative Shift</th>
+                                <th id="quant-reference-header" style="padding: 0.45rem 0.6rem; border-right: 1px solid var(--border-color); font-weight: bold; text-transform: uppercase; text-align: right; width: 14%;">Reference Median</th>
+                                <th id="quant-shift-header" style="padding: 0.45rem 0.6rem; font-weight: bold; text-transform: uppercase; text-align: right; width: 24%;">Relative Shift</th>
                             </tr>
                         </thead>
                         <tbody id="metrics-comparison-tbody">
@@ -7925,6 +7925,7 @@ const rawMetricsData = {
         if (!enabled) {
             refreshViewerTitle();
             updateComparePickerSelection();
+            updateQuantitativeMetrics();
             return;
         }
 
@@ -7948,6 +7949,7 @@ const rawMetricsData = {
         );
         refreshViewerTitle();
         updateComparePickerSelection();
+        updateQuantitativeMetrics();
     }
 
     function toggleComparison() {
@@ -8262,13 +8264,24 @@ const rawMetricsData = {
         const metrics = config.rawData[unitId];
         if (!metrics) return;
 
+        const compareToggle = document.getElementById("compare-toggle");
+        const compareSelect = document.getElementById("compare-select");
+        const compareId = compareSelect ? compareSelect.value : "";
+        const compareMetrics = compareId ? config.rawData[compareId] : null;
+        const isComparing = Boolean(
+            compareToggle && compareToggle.checked && compareId && compareId !== unitId && compareMetrics
+        );
+
         const currentDomain = metrics.domain;
         const currentField = metrics.field;
         const compareScopeSelect = document.getElementById("quant-compare-scope-select");
+        const quantControls = document.getElementById("quant-controls");
         const allOption = compareScopeSelect ? compareScopeSelect.querySelector('option[value="all"]') : null;
         const domainOption = document.getElementById("quant-scope-domain-option");
         const fieldOption = document.getElementById("quant-scope-field-option");
         const valueHeader = document.getElementById("quant-value-header");
+        const referenceHeader = document.getElementById("quant-reference-header");
+        const shiftHeader = document.getElementById("quant-shift-header");
 
         if (allOption) allOption.textContent = `All ${config.pluralLabel} (N=${Object.keys(config.rawData).length})`;
         if (domainOption) domainOption.textContent = `Same Domain (${currentDomain || "..."})`;
@@ -8283,7 +8296,19 @@ const rawMetricsData = {
                 fieldOption.textContent = `Same Field (${currentField || "..."})`;
             }
         }
-        if (valueHeader) valueHeader.textContent = `${config.singularLabel} Value`;
+        if (quantControls) quantControls.style.display = isComparing ? "none" : "flex";
+        if (valueHeader) {
+            valueHeader.textContent = isComparing ? "A. Value" : `${config.singularLabel} Value`;
+            valueHeader.title = isComparing ? getDisplayLabel(unitId) : "";
+        }
+        if (referenceHeader) {
+            referenceHeader.textContent = isComparing ? "B. Value" : "Reference Median";
+            referenceHeader.title = isComparing ? getDisplayLabel(compareId) : "";
+        }
+        if (shiftHeader) {
+            shiftHeader.textContent = "Relative Shift";
+            shiftHeader.title = isComparing ? "A relative to B" : "";
+        }
 
         if (compareScopeSelect && config.unit === "field" && compareScopeSelect.value === "field") {
             compareScopeSelect.value = "domain";
@@ -8314,8 +8339,8 @@ const rawMetricsData = {
         Object.keys(metricMetadata).forEach(metricKey => {
             const meta = metricMetadata[metricKey];
             const val = metrics[metricKey];
-            const refVal = calculateMedian(scopeUnits, metricKey);
-            if (!Number.isFinite(val)) return;
+            const refVal = isComparing ? compareMetrics[metricKey] : calculateMedian(scopeUnits, metricKey);
+            if (!Number.isFinite(val) || !Number.isFinite(refVal)) return;
 
             const row = document.createElement("tr");
 
@@ -8336,6 +8361,7 @@ const rawMetricsData = {
             refMedianCell.textContent = refVal.toFixed(4);
             refMedianCell.style.textAlign = "right";
             refMedianCell.style.borderRight = "1px solid var(--border-color)";
+            refMedianCell.style.fontWeight = isComparing ? "bold" : "normal";
 
             const shiftCell = document.createElement("td");
             shiftCell.innerHTML = formatRelativeShift(val, refVal, metricKey);
