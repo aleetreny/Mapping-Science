@@ -12,6 +12,7 @@ https://aleetreny.github.io/Mapping-Science/
 ## What Is Here
 
 - `memory/`: LaTeX source, final thesis figures, tables, and appendices.
+- `defense_presentation/presentation.pdf`: final thesis defence presentation.
 - `scripts/`: core data, embedding, metric, visualization, and typology scripts.
 - `src/`: reusable analysis code used by the pipeline.
 - `docs/`: compact methodological notes from the project development.
