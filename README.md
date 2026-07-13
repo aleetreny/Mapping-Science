@@ -9,6 +9,14 @@ Explore the interactive project viewer:
 
 https://aleetreny.github.io/Mapping-Science/
 
+## Example UMAP
+
+**Nuclear and High Energy Physics** is one of the most structurally dispersed
+subfields in the analysis (the highest median centroid distance). Its UMAP
+shows the semantic structure behind that extreme case.
+
+![UMAP scatter and density map for Nuclear and High Energy Physics](docs/site-assets/figures/method_comparison/3106__Nuclear_and_High_Energy_Physics/UMAP.png)
+
 ## What Is Here
 
 - `memory/`: LaTeX source, final thesis figures, tables, and appendices.
